@@ -1,0 +1,5 @@
+include 'com.gcplot.api'
+include 'com.gcplot.commons'
+include 'com.gcplot.gc-analytics'
+include 'com.gcplot.log-processor'
+include 'com.gcplot.users'
