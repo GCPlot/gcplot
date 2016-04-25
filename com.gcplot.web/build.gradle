@@ -1,0 +1,12 @@
+plugins {
+    id 'java' // or 'groovy' Must be explicitly applied
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
+
+dependencies {
+    compile project(":com.gcplot.model")
+    compile project(":com.gcplot.api")
+    compile project(":com.gcplot.commons")
+    compile project(":com.gcplot.gc-analytics")
+    compile project(":com.gcplot.log-processor")
+}
