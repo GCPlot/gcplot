@@ -4,6 +4,11 @@ allprojects {
     apply plugin: "eclipse"
     apply plugin: "maven"
 
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
     dependencies {
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "org.slf4j:slf4j-log4j12:$log4jVersion"
