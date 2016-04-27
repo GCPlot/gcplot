@@ -1,4 +1,11 @@
 dependencies {
     compile project(":com.gcplot.commons")
+    compile project(":com.gcplot.api")
 
+    compile "io.dropwizard.metrics:metrics-core:$metricsVersion"
+
+    compile "com.orientechnologies:orientdb-core:$orientdbVersion"
+    compile "com.orientechnologies:orientdb-client:$orientdbVersion"
+    compile "com.orientechnologies:orientdb-object:$orientdbVersion"
+    compile "com.orientechnologies:orientdb-enterprise:$orientdbVersion"
 }

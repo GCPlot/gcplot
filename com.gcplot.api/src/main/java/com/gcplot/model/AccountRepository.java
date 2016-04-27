@@ -5,7 +5,7 @@ import com.gcplot.Identifier;
 import java.util.List;
 import java.util.Optional;
 
-public interface AccountsRepository {
+public interface AccountRepository {
 
     List<Account> accounts();
 
@@ -15,11 +15,11 @@ public interface AccountsRepository {
 
     Optional<Account> account(String username, String passHash);
 
-    void store(Account account);
+    Account store(Account account);
 
-    Optional<Account> delete(Identifier identifier);
+    void delete(Account account);
 
-    String generateNewToken(String oldToken);
+    boolean generateNewToken(String oldToken, String newToken);
 
     boolean confirm(String token, String salt);
 

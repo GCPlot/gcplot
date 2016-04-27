@@ -12,11 +12,11 @@ public interface Identifier {
 
     long num();
 
-    default Identifier fromStr(String id) {
+    static Identifier fromStr(String id) {
         return new StringBasedIdentifier(id);
     }
 
-    default Identifier fromLong(long id) {
+    static Identifier fromLong(long id) {
         return new LongBasedIdentifier(id);
     }
 
@@ -41,7 +41,6 @@ public interface Identifier {
             StringBasedIdentifier that = (StringBasedIdentifier) o;
 
             return id.equals(that.id);
-
         }
 
         @Override
@@ -83,8 +82,28 @@ public interface Identifier {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            LongBasedIdentifier that = (LongBasedIdentifier) o;
+
+            return id == that.id;
+        }
+
+        @Override
+        public int hashCode() {
+            return (int) (id ^ (id >>> 32));
+        }
+
+        @Override
         public long num() {
             return id;
+        }
+
+        @Override
+        public String toString() {
+            return Long.toString(id);
         }
 
         public LongBasedIdentifier(long id) {

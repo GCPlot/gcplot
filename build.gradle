@@ -4,6 +4,8 @@ allprojects {
     apply plugin: "eclipse"
     apply plugin: "maven"
 
+    version="$gcplotVersion"
+
     repositories {
         mavenLocal()
         mavenCentral()
@@ -12,8 +14,8 @@ allprojects {
     dependencies {
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "org.slf4j:slf4j-log4j12:$log4jVersion"
+        compile "com.google.guava:guava:$guavaVersion"
 
-        testCompile "com.google.guava:guava:$guavaVersion"
         testCompile "junit:junit:$junitVersion"
         testCompile "org.easymock:easymock:$easymockVersion"
     }
@@ -24,7 +26,6 @@ allprojects {
         minHeapSize = "512m"
         maxParallelForks = forks
         forkEvery = 1
-        systemProperty 'protostuff.runtime.collection_schema_on_repeated_fields', 'true'
 
         testLogging {
             showExceptions = true

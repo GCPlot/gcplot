@@ -9,4 +9,14 @@ dependencies {
     compile project(":com.gcplot.commons")
     compile project(":com.gcplot.gc-analytics")
     compile project(":com.gcplot.log-processor")
+
+    compile "io.vertx:vertx-web:$vertxVersion"
+    compile "org.springframework:spring-context:$springVersion"
+    compile "org.springframework:spring-beans:$springVersion"
+    compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+    compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+    compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    compile "io.dropwizard.metrics:metrics-core:$metricsVersion"
+
+    testCompile "org.springframework:spring-test:$springVersion"
 }
