@@ -1,4 +1,4 @@
-package com.gcplot.model;
+package com.gcplot.accounts;
 
 import com.gcplot.Identifier;
 
@@ -15,6 +15,8 @@ public interface Account {
     String passHash();
 
     boolean isConfirmed();
+
+    boolean isBlocked();
 
     String confirmationSalt();
 }

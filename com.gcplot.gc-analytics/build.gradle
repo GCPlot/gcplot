@@ -1,4 +1,7 @@
 dependencies {
     compile project(":com.gcplot.commons")
     compile project(":com.gcplot.api")
+
+    compile "com.datastax.cassandra:cassandra-driver-core:$cassandraDriverVersion"
+    compile "com.datastax.cassandra:cassandra-driver-extras:$cassandraDriverVersion"
 }

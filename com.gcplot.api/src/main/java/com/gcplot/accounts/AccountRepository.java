@@ -1,4 +1,4 @@
-package com.gcplot.model;
+package com.gcplot.accounts;
 
 import com.gcplot.Identifier;
 
@@ -13,7 +13,7 @@ public interface AccountRepository {
 
     Optional<Account> account(String token);
 
-    Optional<Account> account(String username, String passHash);
+    Optional<Account> account(String username, String passHash, LoginType type);
 
     Account store(Account account);
 
@@ -22,5 +22,13 @@ public interface AccountRepository {
     boolean generateNewToken(String oldToken, String newToken);
 
     boolean confirm(String token, String salt);
+
+    void block(String username);
+
+    void unblock(String username);
+
+    enum LoginType {
+        USERNAME, EMAIL
+    }
 
 }

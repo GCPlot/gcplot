@@ -1,4 +1,4 @@
-package com.gcplot.model;
+package com.gcplot.accounts;
 
 import com.gcplot.Identifier;
 
@@ -61,6 +61,14 @@ public class AccountImpl implements Account {
     }
 
     @Override
+    public boolean isBlocked() {
+        return blocked;
+    }
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+    }
+
+    @Override
     public String confirmationSalt() {
         return confirmationSalt;
     }
@@ -109,5 +117,6 @@ public class AccountImpl implements Account {
     protected String token;
     protected String passHash;
     protected boolean confirmed;
+    protected boolean blocked;
     protected String confirmationSalt;
 }

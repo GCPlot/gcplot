@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+    <context:annotation-config/>
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
+    <bean class="com.codahale.metrics.MetricRegistry"/>
+    <bean id="vertx" class="io.vertx.core.Vertx" factory-method="vertx"/>
+    <bean id="orientDbPool" class="com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory"/>
+
+    <bean id="orientDbConfig" class="com.gcplot.accounts.orientdb.OrientDbConfig">
+        <constructor-arg value="${orientdb.connection.string}"/>
+        <constructor-arg value="${orientdb.user}"/>
+        <constructor-arg value="${orientdb.password}"/>
+    </bean>
+
+    <bean id="orientDbRepository" class="com.gcplot.accounts.orientdb.OrientDbRepository">
+        <constructor-arg ref="orientDbConfig"/>
+        <constructor-arg ref="orientDbPool"/>
+    </bean>
+
+
+
+</beans>
