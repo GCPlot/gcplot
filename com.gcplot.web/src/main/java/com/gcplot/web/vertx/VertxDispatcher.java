@@ -6,6 +6,7 @@ import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.HttpMethod;
 import com.gcplot.web.RequestContext;
+import com.google.common.base.Strings;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -136,8 +137,9 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
 
     @Override
-    public Dispatcher<String> filter(Predicate<RequestContext> filter) {
+    public Dispatcher<String> filter(Predicate<RequestContext> filter, String message) {
         this.filter = filter;
+        this.filterMessage = message;
         return this;
     }
 
@@ -201,8 +203,9 @@ public class VertxDispatcher implements Dispatcher<String> {
                         }
                         if (filter == null || filter.test(context)) {
                             handler.accept(routingContext, context);
-                        } else {
-                            routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED));
+                        } else if (!routingContext.response().ended()) {
+                            routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
+                                    Strings.nullToEmpty(filterMessage)));
                         }
                     }
                 } catch (Throwable t) {
@@ -240,6 +243,7 @@ public class VertxDispatcher implements Dispatcher<String> {
         requireAuth = true;
         requireConfirmed = false;
         filter = null;
+        filterMessage = null;
         mimeTypes = null;
     }
 
@@ -262,6 +266,7 @@ public class VertxDispatcher implements Dispatcher<String> {
     protected Consumer<RequestContext> preHandler;
     protected Consumer<RequestContext> postHandler;
     protected Predicate<RequestContext> filter;
+    protected String filterMessage;
 
     protected static final Logger LOG = LoggerFactory.getLogger(VertxDispatcher.class);
 

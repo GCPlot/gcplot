@@ -26,7 +26,10 @@ public class OrientDbRepositoryTest {
 
     @After
     public void tearDown() throws Exception {
-        new ODatabaseDocumentTx(config.connectionString).open(config.user, config.password).drop();
+        ODatabaseDocumentTx db = new ODatabaseDocumentTx(config.connectionString).open(config.user, config.password);
+        db.getMetadata().getSchema().dropClass("AccountImpl");
+        db.getMetadata().getSchema().dropClass("Filter");
+        db.drop();
     }
 
     @Test

@@ -14,7 +14,7 @@ public abstract class JsonSerializer {
 
     static {
         mapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, true);
-        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.OBJECT_AND_NON_CONCRETE);
+        mapper.disableDefaultTyping();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.PUBLIC_ONLY);
     }
 

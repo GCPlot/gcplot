@@ -36,6 +36,8 @@ public interface RequestContext {
 
     String param(String key);
 
+    boolean hasParam(String key);
+
     String mimeType();
 
     String query();

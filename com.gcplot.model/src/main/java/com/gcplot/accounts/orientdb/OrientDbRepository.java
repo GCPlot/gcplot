@@ -5,7 +5,9 @@ import com.gcplot.Identifier;
 import com.gcplot.accounts.Account;
 import com.gcplot.accounts.AccountImpl;
 import com.gcplot.accounts.AccountRepository;
+import com.gcplot.commons.Metrics;
 import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.filters.FiltersRepository;
 import com.google.common.collect.Lists;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
@@ -19,6 +21,7 @@ import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
+import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import com.orientechnologies.orient.object.db.OObjectDatabaseTx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +77,7 @@ public class OrientDbRepository implements AccountRepository, FiltersRepository 
 
     @Override
     public List<Account> accounts() {
-        metrics.counter(ALL_ACCOUNTS_METRIC).inc();
+        metrics.meter(ALL_ACCOUNTS_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             List<Account> l = db.query(new OSQLSynchQuery<>(ALL_ACCOUNTS_QUERY));
             l.forEach(i -> db.detachAll(i, true));
@@ -84,7 +87,7 @@ public class OrientDbRepository implements AccountRepository, FiltersRepository 
 
     @Override
     public Optional<Account> account(Identifier id) {
-        metrics.counter(ACCOUNT_METRIC).inc();
+        metrics.meter(ACCOUNT_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             Object oid = mapToEntityId(id.toString());
             if (oid != null) {
@@ -97,28 +100,32 @@ public class OrientDbRepository implements AccountRepository, FiltersRepository 
 
     @Override
     public Optional<Account> account(String token) {
-        metrics.counter(ACCOUNT_TOKEN_METRIC).inc();
+        metrics.meter(ACCOUNT_TOKEN_METRIC).mark();
         return singleByQuery(String.format(ACCOUNT_BY_TOKEN_QUERY, token));
     }
 
     @Override
     public Optional<Account> account(String username, String passHash, LoginType loginType) {
-        metrics.counter(ACCOUNT_METRIC).inc();
+        metrics.meter(ACCOUNT_METRIC).mark();
         return singleByQuery(String.format(ACCOUNT_BY_USERNAME_QUERY, loginType == LoginType.USERNAME ? "username" : "email",
                 username, passHash));
     }
 
     @Override
     public Account store(Account account) {
-        metrics.counter(ACCOUNT_STORE_METRIC).inc();
+        metrics.meter(ACCOUNT_STORE_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
-            return db.detachAll(db.save(account), true);
+            try {
+                return db.detachAll(db.save(account), true);
+            } catch (ORecordDuplicatedException e) {
+                throw new NotUniqueException(e.getMessage());
+            }
         }
     }
 
     @Override
     public void delete(Account account) {
-        metrics.counter(ACCOUNT_DELETE_METRIC).inc();
+        metrics.meter(ACCOUNT_DELETE_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             db.delete((ORID) ((AccountImpl) account).getOId());
         }
@@ -126,7 +133,7 @@ public class OrientDbRepository implements AccountRepository, FiltersRepository 
 
     @Override
     public boolean generateNewToken(String oldToken, String newToken) {
-        metrics.counter(ACCOUNT_NEW_TOKEN_METRIC).inc();
+        metrics.meter(ACCOUNT_NEW_TOKEN_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             db.begin();
             try {
@@ -146,7 +153,7 @@ public class OrientDbRepository implements AccountRepository, FiltersRepository 
 
     @Override
     public boolean confirm(String token, String salt) {
-        metrics.counter(ACCOUNT_CONFIRM_METRIC).inc();
+        metrics.meter(ACCOUNT_CONFIRM_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             db.begin();
             try {
@@ -308,13 +315,13 @@ public class OrientDbRepository implements AccountRepository, FiltersRepository 
     private static final String SET_BLOCKED_COMMAND = "update " + ACCOUNT_DOCUMENT_NAME +
             " set blocked=%s where username=\"%s\"";
 
-    private static final String POOL_ACQUIRE_METRIC = MetricRegistry.name(OrientDbRepository.class, "pool");
-    private static final String POOL_EXHAUSTED_METRIC = MetricRegistry.name(OrientDbRepository.class, "pool", "exhausted");
-    private static final String ALL_ACCOUNTS_METRIC = MetricRegistry.name(OrientDbRepository.class, "all_accounts");
-    private static final String ACCOUNT_METRIC = MetricRegistry.name(OrientDbRepository.class, "account");
-    private static final String ACCOUNT_TOKEN_METRIC = MetricRegistry.name(OrientDbRepository.class, "account", "token");
-    private static final String ACCOUNT_STORE_METRIC = MetricRegistry.name(OrientDbRepository.class, "account", "store");
-    private static final String ACCOUNT_DELETE_METRIC = MetricRegistry.name(OrientDbRepository.class, "account", "delete");
-    private static final String ACCOUNT_NEW_TOKEN_METRIC = MetricRegistry.name(OrientDbRepository.class, "account", "new_token");
-    private static final String ACCOUNT_CONFIRM_METRIC = MetricRegistry.name(OrientDbRepository.class, "account", "confirm");
+    private static final String POOL_ACQUIRE_METRIC = Metrics.name(OrientDbRepository.class, "pool");
+    private static final String POOL_EXHAUSTED_METRIC = Metrics.name(OrientDbRepository.class, "pool", "exhausted");
+    private static final String ALL_ACCOUNTS_METRIC = Metrics.name(OrientDbRepository.class, "all_accounts");
+    private static final String ACCOUNT_METRIC = Metrics.name(OrientDbRepository.class, "account");
+    private static final String ACCOUNT_TOKEN_METRIC = Metrics.name(OrientDbRepository.class, "account", "token");
+    private static final String ACCOUNT_STORE_METRIC = Metrics.name(OrientDbRepository.class, "account", "store");
+    private static final String ACCOUNT_DELETE_METRIC = Metrics.name(OrientDbRepository.class, "account", "delete");
+    private static final String ACCOUNT_NEW_TOKEN_METRIC = Metrics.name(OrientDbRepository.class, "account", "new_token");
+    private static final String ACCOUNT_CONFIRM_METRIC = Metrics.name(OrientDbRepository.class, "account", "confirm");
 }

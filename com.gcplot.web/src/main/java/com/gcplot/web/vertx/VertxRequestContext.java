@@ -3,6 +3,7 @@ package com.gcplot.web.vertx;
 import com.gcplot.accounts.Account;
 import com.gcplot.accounts.AccountRepository;
 import com.gcplot.commons.serialization.JsonSerializer;
+import com.gcplot.messages.Wrapper;
 import com.gcplot.web.*;
 import io.vertx.ext.web.RoutingContext;
 
@@ -13,7 +14,7 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public void response(Object response) {
-        context.response().end(JsonSerializer.serialize(response));
+        context.response().end(JsonSerializer.serialize(new Wrapper(response)));
     }
 
     @Override
@@ -28,6 +29,7 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public void mimeType(String mimeType) {
+        context.response().end();
         context.response().putHeader("Content-Type", mimeType);
     }
 
@@ -98,6 +100,11 @@ public class VertxRequestContext implements RequestContext {
     @Override
     public String param(String key) {
         return context.request().getParam(key);
+    }
+
+    @Override
+    public boolean hasParam(String key) {
+        return param(key) != null;
     }
 
     @Override

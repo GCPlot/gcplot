@@ -8,6 +8,7 @@ import com.gcplot.accounts.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.serialization.JsonSerializer;
+import com.gcplot.messages.Wrapper;
 import com.gcplot.web.Constants;
 import com.gcplot.web.LoginInfo;
 import io.vertx.core.Vertx;
@@ -101,12 +102,12 @@ public class VertxDispatcherTest {
         CountDownLatch getMe = new CountDownLatch(1);
         client.get(port, HOST, "/get/me", c -> {
             c.bodyHandler(b -> {
-                if (response.equals(JsonSerializer.deserialize(b.toString(), TestEntity.class)))
+                if (b.toString().equals("{\"result\":{\"num\":5,\"str\":\"VertxDisp\",\"nums\":[3,4,5]}}"))
                     getMe.countDown();
             });
         }).putHeader(Constants.AUTH_TOKEN_HEADER, _token[0]).end();
 
-        Assert.assertTrue(getMe.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(getMe.await(30, TimeUnit.SECONDS));
     }
 
     protected void httpGet(HttpClient client, String path, Predicate<JsonObject> test) throws Exception {

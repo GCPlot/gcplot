@@ -46,7 +46,7 @@ public interface Dispatcher<Route> extends Closeable {
 
     Dispatcher<Route> requireConfirmed();
 
-    Dispatcher<Route> filter(Predicate<RequestContext> filter);
+    Dispatcher<Route> filter(Predicate<RequestContext> filter, String message);
 
     Dispatcher<Route> mimeTypes(String... mimeTypes);
 
