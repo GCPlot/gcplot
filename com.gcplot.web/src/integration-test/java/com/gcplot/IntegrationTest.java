@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 public abstract class IntegrationTest {
@@ -45,12 +46,7 @@ public abstract class IntegrationTest {
         dbName = Utils.getRandomIdentifier();
         database = new ODatabaseDocumentTx("memory:" + dbName).create();
 
-        tempDir = Files.createTempDir();
-        port = Utils.getFreePorts(1)[0];
-        StringBuilder sb = new StringBuilder();
-        sb.append("bootstrap.server.port=" + port).append('\n');
-        sb.append("orientdb.connection.string=memory:" + dbName);
-        Files.write(sb.toString(), new File(tempDir, "gcplot.properties"), Charset.forName("UTF-8"));
+        makeTestPropertiesFile();
         bootstrap = new Bootstrap();
         bootstrap.hang = false;
         bootstrap.configDir = tempDir.getAbsolutePath();
@@ -70,6 +66,15 @@ public abstract class IntegrationTest {
             LOG.error(t.getMessage(), t);
         }
         getBean(Dispatcher.class).close();
+    }
+
+    protected void makeTestPropertiesFile() throws IOException {
+        tempDir = Files.createTempDir();
+        port = Utils.getFreePorts(1)[0];
+        StringBuilder sb = new StringBuilder();
+        sb.append("bootstrap.server.port=" + port).append('\n');
+        sb.append("orientdb.connection.string=memory:" + dbName);
+        Files.write(sb.toString(), new File(tempDir, "gcplot.properties"), Charset.forName("UTF-8"));
     }
 
     public void intercept() {

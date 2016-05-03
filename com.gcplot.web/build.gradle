@@ -24,6 +24,19 @@ task integrationTest(type: Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
+integrationTest {
+    minHeapSize = "512m"
+    maxParallelForks = 4
+    forkEvery = 1
+
+    testLogging {
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}
+
 dependencies {
     compile project(":com.gcplot.model")
     compile project(":com.gcplot.api")
