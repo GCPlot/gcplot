@@ -1,6 +1,7 @@
 package com.gcplot.web.vertx;
 
 import com.gcplot.accounts.AccountRepository;
+import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.HttpMethod;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class VertxDispatcher implements Dispatcher<String> {
 
@@ -127,6 +129,19 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
 
     @Override
+    public Dispatcher<String> requireConfirmed() {
+        this.requireConfirmed = true;
+        this.requireAuth = true;
+        return this;
+    }
+
+    @Override
+    public Dispatcher<String> filter(Predicate<RequestContext> filter) {
+        this.filter = filter;
+        return this;
+    }
+
+    @Override
     public Dispatcher<String> mimeTypes(String... mimeTypes) {
         this.mimeTypes = mimeTypes;
         return this;
@@ -170,20 +185,25 @@ public class VertxDispatcher implements Dispatcher<String> {
                 }
             }
             final boolean auth = requireAuth;
+            final boolean confirmation = requireConfirmed;
+            final Predicate<RequestContext> filter = this.filter;
             final Handler<RoutingContext> r = routingContext -> {
                 VertxRequestContext context = contexts.get().reset(routingContext);
                 try {
                     if (preHandler != null) {
                         preHandler.accept(context);
                     }
-                    if (auth) {
-                        if (context.loginInfo().isPresent()) {
+                    if (auth && !context.loginInfo().isPresent()) {
+                        routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
+                    } else {
+                        if (confirmation && !context.loginInfo().get().getAccount().isConfirmed()) {
+                            routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
+                        }
+                        if (filter == null || filter.test(context)) {
                             handler.accept(routingContext, context);
                         } else {
-                            routingContext.response().setStatusCode(403);
+                            routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED));
                         }
-                    } else {
-                        handler.accept(routingContext, context);
                     }
                 } catch (Throwable t) {
                     if (exceptionHandler != null) {
@@ -193,7 +213,11 @@ public class VertxDispatcher implements Dispatcher<String> {
                     }
                 } finally {
                     if (postHandler != null) {
-                        postHandler.accept(context);
+                        try {
+                            postHandler.accept(context);
+                        } catch (Throwable t) {
+                            LOG.error("DISPATCH POST HANDLE: ", t);
+                        }
                     }
                     if (!routingContext.response().ended()) {
                         routingContext.response().end();
@@ -214,6 +238,8 @@ public class VertxDispatcher implements Dispatcher<String> {
     protected void reset() {
         blocking = false;
         requireAuth = true;
+        requireConfirmed = false;
+        filter = null;
         mimeTypes = null;
     }
 
@@ -230,10 +256,12 @@ public class VertxDispatcher implements Dispatcher<String> {
 
     protected boolean blocking = false;
     protected boolean requireAuth = true;
+    protected boolean requireConfirmed = false;
     protected String[] mimeTypes;
     protected BiConsumer<Throwable, RequestContext> exceptionHandler;
     protected Consumer<RequestContext> preHandler;
     protected Consumer<RequestContext> postHandler;
+    protected Predicate<RequestContext> filter;
 
     protected static final Logger LOG = LoggerFactory.getLogger(VertxDispatcher.class);
 

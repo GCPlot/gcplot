@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import java.io.Closeable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public interface Dispatcher<Route> extends Closeable {
 
@@ -42,6 +43,10 @@ public interface Dispatcher<Route> extends Closeable {
     Dispatcher<Route> noAuth();
 
     Dispatcher<Route> requireAuth();
+
+    Dispatcher<Route> requireConfirmed();
+
+    Dispatcher<Route> filter(Predicate<RequestContext> filter);
 
     Dispatcher<Route> mimeTypes(String... mimeTypes);
 

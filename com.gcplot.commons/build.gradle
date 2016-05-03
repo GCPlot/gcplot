@@ -2,4 +2,5 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
     compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
     compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    compile "net.sf.trove4j:trove4j:$troveVersion"
 }
