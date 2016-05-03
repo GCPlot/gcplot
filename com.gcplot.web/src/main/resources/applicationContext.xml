@@ -17,11 +17,24 @@
         <constructor-arg value="${orientdb.password}"/>
     </bean>
 
-    <bean id="orientDbRepository" class="com.gcplot.accounts.orientdb.OrientDbRepository">
+    <bean id="orientDbRepository" class="com.gcplot.accounts.orientdb.OrientDbRepository" init-method="init"
+          destroy-method="destroy">
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>
     </bean>
 
+    <bean id="mailService" class="com.gcplot.mail.MailService"/>
 
+    <bean id="dispatcher" class="com.gcplot.web.vertx.VertxDispatcher" init-method="init" destroy-method="close">
+        <property name="vertx" ref="vertx"/>
+        <property name="accountRepository" ref="orientDbRepository"/>
+        <property name="host" value="${bootstrap.server.host}"/>
+        <property name="port" value="${bootstrap.server.port}"/>
+        <property name="maxUploadSize" value="1073741824"/>
+    </bean>
+
+    <!-- CONTROLLERS -->
+
+    <bean id="loginController" class="com.gcplot.controllers.LoginController"/>
 
 </beans>

@@ -21,7 +21,6 @@ public abstract class Controller {
     public Dispatcher<String> getDispatcher() {
         return dispatcher;
     }
-    @Required
     @Autowired
     public void setDispatcher(Dispatcher<String> dispatcher) {
         this.dispatcher = dispatcher;
@@ -40,7 +39,6 @@ public abstract class Controller {
     public MetricRegistry getMetrics() {
         return metrics;
     }
-    @Required
     @Autowired
     public void setMetrics(MetricRegistry metrics) {
         this.metrics = metrics;

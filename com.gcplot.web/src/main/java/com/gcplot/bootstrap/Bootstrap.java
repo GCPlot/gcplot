@@ -17,13 +17,15 @@ public class Bootstrap {
     private static final Logger LOG = LoggerFactory.getLogger(Bootstrap.class);
     public static final String GCPLOT_CONFIG_DIR_ENV = "GCPLOT_CONFIG_DIR";
 
-    protected static ApplicationContext applicationContext;
-    public static ApplicationContext getApplicationContext() {
+    protected ApplicationContext applicationContext;
+    public ApplicationContext getApplicationContext() {
         return applicationContext;
     }
 
-    @Parameter(names = "-config_dir")
-    private String configDir;
+    @Parameter(names = { "-cfg", "--confir_dir" })
+    public String configDir;
+    @Parameter(names = { "-h", "--hang" })
+    public boolean hang = true;
 
     public static void main(String[] args) throws Exception {
         Bootstrap bootstrap = new Bootstrap();
@@ -31,7 +33,7 @@ public class Bootstrap {
         bootstrap.run();
     }
 
-    private void run() throws Exception {
+    public void run() throws Exception {
         Properties properties = new Properties();
         try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("gcplot.properties")) {
             LOG.info("Loading properties from bundled properties file.");
@@ -60,9 +62,8 @@ public class Bootstrap {
         applicationContext = new FileSystemXmlApplicationContext(new String[] {
                 "file:" + new File(resource.toURI()).getAbsolutePath()
         }, true);
-        Thread.sleep(Long.MAX_VALUE);
-    }
-
-    private Bootstrap() {
+        if (hang) {
+            Thread.sleep(Long.MAX_VALUE);
+        }
     }
 }

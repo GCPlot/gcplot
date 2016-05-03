@@ -3,6 +3,27 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integration-test/java')
+        }
+        resources.srcDir file('src/integration-test/resources')
+    }
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+}
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
 dependencies {
     compile project(":com.gcplot.model")
     compile project(":com.gcplot.api")
@@ -19,4 +40,11 @@ dependencies {
     compile "org.apache.commons:commons-email:$apacheMailVersion"
 
     testCompile "org.springframework:spring-test:$springVersion"
+}
+
+check.dependsOn integrationTest
+integrationTest.mustRunAfter test
+
+tasks.withType(Test) {
+    reports.html.destination = file("${reporting.baseDir}/${name}")
 }
