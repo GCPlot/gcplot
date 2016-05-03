@@ -189,23 +189,27 @@ public class VertxDispatcher implements Dispatcher<String> {
             final boolean auth = requireAuth;
             final boolean confirmation = requireConfirmed;
             final Predicate<RequestContext> filter = this.filter;
-            final Handler<RoutingContext> r = routingContext -> {
-                VertxRequestContext context = contexts.get().reset(routingContext);
+            final Handler<RoutingContext> r = rc -> {
+                VertxRequestContext context = contexts.get().reset(rc);
                 try {
                     if (preHandler != null) {
                         preHandler.accept(context);
                     }
-                    if (auth && !context.loginInfo().isPresent()) {
-                        routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
+                    if (context.loginInfo().isPresent() && context.loginInfo().get().getAccount().isBlocked()) {
+                        rc.response().end(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
                     } else {
-                        if (confirmation && !context.loginInfo().get().getAccount().isConfirmed()) {
-                            routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
-                        }
-                        if (filter == null || filter.test(context)) {
-                            handler.accept(routingContext, context);
-                        } else if (!routingContext.response().ended()) {
-                            routingContext.response().end(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
-                                    Strings.nullToEmpty(filterMessage)));
+                        if (auth && !context.loginInfo().isPresent()) {
+                            rc.response().end(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
+                        } else {
+                            if (confirmation && !context.loginInfo().get().getAccount().isConfirmed()) {
+                                rc.response().end(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
+                            }
+                            if (filter == null || filter.test(context)) {
+                                handler.accept(rc, context);
+                            } else if (!rc.response().ended()) {
+                                rc.response().end(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
+                                        Strings.nullToEmpty(filterMessage)));
+                            }
                         }
                     }
                 } catch (Throwable t) {
@@ -222,8 +226,8 @@ public class VertxDispatcher implements Dispatcher<String> {
                             LOG.error("DISPATCH POST HANDLE: ", t);
                         }
                     }
-                    if (!routingContext.response().ended()) {
-                        routingContext.response().end();
+                    if (!rc.response().ended()) {
+                        rc.response().end();
                     }
                 }
             };

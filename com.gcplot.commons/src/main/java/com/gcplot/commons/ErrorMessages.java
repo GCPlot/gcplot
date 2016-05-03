@@ -12,6 +12,7 @@ public class ErrorMessages {
     public static final long WRONG_CREDENTIALS = 0x126;
     public static final long INTERNAL_ERROR = 0x1F4;
     public static final long NOT_UNIQUE_FIELDS = 0x127;
+    public static final long USER_IS_BLOCKED = 0x128;
 
     public static String buildJson(long code) {
         ObjectNode node = new ObjectNode(JSON_NODE_FACTORY);
@@ -36,6 +37,7 @@ public class ErrorMessages {
         errorMessages.put(WRONG_CREDENTIALS, "Wrong credentials, try again.");
         errorMessages.put(INTERNAL_ERROR, "Internal error.");
         errorMessages.put(NOT_UNIQUE_FIELDS, "One of the fields are already presented.");
+        errorMessages.put(USER_IS_BLOCKED, "User is blocked.");
     }
 
     private static final JsonNodeFactory JSON_NODE_FACTORY = JsonNodeFactory.instance;
