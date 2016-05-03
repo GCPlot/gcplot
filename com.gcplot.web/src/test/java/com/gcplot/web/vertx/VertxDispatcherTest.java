@@ -2,13 +2,11 @@ package com.gcplot.web.vertx;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.gcplot.accounts.Account;
 import com.gcplot.accounts.AccountImpl;
 import com.gcplot.accounts.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
-import com.gcplot.commons.serialization.JsonSerializer;
-import com.gcplot.messages.Wrapper;
 import com.gcplot.web.Constants;
 import com.gcplot.web.LoginInfo;
 import io.vertx.core.Vertx;
@@ -96,7 +94,8 @@ public class VertxDispatcherTest {
         }).end();
         Assert.assertTrue(auth.await(3, TimeUnit.SECONDS));
 
-        expect(accountRepository.account(token)).andReturn(Optional.of(new AccountImpl()));
+        Account fakeAccount = new AccountImpl();
+        expect(accountRepository.account(token)).andReturn(Optional.of(fakeAccount)).anyTimes();
         replay(accountRepository);
 
         CountDownLatch getMe = new CountDownLatch(1);
@@ -107,7 +106,7 @@ public class VertxDispatcherTest {
             });
         }).putHeader(Constants.AUTH_TOKEN_HEADER, _token[0]).end();
 
-        Assert.assertTrue(getMe.await(30, TimeUnit.SECONDS));
+        Assert.assertTrue(getMe.await(3, TimeUnit.SECONDS));
     }
 
     protected void httpGet(HttpClient client, String path, Predicate<JsonObject> test) throws Exception {
@@ -118,7 +117,7 @@ public class VertxDispatcherTest {
                 l.countDown();
             }
         })).end();
-        Assert.assertTrue(l.await(300, TimeUnit.SECONDS));
+        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
     }
 
     protected int port;
