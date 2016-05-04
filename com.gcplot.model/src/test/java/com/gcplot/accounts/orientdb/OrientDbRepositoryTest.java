@@ -26,15 +26,12 @@ public class OrientDbRepositoryTest {
 
     @After
     public void tearDown() throws Exception {
-        ODatabaseDocumentTx db = new ODatabaseDocumentTx(config.connectionString).open(config.user, config.password);
-        db.getMetadata().getSchema().dropClass("AccountImpl");
-        db.getMetadata().getSchema().dropClass("Filter");
-        db.drop();
+        new ODatabaseDocumentTx(config.connectionString).open(config.user, config.password).drop();
     }
 
     @Test
     public void test() throws Exception {
-        OrientDbRepository repository = new OrientDbRepository(config, new OPartitionedDatabasePoolFactory());
+        AccountOrientDbRepository repository = new AccountOrientDbRepository(config, new OPartitionedDatabasePoolFactory());
         repository.init();
         Assert.assertFalse(repository.account("token").isPresent());
         AccountImpl account = AccountImpl.createNew("abc", "artem@reveno.org", "token", "pass", "salt");
@@ -63,7 +60,7 @@ public class OrientDbRepositoryTest {
 
     @Test
     public void testFilters() throws Exception {
-        OrientDbRepository repository = new OrientDbRepository(config, new OPartitionedDatabasePoolFactory());
+        FiltersOrientDbRepository repository = new FiltersOrientDbRepository(config, new OPartitionedDatabasePoolFactory());
         repository.init();
         Assert.assertEquals(0, repository.getAllFiltered("type1").size());
         repository.filter("type1", "value1");
