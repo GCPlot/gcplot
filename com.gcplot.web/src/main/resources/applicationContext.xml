@@ -7,7 +7,7 @@
     <context:annotation-config/>
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-    <bean class="com.codahale.metrics.MetricRegistry"/>
+    <bean id="metrics" class="com.codahale.metrics.MetricRegistry"/>
     <bean id="vertx" class="io.vertx.core.Vertx" factory-method="vertx"/>
     <bean id="orientDbPool" class="com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory"/>
 
@@ -17,23 +17,33 @@
         <constructor-arg value="${orientdb.password}"/>
     </bean>
 
-    <bean id="accountOrientDbRepository" class="com.gcplot.accounts.orientdb.AccountOrientDbRepository" init-method="init"
+    <bean id="accountRepository" class="com.gcplot.accounts.orientdb.AccountOrientDbRepository" init-method="init"
           destroy-method="destroy">
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>
+        <property name="metrics" ref="metrics"/>
     </bean>
 
-    <bean id="filtersOrientDbRepository" class="com.gcplot.accounts.orientdb.FiltersOrientDbRepository" init-method="init"
+    <bean id="filtersRepository" class="com.gcplot.accounts.orientdb.FiltersOrientDbRepository" init-method="init"
           destroy-method="destroy">
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>
+        <property name="metrics" ref="metrics"/>
+    </bean>
+
+    <bean id="configurationManager" class="com.gcplot.accounts.orientdb.OrientDbConfigurationManager"
+          init-method="init" destroy-method="destroy">
+        <constructor-arg ref="orientDbConfig"/>
+        <constructor-arg ref="orientDbPool"/>
+        <property name="metrics" ref="metrics"/>
+        <property name="pullIntervalMs" value="${config.pull.interval.ms}"/>
     </bean>
 
     <bean id="mailService" class="com.gcplot.mail.MailService"/>
 
     <bean id="dispatcher" class="com.gcplot.web.vertx.VertxDispatcher" init-method="init" destroy-method="close">
         <property name="vertx" ref="vertx"/>
-        <property name="accountRepository" ref="accountOrientDbRepository"/>
+        <property name="accountRepository" ref="accountRepository"/>
         <property name="host" value="${bootstrap.server.host}"/>
         <property name="port" value="${bootstrap.server.port}"/>
         <property name="maxUploadSize" value="1073741824"/>
