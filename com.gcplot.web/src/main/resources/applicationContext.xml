@@ -9,7 +9,9 @@
 
     <bean id="metrics" class="com.codahale.metrics.MetricRegistry"/>
     <bean id="vertx" class="io.vertx.core.Vertx" factory-method="vertx"/>
-    <bean id="orientDbPool" class="com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory"/>
+    <bean id="orientDbPool" class="com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory">
+        <constructor-arg value="${orientdb.pool.size}"/>
+    </bean>
 
     <bean id="orientDbConfig" class="com.gcplot.accounts.orientdb.OrientDbConfig">
         <constructor-arg value="${orientdb.connection.string}"/>
