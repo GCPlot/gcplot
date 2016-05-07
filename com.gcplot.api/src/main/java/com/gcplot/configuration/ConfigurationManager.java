@@ -1,27 +1,19 @@
 package com.gcplot.configuration;
 
+import com.gcplot.commons.Configuration;
+
 public interface ConfigurationManager {
 
-    String readString(String key);
+    String readString(Configuration configuration);
 
-    String readString(String key, String defaultValue);
+    int readInt(Configuration configuration);
 
-    Integer readInt(String key);
+    long readLong(Configuration configuration);
 
-    int readInt(String key, int defaultValue);
+    boolean readBoolean(Configuration configuration);
 
-    Long readLong(String key);
+    double readDouble(Configuration configuration);
 
-    long readLong(String key, long defaultValue);
-
-    Boolean readBoolean(String key);
-
-    boolean readBoolean(String key, boolean defaultValue);
-
-    Double readDouble(String key);
-
-    double readDouble(String key, double defaultValue);
-
-    void putProperty(String key, Object value);
+    void putProperty(Configuration key, Object value);
 
 }

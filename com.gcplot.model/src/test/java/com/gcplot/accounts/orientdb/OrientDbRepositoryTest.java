@@ -3,6 +3,7 @@ package com.gcplot.accounts.orientdb;
 import com.gcplot.accounts.Account;
 import com.gcplot.accounts.AccountImpl;
 import com.gcplot.accounts.AccountRepository;
+import com.gcplot.commons.Configuration;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import org.junit.After;
@@ -78,17 +79,17 @@ public class OrientDbRepositoryTest {
         OrientDbConfigurationManager cm = new OrientDbConfigurationManager(config, new OPartitionedDatabasePoolFactory());
         cm.init();
 
-        cm.putProperty("test", "value");
-        cm.putProperty("primitive", 16.0);
-        Assert.assertEquals("value", cm.readString("test"));
-        Assert.assertEquals(16.0, cm.readDouble("primitive"), 0.0001);
+        cm.putProperty(Configuration.TEST1_CONFIG, "value");
+        cm.putProperty(Configuration.POLL_INTERVAL, 16);
+        Assert.assertEquals("value", cm.readString(Configuration.TEST1_CONFIG));
+        Assert.assertEquals(16, cm.readInt(Configuration.POLL_INTERVAL));
 
         cm.destroy();
 
         cm = new OrientDbConfigurationManager(config, new OPartitionedDatabasePoolFactory());
         cm.init();
-        Assert.assertEquals("value", cm.readString("test"));
-        Assert.assertEquals(16.0, cm.readDouble("primitive"), 0.0001);
+        Assert.assertEquals("value", cm.readString(Configuration.TEST1_CONFIG));
+        Assert.assertEquals(16, cm.readInt(Configuration.POLL_INTERVAL));
         cm.destroy();
     }
 

@@ -1,5 +1,6 @@
 package com.gcplot.accounts.orientdb;
 
+import com.gcplot.commons.Configuration;
 import com.gcplot.configuration.ConfigurationManager;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
@@ -68,69 +69,41 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
     }
 
     @Override
-    public String readString(String key) {
-        return (String) configs.get(key);
+    public String readString(Configuration configuration) {
+        return (String) configs.getOrDefault(configuration.getKey(), configuration.getDefaultValue());
     }
 
     @Override
-    public String readString(String key, String defaultValue) {
-        return (String) configs.getOrDefault(key, defaultValue);
+    public int readInt(Configuration configuration) {
+        Number n = (Number) configs.get(configuration.getKey());
+        return n == null ? (int) configuration.getDefaultValue() : n.intValue();
     }
 
     @Override
-    public Integer readInt(String key) {
-        Number n = (Number) configs.get(key);
-        return n == null ? null : n.intValue();
+    public long readLong(Configuration configuration) {
+        Number n = (Number) configs.get(configuration.getKey());
+        return n == null ? (long) configuration.getDefaultValue() : n.longValue();
     }
 
     @Override
-    public int readInt(String key, int defaultValue) {
-        Number n = (Number) configs.get(key);
-        return n == null ? defaultValue : n.intValue();
+    public boolean readBoolean(Configuration configuration) {
+        return (boolean) configs.getOrDefault(configuration.getKey(), configuration.getDefaultValue());
     }
 
     @Override
-    public Long readLong(String key) {
-        Number n = (Number) configs.get(key);
-        return n == null ? null : n.longValue();
+    public double readDouble(Configuration configuration) {
+        Number n = (Number) configs.get(configuration.getKey());
+        return n == null ? (double) configuration.getDefaultValue() : n.doubleValue();
     }
 
     @Override
-    public long readLong(String key, long defaultValue) {
-        Number n = (Number) configs.get(key);
-        return n == null ? defaultValue : n.longValue();
-    }
-
-    @Override
-    public Boolean readBoolean(String key) {
-        return (boolean) configs.get(key);
-    }
-
-    @Override
-    public boolean readBoolean(String key, boolean defaultValue) {
-        return (boolean) configs.getOrDefault(key, defaultValue);
-    }
-
-    @Override
-    public Double readDouble(String key) {
-        Number n = (Number) configs.get(key);
-        return n == null ? null : n.doubleValue();
-    }
-
-    @Override
-    public double readDouble(String key, double defaultValue) {
-        Number n = (Number) configs.get(key);
-        return n == null ? defaultValue : n.doubleValue();
-    }
-
-    @Override
-    public void putProperty(String key, Object value) {
+    public void putProperty(Configuration key, Object value) {
         putLock.readLock().lock();
         try {
-            configs.put(key, value);
+            configs.put(key.getKey(), value);
             String val = value.getClass().equals(String.class) ? "\"" + value + "\"" : value.toString();
             try (ODatabaseDocumentTx db = docDb()) {
-                db.command(new OCommandSQL(String.format(UPDATE_COMMAND, key, val))).execute();
+                db.command(new OCommandSQL(String.format(UPDATE_COMMAND, key.getKey(), val))).execute();
             }
         } finally {
             putLock.readLock().unlock();
