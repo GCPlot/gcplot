@@ -43,18 +43,16 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
                         " SET id = " + DEFAULT_ID + ", map={}")).execute();
             }
             fetchFromDb(db);
-            if (pullIntervalMs > 0) {
-                executor.scheduleAtFixedRate(() -> {
-                    putLock.writeLock().lock();
-                    try {
-                        try (ODatabaseDocumentTx _db = docDb()) {
-                            fetchFromDb(_db);
-                        }
-                    } finally {
-                        putLock.writeLock().unlock();
+            executor.scheduleAtFixedRate(() -> {
+                putLock.writeLock().lock();
+                try {
+                    try (ODatabaseDocumentTx _db = docDb()) {
+                        fetchFromDb(_db);
                     }
-                }, pullIntervalMs, pullIntervalMs, TimeUnit.MILLISECONDS);
-            }
+                } finally {
+                    putLock.writeLock().unlock();
+                }
+            }, readLong(Configuration.POLL_INTERVAL), readLong(Configuration.POLL_INTERVAL), TimeUnit.MILLISECONDS);
         }
     }
 
@@ -76,13 +74,13 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
     @Override
     public int readInt(Configuration configuration) {
         Number n = (Number) configs.get(configuration.getKey());
-        return n == null ? (int) configuration.getDefaultValue() : n.intValue();
+        return n == null ? ((Number) configuration.getDefaultValue()).intValue() : n.intValue();
     }
 
     @Override
     public long readLong(Configuration configuration) {
         Number n = (Number) configs.get(configuration.getKey());
-        return n == null ? (long) configuration.getDefaultValue() : n.longValue();
+        return n == null ? ((Number) configuration.getDefaultValue()).longValue() : n.longValue();
     }
 
     @Override
@@ -93,7 +91,7 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
     @Override
     public double readDouble(Configuration configuration) {
         Number n = (Number) configs.get(configuration.getKey());
-        return n == null ? (double) configuration.getDefaultValue() : n.doubleValue();
+        return n == null ? ((Number) configuration.getDefaultValue()).doubleValue() : n.doubleValue();
     }
 
     @Override
@@ -118,11 +116,6 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
         if (docs.size() > 0) {
             configs = new ConcurrentHashMap<>(docs.get(0).field("map"));
         }
-    }
-
-    protected long pullIntervalMs;
-    public void setPullIntervalMs(long pullIntervalMs) {
-        this.pullIntervalMs = pullIntervalMs;
     }
 
     protected ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();

@@ -2,7 +2,7 @@ package com.gcplot.commons;
 
 public enum Configuration {
 
-    POLL_INTERVAL("config.poll.interval", 60000),
+    POLL_INTERVAL("config.poll.interval", 15000),
     TEST1_CONFIG("test.config.1", "test");
 
     private String key;
