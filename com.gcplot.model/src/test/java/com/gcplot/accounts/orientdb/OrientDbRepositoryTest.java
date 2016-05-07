@@ -73,4 +73,23 @@ public class OrientDbRepositoryTest {
         repository.destroy();
     }
 
+    @Test
+    public void testConfigs() throws Exception {
+        OrientDbConfigurationManager cm = new OrientDbConfigurationManager(config, new OPartitionedDatabasePoolFactory());
+        cm.init();
+
+        cm.putProperty("test", "value");
+        cm.putProperty("primitive", 16.0);
+        Assert.assertEquals("value", cm.readString("test"));
+        Assert.assertEquals(16.0, cm.readDouble("primitive"), 0.0001);
+
+        cm.destroy();
+
+        cm = new OrientDbConfigurationManager(config, new OPartitionedDatabasePoolFactory());
+        cm.init();
+        Assert.assertEquals("value", cm.readString("test"));
+        Assert.assertEquals(16.0, cm.readDouble("primitive"), 0.0001);
+        cm.destroy();
+    }
+
 }
