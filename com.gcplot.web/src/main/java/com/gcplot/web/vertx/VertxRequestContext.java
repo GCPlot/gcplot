@@ -7,6 +7,7 @@ import com.gcplot.messages.Wrapper;
 import com.gcplot.web.*;
 import io.vertx.ext.web.RoutingContext;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,13 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public void write(String value) {
+        byte[] response = new byte[0];
+        try {
+            response = value.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        context.response().putHeader("Content-Length", response.length + "");
         context.response().write(value);
     }
 

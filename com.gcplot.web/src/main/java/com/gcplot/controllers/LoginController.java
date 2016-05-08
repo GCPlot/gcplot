@@ -22,10 +22,11 @@ public class LoginController extends Controller {
     @Override
     public void init() {
         super.init();
-        dispatcher.filter(c -> c.hasParam("username") && c.hasParam("password"),
+        dispatcher.noAuth().filter(c -> c.hasParam("username") && c.hasParam("password"),
                 "Username and password are required!").get("/user/login", this::login);
-        dispatcher.post("/user/register", RegisterRequest.class, this::register);
-        dispatcher.requireAuth().get("/user/confirm", this::confirm);
+        dispatcher.noAuth().post("/user/register", RegisterRequest.class, this::register);
+        dispatcher.requireAuth().filter(c -> c.hasParam("salt"),
+                "Salt should be provided!").get("/user/confirm", this::confirm);
     }
 
     public void login(RequestContext request) {
@@ -61,8 +62,7 @@ public class LoginController extends Controller {
     }
 
     public void confirm(RequestContext context) {
-        if (getAccountRepository().confirm(context.loginInfo().get().token(),
-                context.loginInfo().get().getAccount().confirmationSalt())) {
+        if (getAccountRepository().confirm(context.loginInfo().get().token(), context.param("salt"))) {
             context.response(SUCCESS);
         } else {
             context.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR, String.format("Can't confirm user with token %s and salt %s", context.loginInfo().get().token(),
