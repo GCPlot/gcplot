@@ -1,6 +1,6 @@
 package com.gcplot.commons;
 
-public enum Configuration {
+public enum ConfigProperty {
 
     POLL_INTERVAL("config.poll.interval", 15000),
     TEST1_CONFIG("test.config.1", "test");
@@ -15,7 +15,7 @@ public enum Configuration {
         return defaultValue;
     }
 
-    Configuration(String key, Object defaultValue) {
+    ConfigProperty(String key, Object defaultValue) {
         this.key = key;
         this.defaultValue = defaultValue;
     }

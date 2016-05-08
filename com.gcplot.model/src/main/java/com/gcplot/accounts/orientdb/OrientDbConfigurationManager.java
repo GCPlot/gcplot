@@ -1,6 +1,6 @@
 package com.gcplot.accounts.orientdb;
 
-import com.gcplot.commons.Configuration;
+import com.gcplot.commons.ConfigProperty;
 import com.gcplot.configuration.ConfigurationManager;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
@@ -35,12 +35,12 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
             OSchema schema = db.getMetadata().getSchema();
             if (!schema.existsClass(GCP_CONFIG)) {
                 OClass newClass = schema.createClass(GCP_CONFIG);
-                newClass.createProperty("id", OType.INTEGER);
+                newClass.createProperty("hg", OType.STRING);
                 newClass.createProperty("map", OType.EMBEDDEDMAP);
-                newClass.createIndex("id.unq", OClass.INDEX_TYPE.UNIQUE, "id");
+                newClass.createIndex("hg.unq", OClass.INDEX_TYPE.UNIQUE, "hg");
                 db.commit(true);
                 db.command(new OCommandSQL("INSERT INTO " + GCP_CONFIG +
-                        " SET id = " + DEFAULT_ID + ", map={}")).execute();
+                        " SET hg=\"" + hostGroup + "\", map={}")).execute();
             }
             fetchFromDb(db);
             executor.scheduleAtFixedRate(() -> {
@@ -52,7 +52,7 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
                 } finally {
                     putLock.writeLock().unlock();
                 }
-            }, readLong(Configuration.POLL_INTERVAL), readLong(Configuration.POLL_INTERVAL), TimeUnit.MILLISECONDS);
+            }, readLong(ConfigProperty.POLL_INTERVAL), readLong(ConfigProperty.POLL_INTERVAL), TimeUnit.MILLISECONDS);
         }
     }
 
@@ -67,41 +67,41 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
     }
 
     @Override
-    public String readString(Configuration configuration) {
-        return (String) configs.getOrDefault(configuration.getKey(), configuration.getDefaultValue());
+    public String readString(ConfigProperty configProperty) {
+        return (String) configs.getOrDefault(configProperty.getKey(), configProperty.getDefaultValue());
     }
 
     @Override
-    public int readInt(Configuration configuration) {
-        Number n = (Number) configs.get(configuration.getKey());
-        return n == null ? ((Number) configuration.getDefaultValue()).intValue() : n.intValue();
+    public int readInt(ConfigProperty configProperty) {
+        Number n = (Number) configs.get(configProperty.getKey());
+        return n == null ? ((Number) configProperty.getDefaultValue()).intValue() : n.intValue();
     }
 
     @Override
-    public long readLong(Configuration configuration) {
-        Number n = (Number) configs.get(configuration.getKey());
-        return n == null ? ((Number) configuration.getDefaultValue()).longValue() : n.longValue();
+    public long readLong(ConfigProperty configProperty) {
+        Number n = (Number) configs.get(configProperty.getKey());
+        return n == null ? ((Number) configProperty.getDefaultValue()).longValue() : n.longValue();
     }
 
     @Override
-    public boolean readBoolean(Configuration configuration) {
-        return (boolean) configs.getOrDefault(configuration.getKey(), configuration.getDefaultValue());
+    public boolean readBoolean(ConfigProperty configProperty) {
+        return (boolean) configs.getOrDefault(configProperty.getKey(), configProperty.getDefaultValue());
     }
 
     @Override
-    public double readDouble(Configuration configuration) {
-        Number n = (Number) configs.get(configuration.getKey());
-        return n == null ? ((Number) configuration.getDefaultValue()).doubleValue() : n.doubleValue();
+    public double readDouble(ConfigProperty configProperty) {
+        Number n = (Number) configs.get(configProperty.getKey());
+        return n == null ? ((Number) configProperty.getDefaultValue()).doubleValue() : n.doubleValue();
     }
 
     @Override
-    public void putProperty(Configuration key, Object value) {
+    public void putProperty(ConfigProperty key, Object value) {
         putLock.readLock().lock();
         try {
             configs.put(key.getKey(), value);
             String val = value.getClass().equals(String.class) ? "\"" + value + "\"" : value.toString();
             try (ODatabaseDocumentTx db = docDb()) {
-                db.command(new OCommandSQL(String.format(UPDATE_COMMAND, key.getKey(), val))).execute();
+                db.command(new OCommandSQL(String.format(UPDATE_COMMAND, key.getKey(), val, hostGroup))).execute();
             }
         } finally {
             putLock.readLock().unlock();
@@ -109,7 +109,7 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
     }
 
     protected void fetchFromDb(ODatabaseDocumentTx db) {
-        List<ODocument> docs = db.query(new OSQLSynchQuery<>(GET_COMMAND));
+        List<ODocument> docs = db.query(new OSQLSynchQuery<>(String.format(GET_COMMAND, hostGroup)));
         if (docs.size() == 0 || docs.size() > 1) {
             LOG.error("Illegal OrientDB configuration state - " + docs.size() + " number of records.");
         }
@@ -118,13 +118,20 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
         }
     }
 
+    protected String hostGroup;
+    public String getHostGroup() {
+        return hostGroup;
+    }
+    public void setHostGroup(String hostGroup) {
+        this.hostGroup = hostGroup;
+    }
+
     protected ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     protected volatile Map<String, Object> configs = new ConcurrentHashMap<>();
     protected final ReadWriteLock putLock = new ReentrantReadWriteLock();
 
-    protected static final int DEFAULT_ID = 1;
     protected static final String GCP_CONFIG = "GCPConfig";
-    protected static final String UPDATE_COMMAND = "UPDATE " + GCP_CONFIG + " PUT map = \"%s\", %s WHERE id=" + DEFAULT_ID;
-    protected static final String GET_COMMAND = "SELECT FROM " + GCP_CONFIG + " WHERE id=" + DEFAULT_ID;
+    protected static final String UPDATE_COMMAND = "UPDATE " + GCP_CONFIG + " PUT map = \"%s\", %s WHERE hg=\"%s\"";
+    protected static final String GET_COMMAND = "SELECT FROM " + GCP_CONFIG + " WHERE hg=\"%s\"";
     protected static final Logger LOG = LoggerFactory.getLogger(OrientDbConfigurationManager.class);
 }

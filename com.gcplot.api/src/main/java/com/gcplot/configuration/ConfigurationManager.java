@@ -1,19 +1,19 @@
 package com.gcplot.configuration;
 
-import com.gcplot.commons.Configuration;
+import com.gcplot.commons.ConfigProperty;
 
 public interface ConfigurationManager {
 
-    String readString(Configuration configuration);
+    String readString(ConfigProperty configProperty);
 
-    int readInt(Configuration configuration);
+    int readInt(ConfigProperty configProperty);
 
-    long readLong(Configuration configuration);
+    long readLong(ConfigProperty configProperty);
 
-    boolean readBoolean(Configuration configuration);
+    boolean readBoolean(ConfigProperty configProperty);
 
-    double readDouble(Configuration configuration);
+    double readDouble(ConfigProperty configProperty);
 
-    void putProperty(Configuration key, Object value);
+    void putProperty(ConfigProperty key, Object value);
 
 }

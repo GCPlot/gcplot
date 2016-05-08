@@ -38,6 +38,7 @@
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>
         <property name="metrics" ref="metrics"/>
+        <property name="hostGroup" value="${hosts.group}"/>
     </bean>
 
     <bean id="mailService" class="com.gcplot.mail.MailService"/>
