@@ -5,6 +5,7 @@ import com.gcplot.accounts.AccountRepository;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.messages.Wrapper;
 import com.gcplot.web.*;
+import com.google.common.base.Strings;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.RoutingContext;
 
@@ -33,7 +34,7 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public RequestContext mimeType(String mimeType) {
-        context.response().putHeader("Content-Type", mimeType);
+        this.mimeType = mimeType;
         return this;
     }
 
@@ -64,6 +65,9 @@ public class VertxRequestContext implements RequestContext {
         }
         context.response().putHeader("Content-Length", response.length + "");
         context.response().end(Buffer.buffer(response));
+        if (Strings.isNullOrEmpty(mimeType)) {
+            context.response().putHeader("Content-Type", mimeType);
+        }
         return this;
     }
 
@@ -138,8 +142,8 @@ public class VertxRequestContext implements RequestContext {
     }
 
     @Override
-    public String query() {
-        return context.request().query();
+    public String path() {
+        return context.request().path();
     }
 
     @Override
@@ -153,6 +157,7 @@ public class VertxRequestContext implements RequestContext {
     public VertxRequestContext reset(RoutingContext context) {
         this.context = context;
         this.clear();
+        mimeType = APPLICATION_JSON;
         return this;
     }
 
@@ -179,6 +184,7 @@ public class VertxRequestContext implements RequestContext {
     protected RoutingContext context;
     protected AccountRepository accountRepository;
     protected StringBuilder sb = new StringBuilder();
+    protected String mimeType = APPLICATION_JSON;
 
     protected static class UploadedFileImpl implements UploadedFile {
 
@@ -199,4 +205,6 @@ public class VertxRequestContext implements RequestContext {
             this.fileName = fileName;
         }
     }
+
+    protected static final String APPLICATION_JSON = "application/json; charset=utf-8";
 }

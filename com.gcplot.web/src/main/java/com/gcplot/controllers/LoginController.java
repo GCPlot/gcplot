@@ -43,12 +43,8 @@ public class LoginController extends Controller {
     }
 
     public void register(RegisterRequest request, RequestContext c) {
-        AccountImpl newAccount = new AccountImpl();
-        newAccount.setUsername(request.username);
-        newAccount.setPassHash(hashPass(request.password));
-        newAccount.setEmail(request.email);
-        newAccount.setConfirmationSalt(Utils.getRandomIdentifier());
-        newAccount.setToken(Utils.getRandomIdentifier());
+        Account newAccount = AccountImpl.createNew(request.username, request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
+                hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()));
 
         try {
             getAccountRepository().store(newAccount);
@@ -57,8 +53,13 @@ public class LoginController extends Controller {
             return;
         }
         if (getMailService() != null) {
-            getMailService().sendConfirmationFor(newAccount);
+            try {
+                getMailService().sendConfirmationFor(newAccount);
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+            }
         }
+        c.response(SUCCESS);
     }
 
     public void confirm(RequestContext context) {

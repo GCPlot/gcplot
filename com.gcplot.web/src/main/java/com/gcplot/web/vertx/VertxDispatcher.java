@@ -28,6 +28,11 @@ public class VertxDispatcher implements Dispatcher<String> {
         LOG.info("Starting Vert.x Dispatcher at [{}:{}]", host, port);
         httpServer = vertx.createHttpServer();
         router = Router.router(vertx);
+        router.route().last().handler(f -> {
+            if (!f.response().ended() && f.response().bytesWritten() == 0) {
+                f.response().end(ErrorMessages.buildJson(ErrorMessages.NOT_FOUND));
+            }
+        });
         httpServer.requestHandler(router::accept).listen(port, host);
         router.route().handler(bodyHandler.setBodyLimit(maxUploadSize));
     }

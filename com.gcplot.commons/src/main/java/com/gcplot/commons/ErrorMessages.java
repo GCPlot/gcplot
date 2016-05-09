@@ -6,6 +6,8 @@ import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class ErrorMessages {
+    public static final long UNDEFINED_ERROR = 0x1;
+
     public static final long NOT_AUTHORISED = 0x123;
     public static final long ACCOUNT_NOT_CONFIRMED = 0x124;
     public static final long REQUEST_FILTERED = 0x125;
@@ -13,6 +15,7 @@ public class ErrorMessages {
     public static final long INTERNAL_ERROR = 0x1F4;
     public static final long NOT_UNIQUE_FIELDS = 0x127;
     public static final long USER_IS_BLOCKED = 0x128;
+    public static final long NOT_FOUND = 0x194;
 
     public static String buildJson(long code) {
         ObjectNode node = new ObjectNode(JSON_NODE_FACTORY);
@@ -38,6 +41,7 @@ public class ErrorMessages {
         errorMessages.put(INTERNAL_ERROR, "Internal error.");
         errorMessages.put(NOT_UNIQUE_FIELDS, "One of the fields are already presented.");
         errorMessages.put(USER_IS_BLOCKED, "User is blocked.");
+        errorMessages.put(NOT_FOUND, "The requested path wasn't found.");
     }
 
     private static final JsonNodeFactory JSON_NODE_FACTORY = JsonNodeFactory.instance;

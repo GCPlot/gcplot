@@ -44,7 +44,7 @@ public interface RequestContext {
 
     String mimeType();
 
-    String query();
+    String path();
 
     Map<String, List<String>> headers();
 

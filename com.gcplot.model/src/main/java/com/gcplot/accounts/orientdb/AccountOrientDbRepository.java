@@ -45,7 +45,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
                 }
                 if (fields.size() > 0) {
                     LOG.info("Registering unique constraint for fields: " + fields);
-                    cls.createIndex(indexName, OClass.INDEX_TYPE.UNIQUE_HASH_INDEX, (String[]) fields.toArray(new String[0]));
+                    for (String field : fields)
+                        cls.createIndex(indexName + "." + field, OClass.INDEX_TYPE.UNIQUE_HASH_INDEX, field);
                 }
             }
         }

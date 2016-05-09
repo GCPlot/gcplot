@@ -106,14 +106,23 @@ public abstract class IntegrationTest {
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
     }
 
-    protected void httpPost(String path, Object message, Predicate<JsonObject> test) throws Exception {
+    protected void post(String path, Object message, long expectedError) throws Exception {
+        post(path, message, a -> true, expectedError);
+    }
+
+    protected void post(String path, Object message, Predicate<JsonObject> test) throws Exception {
+        post(path, message, test, -1);
+    }
+
+    protected void post(String path, Object message, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
-        client.post(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, -1, l, b))).end(JsonSerializer.serialize(message));
-        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        client.post(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end(JsonSerializer.serialize(message));
+        Assert.assertTrue(l.await(300, TimeUnit.SECONDS));
     }
 
     private void handleResponse(Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
         JsonObject jo = new JsonObject(new String(b.getBytes()));
+        LOG.info("Response: {}", jo);
         if (jo.containsKey("error") && expectedError == -1) {
             LOG.error("ERROR: [code={}, message={}];", jo.getLong("error"), jo.getString("message"));
         } else if (expectedError != -1) {

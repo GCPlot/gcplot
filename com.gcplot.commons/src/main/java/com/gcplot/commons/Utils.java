@@ -55,7 +55,7 @@ public abstract class Utils {
             char upperBound = 'z';
             SecureRandom randomCharacterGenerator = new SecureRandom();
             // Then get some characters
-            char[] identifierBuffer = new char[64];
+            char[] identifierBuffer = new char[512];
             int index = identifierBuffer.length;
             final int numericLowerBound = (int) lowerBound;
             final int numericUpperBound = (int) upperBound;

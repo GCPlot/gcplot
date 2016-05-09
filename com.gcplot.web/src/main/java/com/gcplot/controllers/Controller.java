@@ -67,8 +67,8 @@ public abstract class Controller {
     }
 
     public void error(Throwable t, RequestContext request) {
-        metrics.meter(Metrics.name("requests", query(request), "errors")).mark();
         LOG.error("CONTROLLER ERROR", t);
+        metrics.meter(Metrics.name("requests", query(request), "errors")).mark();
         if (!request.isFinished()) {
             request.clear();
             request.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR));
@@ -85,7 +85,7 @@ public abstract class Controller {
     }
 
     protected String query(RequestContext request) {
-        return request.query().replace("/", "_").replace(".", "_");
+        return request.path().replace("/", "_").replace(".", "_");
     }
 
     protected static final Logger LOG = LoggerFactory.getLogger(Controller.class);
