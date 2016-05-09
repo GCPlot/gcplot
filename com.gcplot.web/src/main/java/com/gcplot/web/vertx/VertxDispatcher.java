@@ -190,44 +190,43 @@ public class VertxDispatcher implements Dispatcher<String> {
             final boolean confirmation = requireConfirmed;
             final Predicate<RequestContext> filter = this.filter;
             final Handler<RoutingContext> r = rc -> {
-                VertxRequestContext context = contexts.get().reset(rc);
+                VertxRequestContext c = contexts.get().reset(rc);
                 try {
                     if (preHandler != null) {
-                        preHandler.accept(context);
+                        preHandler.accept(c);
                     }
-                    if (context.loginInfo().isPresent() && context.loginInfo().get().getAccount().isBlocked()) {
-                        rc.response().end(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
+                    if (c.loginInfo().isPresent() && c.loginInfo().get().getAccount().isBlocked()) {
+                        c.finish(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
                     } else {
-                        if (auth && !context.loginInfo().isPresent()) {
-                            rc.response().end(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
+                        if (auth && !c.loginInfo().isPresent()) {
+                            c.finish(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
                         } else {
-                            if (confirmation && !context.loginInfo().get().getAccount().isConfirmed()) {
-                                rc.response().end(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
-                            }
-                            if (filter == null || filter.test(context)) {
-                                handler.accept(rc, context);
+                            if (confirmation && !c.loginInfo().get().getAccount().isConfirmed()) {
+                                c.finish(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
+                            } else if (filter == null || filter.test(c)) {
+                                handler.accept(rc, c);
                             } else if (!rc.response().ended()) {
-                                rc.response().end(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
+                                c.finish(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
                                         Strings.nullToEmpty(filterMessage)));
                             }
                         }
                     }
                 } catch (Throwable t) {
                     if (exceptionHandler != null) {
-                        exceptionHandler.accept(t, context);
+                        exceptionHandler.accept(t, c);
                     } else {
                         LOG.error("DISPATCH: ", t);
                     }
                 } finally {
                     if (postHandler != null) {
                         try {
-                            postHandler.accept(context);
+                            postHandler.accept(c);
                         } catch (Throwable t) {
                             LOG.error("DISPATCH POST HANDLE: ", t);
                         }
                     }
-                    if (!rc.response().ended()) {
-                        rc.response().end();
+                    if (!c.isFinished()) {
+                        c.finish();
                     }
                 }
             };

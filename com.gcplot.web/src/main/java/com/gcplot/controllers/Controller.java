@@ -69,7 +69,10 @@ public abstract class Controller {
     public void error(Throwable t, RequestContext request) {
         metrics.meter(Metrics.name("requests", query(request), "errors")).mark();
         LOG.error("CONTROLLER ERROR", t);
-        request.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR));
+        if (!request.isFinished()) {
+            request.clear();
+            request.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR));
+        }
     }
 
     @PreDestroy

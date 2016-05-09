@@ -5,6 +5,7 @@ import com.gcplot.accounts.AccountRepository;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.messages.Wrapper;
 import com.gcplot.web.*;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.RoutingContext;
 
 import java.io.UnsupportedEncodingException;
@@ -14,56 +15,72 @@ import java.util.stream.Collectors;
 public class VertxRequestContext implements RequestContext {
 
     @Override
-    public void response(Object response) {
-        context.response().end(JsonSerializer.serialize(new Wrapper(response)));
+    public RequestContext response(Object response) {
+        return finish(JsonSerializer.serialize(new Wrapper(response)));
     }
 
     @Override
-    public void responseCode(int code) {
+    public RequestContext responseCode(int code) {
         context.response().setStatusCode(code);
+        return this;
     }
 
     @Override
-    public void logIn(LoginInfo info) {
+    public RequestContext logIn(LoginInfo info) {
         context.response().putHeader(Constants.AUTH_TOKEN_HEADER, info.token());
+        return this;
     }
 
     @Override
-    public void mimeType(String mimeType) {
-        context.response().end();
+    public RequestContext mimeType(String mimeType) {
         context.response().putHeader("Content-Type", mimeType);
+        return this;
     }
 
     @Override
-    public void putResponseHeader(String header, String value) {
+    public RequestContext putResponseHeader(String header, String value) {
         context.response().putHeader(header, value);
+        return this;
     }
 
     @Override
-    public void write(String value) {
+    public RequestContext write(String value) {
+        sb.append(value);
+        return this;
+    }
+
+    @Override
+    public RequestContext writeLine(String value) {
+        return write(value + System.lineSeparator());
+    }
+
+    @Override
+    public RequestContext finish(String value) {
+        sb.append(value);
         byte[] response = new byte[0];
         try {
-            response = value.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            response = sb.toString().getBytes("UTF-8");
+        } catch (UnsupportedEncodingException ignored) {
         }
         context.response().putHeader("Content-Length", response.length + "");
-        context.response().write(value);
+        context.response().end(Buffer.buffer(response));
+        return this;
     }
 
     @Override
-    public void writeLine(String value) {
-        context.response().write(value + System.lineSeparator());
+    public RequestContext finish() {
+        return finish("");
     }
 
     @Override
-    public void finish(String value) {
-        context.response().end(value);
+    public RequestContext clear() {
+        sb = new StringBuilder();
+        return this;
     }
 
     @Override
-    public void finish() {
-        context.response().end();
+    public boolean isFinished() {
+        return context.response().ended();
     }
 
     @Override
@@ -135,6 +152,7 @@ public class VertxRequestContext implements RequestContext {
 
     public VertxRequestContext reset(RoutingContext context) {
         this.context = context;
+        this.clear();
         return this;
     }
 
@@ -160,6 +178,7 @@ public class VertxRequestContext implements RequestContext {
 
     protected RoutingContext context;
     protected AccountRepository accountRepository;
+    protected StringBuilder sb = new StringBuilder();
 
     protected static class UploadedFileImpl implements UploadedFile {
 

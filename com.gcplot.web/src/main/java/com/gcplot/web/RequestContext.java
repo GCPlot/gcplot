@@ -6,23 +6,27 @@ import java.util.Optional;
 
 public interface RequestContext {
 
-    void response(Object response);
+    RequestContext response(Object response);
 
-    void responseCode(int code);
+    RequestContext responseCode(int code);
 
-    void logIn(LoginInfo info);
+    RequestContext logIn(LoginInfo info);
 
-    void mimeType(String mimeType);
+    RequestContext mimeType(String mimeType);
 
-    void putResponseHeader(String header, String value);
+    RequestContext putResponseHeader(String header, String value);
 
-    void write(String value);
+    RequestContext write(String value);
 
-    void writeLine(String value);
+    RequestContext writeLine(String value);
 
-    void finish(String value);
+    RequestContext finish(String value);
 
-    void finish();
+    RequestContext finish();
+
+    RequestContext clear();
+
+    boolean isFinished();
 
     String getIp();
 
