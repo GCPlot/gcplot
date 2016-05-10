@@ -1,13 +1,13 @@
 package com.gcplot;
 
-import com.dumbster.smtp.SmtpMessage;
 import com.gcplot.commons.ErrorMessages;
+import com.gcplot.commons.Utils;
 import com.gcplot.messages.RegisterRequest;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class LoginTest extends IntegrationTest {
 
@@ -35,9 +35,8 @@ public class LoginTest extends IntegrationTest {
 
         get("/user/login?username=" + request.email + "&password=" + request.password, j -> j.containsKey("result"));
 
-        List<SmtpMessage> msgs = smtpServer.getReceivedEmails();
-        Assert.assertEquals(msgs.size(), 1);
-        String confirmUrl = msgs.get(0).getBody();
+        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(10)));
+        String confirmUrl = smtpServer.getReceivedEmails().get(0).getBody();
         get(confirmUrl, j -> j.containsKey("result"));
 
         jo = login(request);

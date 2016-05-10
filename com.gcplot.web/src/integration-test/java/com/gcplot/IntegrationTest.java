@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -87,14 +88,16 @@ public abstract class IntegrationTest {
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
         } finally {
-            client.close();
+            try {
+                client.close();
+            } catch (Throwable ignored) {}
         }
         try {
             smtpServer.close();
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
         }
-        getBean(Dispatcher.class).close();
+        ((ConfigurableApplicationContext)getApplicationContext()).close();
     }
 
     protected void makeTestPropertiesFile() throws IOException {

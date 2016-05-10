@@ -11,6 +11,8 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
 
 public abstract class Utils {
 
@@ -70,6 +72,18 @@ public abstract class Utils {
         } catch (ArrayIndexOutOfBoundsException e) {
             throw Exceptions.runtime(e);
         }
+    }
+
+    public static boolean waitFor(Supplier<Boolean> condition, long timeoutNanos) {
+        long start = System.nanoTime();
+        boolean result = false;
+        while (System.nanoTime() - start < timeoutNanos) {
+            result = condition.get();
+            if (result) break;
+
+            LockSupport.parkNanos(1);
+        }
+        return result;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
