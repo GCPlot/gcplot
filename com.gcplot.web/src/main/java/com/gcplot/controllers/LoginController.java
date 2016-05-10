@@ -7,10 +7,12 @@ import com.gcplot.accounts.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
+import com.gcplot.mail.MailService;
 import com.gcplot.messages.LoginResult;
 import com.gcplot.messages.RegisterRequest;
 import com.gcplot.web.RequestContext;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.Optional;
@@ -24,7 +26,7 @@ public class LoginController extends Controller {
         super.init();
         dispatcher.noAuth().filter(c -> c.hasParam("username") && c.hasParam("password"),
                 "Username and password are required!").get("/user/login", this::login);
-        dispatcher.noAuth().post("/user/register", RegisterRequest.class, this::register);
+        dispatcher.noAuth().blocking().post("/user/register", RegisterRequest.class, this::register);
         dispatcher.requireAuth().filter(c -> c.hasParam("salt"),
                 "Salt should be provided!").get("/user/confirm", this::confirm);
     }
@@ -80,6 +82,24 @@ public class LoginController extends Controller {
         return DigestUtils.sha1Hex(DigestUtils.md5(p));
     }
 
+    protected AccountRepository accountRepository;
+    public AccountRepository getAccountRepository() {
+        return accountRepository;
+    }
+    @Autowired
+    public void setAccountRepository(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
+    }
+
+    protected MailService mailService;
+    public MailService getMailService() {
+        return mailService;
+    }
+    @Autowired
+    public void setMailService(MailService mailService) {
+        this.mailService = mailService;
+    }
+
     public static final Pattern EMAIL_PATTERN = Pattern.compile("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[" +
             "a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|" +
             "\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-" +
@@ -90,4 +110,5 @@ public class LoginController extends Controller {
         @JsonProperty("success")
         public int success = 1;
     };
+
 }

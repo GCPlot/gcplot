@@ -1,14 +1,22 @@
 package com.gcplot.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RegisterRequest {
-
-    @JsonProperty("username")
     public String username;
-    @JsonProperty("password")
     public String password;
-    @JsonProperty("email")
     public String email;
 
+    @JsonCreator
+    public RegisterRequest(@JsonProperty(value = "username", required = true) String username,
+                           @JsonProperty(value = "password", required = true) String password,
+                           @JsonProperty(value = "email", required = true) String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
+    public RegisterRequest() {
+    }
 }

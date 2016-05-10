@@ -53,6 +53,7 @@ dependencies {
     compile "org.apache.commons:commons-email:$apacheMailVersion"
 
     testCompile "org.springframework:spring-test:$springVersion"
+    integrationTestCompile 'com.github.kirviq:dumbster:1.7'
 }
 
 check.dependsOn integrationTest

@@ -1,10 +1,8 @@
 package com.gcplot.controllers;
 
 import com.codahale.metrics.MetricRegistry;
-import com.gcplot.accounts.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Metrics;
-import com.gcplot.mail.MailService;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.RequestContext;
 import org.slf4j.Logger;
@@ -25,15 +23,6 @@ public abstract class Controller {
         this.dispatcher = dispatcher;
     }
 
-    protected AccountRepository accountRepository;
-    public AccountRepository getAccountRepository() {
-        return accountRepository;
-    }
-    @Autowired
-    public void setAccountRepository(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
-
     protected MetricRegistry metrics;
     public MetricRegistry getMetrics() {
         return metrics;
@@ -41,15 +30,6 @@ public abstract class Controller {
     @Autowired
     public void setMetrics(MetricRegistry metrics) {
         this.metrics = metrics;
-    }
-
-    protected MailService mailService;
-    public MailService getMailService() {
-        return mailService;
-    }
-    @Autowired
-    public void setMailService(MailService mailService) {
-        this.mailService = mailService;
     }
 
     public void init() {
@@ -67,7 +47,7 @@ public abstract class Controller {
     }
 
     public void error(Throwable t, RequestContext request) {
-        LOG.error("CONTROLLER ERROR", t);
+        LOG.error("CONTROLLER ERROR: " + dumpRequest(request), t);
         metrics.meter(Metrics.name("requests", query(request), "errors")).mark();
         if (!request.isFinished()) {
             request.clear();
@@ -82,6 +62,18 @@ public abstract class Controller {
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
         }
+    }
+
+    protected String dumpRequest(RequestContext req) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Path [").append(req.path()).append("] ");
+        sb.append("User Agent [").append(req.getUserAgent()).append("] ");
+        sb.append("IP [").append(req.getIp()).append("] ");
+        sb.append("Method [").append(req.method()).append("] ");
+        sb.append("Headers [");
+        req.headers().forEach((k, v) -> sb.append(k).append("=").append('"').append(v).append("\";"));
+        sb.append("]");
+        return sb.toString();
     }
 
     protected String query(RequestContext request) {

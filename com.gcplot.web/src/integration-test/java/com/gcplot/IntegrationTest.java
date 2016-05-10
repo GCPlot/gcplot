@@ -1,9 +1,12 @@
 package com.gcplot;
 
+import com.dumbster.smtp.SimpleSmtpServer;
 import com.gcplot.bootstrap.Bootstrap;
+import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.serialization.JsonSerializer;
+import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.web.Dispatcher;
 import com.google.common.io.Files;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
@@ -27,6 +30,7 @@ import java.util.function.Predicate;
 
 public abstract class IntegrationTest {
 
+    protected SimpleSmtpServer smtpServer;
     private Bootstrap bootstrap;
     public Bootstrap getBoot() {
         return bootstrap;
@@ -51,6 +55,7 @@ public abstract class IntegrationTest {
 
     @Before
     public void setUp() throws Exception {
+        smtpServer = SimpleSmtpServer.start(SimpleSmtpServer.AUTO_SMTP_PORT);
         dbName = Utils.getRandomIdentifier();
         database = new ODatabaseDocumentTx("memory:" + dbName).create();
 
@@ -61,6 +66,14 @@ public abstract class IntegrationTest {
         intercept();
         bootstrap.run();
         client = getApplicationContext().getBean(Vertx.class).createHttpClient();
+        ConfigurationManager cm = getApplicationContext().getBean(ConfigurationManager.class);
+        cm.putProperty(ConfigProperty.API_HOST, LOCALHOST + ":" + port);
+        cm.putProperty(ConfigProperty.PUBLIC_HOST, LOCALHOST);
+        cm.putProperty(ConfigProperty.EMAIL_USE_SSL, false);
+        cm.putProperty(ConfigProperty.EMAIL_SMTP_PORT, smtpServer.getPort());
+        cm.putProperty(ConfigProperty.EMAIL_HOST_NAME, LOCALHOST);
+        cm.putProperty(ConfigProperty.EMAIL_AUTH, false);
+        cm.putProperty(ConfigProperty.EMAIL_CONFIRM_TEMPLATE, "");
     }
 
     @After
@@ -70,11 +83,16 @@ public abstract class IntegrationTest {
         } catch (Throwable ignored) {
         }
         try {
-            new ODatabaseDocumentTx("memory:" + dbName).open("admin", "admin");
+            new ODatabaseDocumentTx("memory:" + dbName).open("admin", "admin").drop();
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
         } finally {
             client.close();
+        }
+        try {
+            smtpServer.close();
+        } catch (Throwable t) {
+            LOG.error(t.getMessage(), t);
         }
         getBean(Dispatcher.class).close();
     }
@@ -102,21 +120,29 @@ public abstract class IntegrationTest {
 
     protected void get(String path, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
-        client.get(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
+        if (path.startsWith("http")) {
+            client.getAbs(path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
+        } else {
+            client.get(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
+        }
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
     }
 
-    protected void post(String path, Object message, long expectedError) throws Exception {
+    protected void post(String path, String message, long expectedError) throws Exception {
         post(path, message, a -> true, expectedError);
     }
 
-    protected void post(String path, Object message, Predicate<JsonObject> test) throws Exception {
-        post(path, message, test, -1);
+    protected void post(String path, Object message, long expectedError) throws Exception {
+        post(path, JsonSerializer.serialize(message), a -> true, expectedError);
     }
 
-    protected void post(String path, Object message, Predicate<JsonObject> test, long expectedError) throws Exception {
+    protected void post(String path, Object message, Predicate<JsonObject> test) throws Exception {
+        post(path, JsonSerializer.serialize(message), test, -1);
+    }
+
+    protected void post(String path, String message, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
-        client.post(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end(JsonSerializer.serialize(message));
+        client.post(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end(message);
         Assert.assertTrue(l.await(300, TimeUnit.SECONDS));
     }
 

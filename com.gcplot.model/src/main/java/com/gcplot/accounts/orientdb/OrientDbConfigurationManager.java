@@ -68,7 +68,7 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
 
     @Override
     public String readString(ConfigProperty configProperty) {
-        return (String) configs.getOrDefault(configProperty.getKey(), configProperty.getDefaultValue());
+        return configs.getOrDefault(configProperty.getKey(), configProperty.getDefaultValue()).toString();
     }
 
     @Override

@@ -10,7 +10,7 @@
     <bean id="metrics" class="com.codahale.metrics.MetricRegistry"/>
     <bean id="vertx" class="io.vertx.core.Vertx" factory-method="vertx"/>
     <bean id="orientDbPool" class="com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory">
-        <constructor-arg value="${orientdb.pool.size}"/>
+        <constructor-arg value="${orientdb.pool.size:100}"/>
     </bean>
 
     <bean id="orientDbConfig" class="com.gcplot.accounts.orientdb.OrientDbConfig">
@@ -33,7 +33,7 @@
         <property name="metrics" ref="metrics"/>
     </bean>
 
-    <bean id="configurationManager" class="com.gcplot.accounts.orientdb.OrientDbConfigurationManager"
+    <bean id="config" class="com.gcplot.accounts.orientdb.OrientDbConfigurationManager"
           init-method="init" destroy-method="destroy">
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>
@@ -41,7 +41,15 @@
         <property name="hostGroup" value="${hosts.group}"/>
     </bean>
 
-    <bean id="mailService" class="com.gcplot.mail.MailService"/>
+    <bean id="mailService" class="com.gcplot.mail.MailService" init-method="init" destroy-method="destroy">
+        <property name="config" ref="config"/>
+        <property name="urlBuilder" ref="urlBuilder"/>
+        <property name="threadPoolSize" value="${mail.thread.pool.size:30}"/>
+    </bean>
+
+    <bean id="urlBuilder" class="com.gcplot.services.UrlBuilder">
+        <property name="config" ref="config"/>
+    </bean>
 
     <bean id="dispatcher" class="com.gcplot.web.vertx.VertxDispatcher" init-method="init" destroy-method="close">
         <property name="vertx" ref="vertx"/>
