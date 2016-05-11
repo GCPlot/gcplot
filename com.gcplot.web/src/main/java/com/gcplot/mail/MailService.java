@@ -1,7 +1,9 @@
 package com.gcplot.mail;
 
+import com.codahale.metrics.MetricRegistry;
 import com.gcplot.accounts.Account;
 import com.gcplot.commons.ConfigProperty;
+import com.gcplot.commons.Metrics;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.services.UrlBuilder;
@@ -54,12 +56,15 @@ public class MailService {
                 try {
                     email.send();
                 } catch (Throwable t) {
+                    metrics.meter(ERROR_METRIC_NAME).mark();
                     LOG.error("EMAIL ERROR", t);
                 }
             });
         } catch (EmailException e) {
+            metrics.meter(ERROR_METRIC_NAME).mark();
             throw Exceptions.runtime(e);
         }
+        metrics.meter(SUCCESS_METRIC_NAME).mark();
     }
 
     public void init() {
@@ -90,6 +95,14 @@ public class MailService {
         this.urlBuilder = urlBuilder;
     }
 
+    protected MetricRegistry metrics;
+    public MetricRegistry getMetrics() {
+        return metrics;
+    }
+    public void setMetrics(MetricRegistry metrics) {
+        this.metrics = metrics;
+    }
+
     protected int threadPoolSize;
     public int getThreadPoolSize() {
         return threadPoolSize;
@@ -100,5 +113,7 @@ public class MailService {
 
     protected ExecutorService executorService;
     protected static final String PROPERTY_NAME = "${email.confirm.template}";
+    protected static final String SUCCESS_METRIC_NAME = Metrics.name("mail", "sent");
+    protected static final String ERROR_METRIC_NAME = Metrics.name("mail", "error");
     protected static final Logger LOG = LoggerFactory.getLogger(MailService.class);
 }

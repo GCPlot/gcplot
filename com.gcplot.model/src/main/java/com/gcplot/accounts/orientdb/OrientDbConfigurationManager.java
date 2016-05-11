@@ -44,6 +44,7 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
             }
             fetchFromDb(db);
             executor.scheduleAtFixedRate(() -> {
+                LOG.info("Trying to reload configuration from main DB.");
                 putLock.writeLock().lock();
                 try {
                     try (ODatabaseDocumentTx _db = docDb()) {
