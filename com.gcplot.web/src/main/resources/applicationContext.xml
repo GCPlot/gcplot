@@ -52,12 +52,22 @@
         <property name="config" ref="config"/>
     </bean>
 
-    <bean id="dispatcher" class="com.gcplot.web.vertx.VertxDispatcher" init-method="init" destroy-method="close">
+    <bean id="dispatcher" class="com.gcplot.web.vertx.VertxDispatcher"
+          init-method="init" destroy-method="close">
         <property name="vertx" ref="vertx"/>
         <property name="accountRepository" ref="accountRepository"/>
         <property name="host" value="${bootstrap.server.host}"/>
         <property name="port" value="${bootstrap.server.port}"/>
         <property name="maxUploadSize" value="1073741824"/>
+    </bean>
+
+    <bean class="com.gcplot.metrics.GraphiteSender" init-method="init" destroy-method="destroy">
+        <property name="host" value="${graphite.host}"/>
+        <property name="port" value="${graphite.port}"/>
+        <property name="registry" ref="metrics"/>
+        <property name="reportEveryMillis" value="${graphite.report.every.ms}"/>
+        <property name="enabled" value="${graphite.sink.enabled}"/>
+        <property name="retryIntervalMs" value="${graphite.sink.init.retry.ms:10000}"/>
     </bean>
 
     <!-- CONTROLLERS -->
