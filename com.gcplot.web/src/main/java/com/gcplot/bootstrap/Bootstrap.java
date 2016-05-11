@@ -2,6 +2,7 @@ package com.gcplot.bootstrap;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -58,6 +59,10 @@ public class Bootstrap {
         }
         properties.forEach((k,v) -> System.setProperty((String)k, (String)v));
 
+        if (properties.containsKey(LOG4J_LOCATION_PROPERTY)) {
+            PropertyConfigurator.configure(properties.getProperty(LOG4J_LOCATION_PROPERTY));
+        }
+
         URL resource = Thread.currentThread().getContextClassLoader().getResource("applicationContext.xml");
         applicationContext = new FileSystemXmlApplicationContext(new String[] {
                 "file:" + new File(resource.toURI()).getAbsolutePath()
@@ -66,4 +71,6 @@ public class Bootstrap {
             Thread.sleep(Long.MAX_VALUE);
         }
     }
+
+    private static final String LOG4J_LOCATION_PROPERTY = "log4j.file.location";
 }
