@@ -57,14 +57,16 @@ public class Bootstrap {
                 properties.putAll(outProperties);
             }
         }
-        properties.forEach((k,v) -> System.setProperty((String)k, (String)v));
+        properties.forEach((k, v) -> System.setProperty((String) k, (String) v));
 
-        if (properties.containsKey(LOG4J_LOCATION_PROPERTY)) {
-            PropertyConfigurator.configure(properties.getProperty(LOG4J_LOCATION_PROPERTY));
+        File log4File = new File(configDir,
+                properties.getProperty(LOG4J_FILENAME_PROPERTY, "log4j.properties"));
+        if (log4File.exists()) {
+            PropertyConfigurator.configure(log4File.getAbsolutePath());
         }
 
         URL resource = Thread.currentThread().getContextClassLoader().getResource("applicationContext.xml");
-        applicationContext = new FileSystemXmlApplicationContext(new String[] {
+        applicationContext = new FileSystemXmlApplicationContext(new String[]{
                 "file:" + new File(resource.toURI()).getAbsolutePath()
         }, true);
         if (hang) {
@@ -72,5 +74,5 @@ public class Bootstrap {
         }
     }
 
-    private static final String LOG4J_LOCATION_PROPERTY = "log4j.file.location";
+    private static final String LOG4J_FILENAME_PROPERTY = "log4j.file.name";
 }
