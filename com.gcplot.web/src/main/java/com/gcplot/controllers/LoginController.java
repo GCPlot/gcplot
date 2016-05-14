@@ -45,7 +45,8 @@ public class LoginController extends Controller {
     }
 
     public void register(RegisterRequest request, RequestContext c) {
-        Account newAccount = AccountImpl.createNew(request.username, request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
+        Account newAccount = AccountImpl.createNew(request.username, request.firstName, request.lastName,
+                request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
                 hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()));
 
         try {

@@ -15,7 +15,7 @@ public abstract class JsonSerializer {
 
     static {
         mapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, true);
-        mapper.configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
+        //mapper.configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
         mapper.disableDefaultTyping();
         mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.PUBLIC_ONLY);
     }

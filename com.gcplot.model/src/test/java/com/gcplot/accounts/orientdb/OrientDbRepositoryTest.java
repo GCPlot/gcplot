@@ -35,7 +35,8 @@ public class OrientDbRepositoryTest {
         AccountOrientDbRepository repository = new AccountOrientDbRepository(config, new OPartitionedDatabasePoolFactory());
         repository.init();
         Assert.assertFalse(repository.account("token").isPresent());
-        AccountImpl account = AccountImpl.createNew("abc", "artem@reveno.org", "token", "pass", "salt");
+        AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
+                "artem@reveno.org", "token", "pass", "salt");
         account = (AccountImpl) repository.store(account);
         Assert.assertNotNull(account.getOId());
         Assert.assertTrue(repository.account("token").isPresent());

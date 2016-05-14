@@ -37,6 +37,22 @@ public class AccountImpl implements Account {
     }
 
     @Override
+    public String firstName() {
+        return firstName;
+    }
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    @Override
+    public String lastName() {
+        return lastName;
+    }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    @Override
     public String token() {
         return token;
     }
@@ -92,9 +108,12 @@ public class AccountImpl implements Account {
     public AccountImpl() {
     }
 
-    protected AccountImpl(String username, String email, String token,
+    protected AccountImpl(String username, String firstName, String lastName,
+                          String email, String token,
                           String passHash, boolean confirmed, String confirmationSalt) {
         this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.token = token;
         this.passHash = passHash;
@@ -103,9 +122,11 @@ public class AccountImpl implements Account {
     }
 
     public static AccountImpl createNew(String username,
+                                        String firstName, String lastName,
                                         String email, String token, String passHash,
                                         String confirmationSalt) {
-        return new AccountImpl(username, email, token, passHash, false, confirmationSalt);
+        return new AccountImpl(username, firstName, lastName,
+                email, token, passHash, false, confirmationSalt);
     }
 
     @Id
@@ -114,6 +135,8 @@ public class AccountImpl implements Account {
     protected transient Identifier identifier;
     protected String username;
     protected String email;
+    protected String firstName;
+    protected String lastName;
     protected String token;
     protected String passHash;
     protected boolean confirmed;

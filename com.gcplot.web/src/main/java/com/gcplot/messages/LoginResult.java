@@ -7,6 +7,10 @@ public class LoginResult {
 
     @JsonProperty("username")
     public String username;
+    @JsonProperty("first_name")
+    public String firstName;
+    @JsonProperty("last_name")
+    public String lastName;
     @JsonProperty("email")
     public String email;
     @JsonProperty("token")
@@ -20,6 +24,8 @@ public class LoginResult {
     public static LoginResult from(Account account) {
         LoginResult loginResult = new LoginResult();
         loginResult.username = account.username();
+        loginResult.firstName = account.firstName();
+        loginResult.lastName = account.lastName();
         loginResult.email = account.email();
         loginResult.token = account.token();
         loginResult.confirmed = account.isConfirmed();

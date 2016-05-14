@@ -10,6 +10,10 @@ public interface Account {
 
     String email();
 
+    String firstName();
+
+    String lastName();
+
     String token();
 
     String passHash();

@@ -2,6 +2,9 @@
 *.log
 .DS_Store
 
+classes/
+classes/*
+
 # Build directory#
 build/
 bin/

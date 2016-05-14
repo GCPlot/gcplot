@@ -146,7 +146,7 @@ public abstract class IntegrationTest {
     protected void post(String path, String message, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
         client.post(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end(message);
-        Assert.assertTrue(l.await(300, TimeUnit.SECONDS));
+        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
     }
 
     private void handleResponse(Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
