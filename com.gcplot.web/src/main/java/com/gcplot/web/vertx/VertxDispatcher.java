@@ -1,6 +1,6 @@
 package com.gcplot.web.vertx;
 
-import com.gcplot.accounts.AccountRepository;
+import com.gcplot.model.account.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.web.Dispatcher;

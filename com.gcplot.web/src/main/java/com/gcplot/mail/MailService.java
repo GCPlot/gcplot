@@ -1,7 +1,7 @@
 package com.gcplot.mail;
 
 import com.codahale.metrics.MetricRegistry;
-import com.gcplot.accounts.Account;
+import com.gcplot.model.account.Account;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.Metrics;
 import com.gcplot.commons.exceptions.Exceptions;

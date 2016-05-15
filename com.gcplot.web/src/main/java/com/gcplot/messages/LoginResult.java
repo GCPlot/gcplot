@@ -1,7 +1,7 @@
 package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gcplot.accounts.Account;
+import com.gcplot.model.account.Account;
 
 public class LoginResult {
 

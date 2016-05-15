@@ -1,4 +1,4 @@
-package com.gcplot.accounts;
+package com.gcplot.model.account;
 
 import com.gcplot.Identifier;
 

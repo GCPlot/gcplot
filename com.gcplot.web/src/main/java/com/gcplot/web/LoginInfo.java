@@ -1,6 +1,6 @@
 package com.gcplot.web;
 
-import com.gcplot.accounts.Account;
+import com.gcplot.model.account.Account;
 
 public class LoginInfo {
 

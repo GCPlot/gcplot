@@ -1,9 +1,9 @@
-package com.gcplot.accounts.orientdb;
+package com.gcplot.model.account.orientdb;
 
 import com.gcplot.Identifier;
-import com.gcplot.accounts.Account;
-import com.gcplot.accounts.AccountImpl;
-import com.gcplot.accounts.AccountRepository;
+import com.gcplot.model.account.Account;
+import com.gcplot.model.account.AccountImpl;
+import com.gcplot.model.account.AccountRepository;
 import com.gcplot.commons.Metrics;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.commons.exceptions.NotUniqueException;

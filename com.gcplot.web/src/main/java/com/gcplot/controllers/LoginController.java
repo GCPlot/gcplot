@@ -1,9 +1,9 @@
 package com.gcplot.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gcplot.accounts.Account;
-import com.gcplot.accounts.AccountImpl;
-import com.gcplot.accounts.AccountRepository;
+import com.gcplot.model.account.Account;
+import com.gcplot.model.account.AccountImpl;
+import com.gcplot.model.account.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
