@@ -4,4 +4,6 @@ dependencies {
 
     compile "com.datastax.cassandra:cassandra-driver-core:$cassandraDriverVersion"
     compile "com.datastax.cassandra:cassandra-driver-extras:$cassandraDriverVersion"
+
+    testCompile "org.cassandraunit:cassandra-unit:$cassandraUnitVersion"
 }

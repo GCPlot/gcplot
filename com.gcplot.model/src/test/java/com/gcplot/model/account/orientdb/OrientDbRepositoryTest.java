@@ -1,9 +1,13 @@
 package com.gcplot.model.account.orientdb;
 
+import com.gcplot.configuration.OrientDbConfigurationManager;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
-import com.gcplot.model.account.AccountRepository;
+import com.gcplot.repository.AccountOrientDbRepository;
+import com.gcplot.repository.AccountRepository;
 import com.gcplot.commons.ConfigProperty;
+import com.gcplot.repository.FiltersOrientDbRepository;
+import com.gcplot.repository.OrientDbConfig;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import org.junit.After;

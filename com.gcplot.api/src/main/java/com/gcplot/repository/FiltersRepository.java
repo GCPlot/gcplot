@@ -1,4 +1,4 @@
-package com.gcplot.filters;
+package com.gcplot.repository;
 
 import java.util.List;
 

@@ -1,6 +1,5 @@
-package com.gcplot.model.account.orientdb;
+package com.gcplot.repository;
 
-import com.gcplot.filters.FiltersRepository;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.metadata.schema.OClass;

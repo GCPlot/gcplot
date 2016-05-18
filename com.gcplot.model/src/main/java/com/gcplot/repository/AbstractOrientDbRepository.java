@@ -1,4 +1,4 @@
-package com.gcplot.model.account.orientdb;
+package com.gcplot.repository;
 
 import com.codahale.metrics.MetricRegistry;
 import com.gcplot.commons.Metrics;

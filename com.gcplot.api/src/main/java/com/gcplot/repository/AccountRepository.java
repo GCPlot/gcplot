@@ -1,6 +1,7 @@
-package com.gcplot.model.account;
+package com.gcplot.repository;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.account.Account;
 
 import java.util.List;
 import java.util.Optional;

@@ -23,4 +23,8 @@ public interface GCAnalyse {
 
     List<String> commandLineParams();
 
+    String header();
+
+    MemoryDetails memoryDetails();
+
 }

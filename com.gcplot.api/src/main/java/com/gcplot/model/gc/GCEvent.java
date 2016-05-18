@@ -3,10 +3,13 @@ package com.gcplot.model.gc;
 import org.joda.time.DateTime;
 
 import java.util.EnumSet;
+import java.util.OptionalLong;
 
 public interface GCEvent {
 
     long id();
+
+    OptionalLong parentEvent();
 
     long analyseId();
 
@@ -16,20 +19,9 @@ public interface GCEvent {
 
     VMEventType vmEventType();
 
-    /**
-     * Used bytes before this GC event.
-     */
-    long usedBeforeBytes();
+    Capacity capacity();
 
-    /**
-     * Used bytes after this GC event.
-     */
-    long afterUsedBytes();
-
-    /**
-     * Capacity in bytes.
-     */
-    long totalBytes();
+    Capacity totalCapacity();
 
     /**
      * Pause value in microseconds of the whole step (which
@@ -48,6 +40,6 @@ public interface GCEvent {
      */
     EnumSet<Generation> generations();
 
-    boolean isConcurrent();
+    EventConcurrency concurrency();
 
 }

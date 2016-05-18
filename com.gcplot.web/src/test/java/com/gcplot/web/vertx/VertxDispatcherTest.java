@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
-import com.gcplot.model.account.AccountRepository;
+import com.gcplot.repository.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.web.Constants;

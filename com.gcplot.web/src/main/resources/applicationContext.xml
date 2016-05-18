@@ -13,27 +13,27 @@
         <constructor-arg value="${orientdb.pool.size:100}"/>
     </bean>
 
-    <bean id="orientDbConfig" class="com.gcplot.model.account.orientdb.OrientDbConfig">
+    <bean id="orientDbConfig" class="com.gcplot.repository.OrientDbConfig">
         <constructor-arg value="${orientdb.connection.string}"/>
         <constructor-arg value="${orientdb.user}"/>
         <constructor-arg value="${orientdb.password}"/>
     </bean>
 
-    <bean id="accountRepository" class="com.gcplot.model.account.orientdb.AccountOrientDbRepository" init-method="init"
+    <bean id="accountRepository" class="com.gcplot.repository.AccountOrientDbRepository" init-method="init"
           destroy-method="destroy">
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>
         <property name="metrics" ref="metrics"/>
     </bean>
 
-    <bean id="filtersRepository" class="com.gcplot.model.account.orientdb.FiltersOrientDbRepository" init-method="init"
+    <bean id="filtersRepository" class="com.gcplot.repository.FiltersOrientDbRepository" init-method="init"
           destroy-method="destroy">
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>
         <property name="metrics" ref="metrics"/>
     </bean>
 
-    <bean id="config" class="com.gcplot.model.account.orientdb.OrientDbConfigurationManager"
+    <bean id="config" class="com.gcplot.configuration.OrientDbConfigurationManager"
           init-method="init" destroy-method="destroy">
         <constructor-arg ref="orientDbConfig"/>
         <constructor-arg ref="orientDbPool"/>

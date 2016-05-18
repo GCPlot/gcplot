@@ -1,6 +1,6 @@
 include 'com.gcplot.api'
 include 'com.gcplot.commons'
-include 'com.gcplot.gc-analytics'
+include 'com.gcplot.gc-model'
 include 'com.gcplot.log-processor'
 include 'com.gcplot.model'
 include 'com.gcplot.web'

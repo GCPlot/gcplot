@@ -1,7 +1,7 @@
 package com.gcplot.web.vertx;
 
 import com.gcplot.model.account.Account;
-import com.gcplot.model.account.AccountRepository;
+import com.gcplot.repository.AccountRepository;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.messages.Wrapper;
 import com.gcplot.web.*;

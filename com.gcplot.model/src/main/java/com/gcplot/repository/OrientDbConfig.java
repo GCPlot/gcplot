@@ -1,4 +1,4 @@
-package com.gcplot.model.account.orientdb;
+package com.gcplot.repository;
 
 public class OrientDbConfig {
 
