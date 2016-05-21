@@ -3,15 +3,16 @@ package com.gcplot.model.gc;
 import org.joda.time.DateTime;
 
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.OptionalLong;
 
 public interface GCEvent {
 
-    long id();
+    String id();
 
-    OptionalLong parentEvent();
+    Optional<String> parentEvent();
 
-    long analyseId();
+    String analyseId();
 
     String description();
 

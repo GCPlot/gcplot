@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface GCAnalyse {
 
-    long id();
+    String id();
 
     Identifier accountId();
 
