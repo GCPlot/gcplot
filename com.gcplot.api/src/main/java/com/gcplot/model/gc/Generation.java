@@ -16,14 +16,18 @@ public enum Generation implements TypedEnum {
     OTHER(6);
 
     private int type;
-    private static TIntObjectMap<Enum> types = new TIntObjectHashMap<>();
+    private static TIntObjectMap<Generation> types = new TIntObjectHashMap<>();
 
     @Override
     public int type() {
         return type;
     }
 
-    public static TIntObjectMap<Enum> types() {
+    public static Generation get(int type) {
+        return types.get(type);
+    }
+
+    public static TIntObjectMap<Generation> types() {
         return types;
     }
 

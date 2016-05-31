@@ -6,10 +6,14 @@ public interface TypedEnum {
 
     int type();
 
+    static <D extends Enum> D get(int type) {
+        return null;
+    }
+
     /**
      * Must be overlapped with concrete implementation.
      */
-    static TIntObjectMap<Enum> types() {
+    static <D extends Enum> TIntObjectMap<D> types() {
         return null;
     }
 

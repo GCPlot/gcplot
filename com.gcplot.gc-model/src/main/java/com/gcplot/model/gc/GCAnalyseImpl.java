@@ -3,7 +3,10 @@ package com.gcplot.model.gc;
 import com.gcplot.Identifier;
 import org.joda.time.DateTime;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class GCAnalyseImpl implements GCAnalyse {
 
@@ -36,10 +39,10 @@ public class GCAnalyseImpl implements GCAnalyse {
 
     @Override
     public boolean isContinuous() {
-        return isContinous;
+        return isContinuous;
     }
     public GCAnalyseImpl isContinuous(boolean isContinuous) {
-        this.isContinous = isContinuous;
+        this.isContinuous = isContinuous;
         return this;
     }
 
@@ -65,47 +68,97 @@ public class GCAnalyseImpl implements GCAnalyse {
     public GarbageCollectorType collectorType() {
         return collectorType;
     }
+
+    @Override
+    public Map<String, String> jvmHeaders() {
+        return jvmHeaders;
+    }
+    public GCAnalyseImpl jvmHeaders(Map<String, String> jvmHeaders) {
+        this.jvmHeaders = jvmHeaders;
+        return this;
+    }
+
     public GCAnalyseImpl collectorType(GarbageCollectorType collectorType) {
         this.collectorType = collectorType;
         return this;
     }
 
     @Override
-    public List<String> commandLineParams() {
-        return commandLineParams;
+    public Set<String> jvmIds() {
+        return Collections.unmodifiableSet(jvmIds);
     }
-    public GCAnalyseImpl commandLineParams(List<String> commandLineParams) {
-        this.commandLineParams = commandLineParams;
+    public GCAnalyseImpl jvmIds(Set<String> jvmIds) {
+        this.jvmIds = jvmIds;
         return this;
     }
 
     @Override
-    public String header() {
-        return header;
+    public Map<String, MemoryDetails> jvmMemoryDetails() {
+        return Collections.unmodifiableMap(jvmMemoryDetails);
     }
-    public GCAnalyseImpl header(String header) {
-        this.header = header;
-        return this;
-    }
-
-    @Override
-    public MemoryDetailsImpl memoryDetails() {
-        return memoryDetails;
-    }
-    public GCAnalyseImpl memoryDetails(MemoryDetailsImpl memoryDetails) {
-        this.memoryDetails = memoryDetails;
+    public GCAnalyseImpl jvmMemoryDetails(Map<String, MemoryDetails> jvmMemoryDetails) {
+        this.jvmMemoryDetails = jvmMemoryDetails;
         return this;
     }
 
     protected String id;
     protected Identifier accountId;
     protected String name;
-    protected boolean isContinous;
+    protected boolean isContinuous;
     protected DateTime start;
     protected DateTime lastEvent;
     protected GarbageCollectorType collectorType;
-    protected List<String> commandLineParams;
-    protected String header;
-    protected MemoryDetailsImpl memoryDetails;
+    protected Map<String, String> jvmHeaders = Collections.emptyMap();
+    protected Set<String> jvmIds = Collections.emptySet();
+    protected Map<String, MemoryDetails> jvmMemoryDetails = Collections.emptyMap();
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        GCAnalyseImpl gcAnalyse = (GCAnalyseImpl) o;
+
+        if (isContinuous != gcAnalyse.isContinuous) return false;
+        if (id != null ? !id.equals(gcAnalyse.id) : gcAnalyse.id != null) return false;
+        if (accountId != null ? !accountId.equals(gcAnalyse.accountId) : gcAnalyse.accountId != null) return false;
+        if (name != null ? !name.equals(gcAnalyse.name) : gcAnalyse.name != null) return false;
+        if (start != null ? !start.equals(gcAnalyse.start) : gcAnalyse.start != null) return false;
+        if (lastEvent != null ? !lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent != null) return false;
+        if (collectorType != gcAnalyse.collectorType) return false;
+        if (jvmHeaders != null ? !jvmHeaders.equals(gcAnalyse.jvmHeaders) : gcAnalyse.jvmHeaders != null) return false;
+        if (jvmIds != null ? !jvmIds.equals(gcAnalyse.jvmIds) : gcAnalyse.jvmIds != null) return false;
+        return jvmMemoryDetails != null ? jvmMemoryDetails.equals(gcAnalyse.jvmMemoryDetails) : gcAnalyse.jvmMemoryDetails == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (isContinuous ? 1 : 0);
+        result = 31 * result + (start != null ? start.hashCode() : 0);
+        result = 31 * result + (lastEvent != null ? lastEvent.hashCode() : 0);
+        result = 31 * result + (collectorType != null ? collectorType.hashCode() : 0);
+        result = 31 * result + (jvmHeaders != null ? jvmHeaders.hashCode() : 0);
+        result = 31 * result + (jvmIds != null ? jvmIds.hashCode() : 0);
+        result = 31 * result + (jvmMemoryDetails != null ? jvmMemoryDetails.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "GCAnalyseImpl{" +
+                "id='" + id + '\'' +
+                ", accountId=" + accountId +
+                ", name='" + name + '\'' +
+                ", isContinuous=" + isContinuous +
+                ", start=" + start +
+                ", lastEvent=" + lastEvent +
+                ", collectorType=" + collectorType +
+                ", jvmHeaders=" + jvmHeaders +
+                ", jvmIds=" + jvmIds +
+                ", jvmMemoryDetails=" + jvmMemoryDetails +
+                '}';
+    }
 }

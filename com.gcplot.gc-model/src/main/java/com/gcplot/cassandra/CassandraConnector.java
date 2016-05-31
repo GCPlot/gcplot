@@ -22,7 +22,7 @@ public class CassandraConnector {
             builder.withCredentials(username, password);
         }
         cluster = builder.build();
-        session = cluster.connect();
+        session = cluster.connect(keyspace);
     }
 
     public void destroy() {
@@ -42,6 +42,11 @@ public class CassandraConnector {
     protected int port = 9042;
     public void setPort(int port) {
         this.port = port;
+    }
+
+    protected String keyspace = "gcplot";
+    public void setKeyspace(String keyspace) {
+        this.keyspace = keyspace;
     }
 
     protected String username;

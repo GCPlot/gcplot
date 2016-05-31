@@ -10,6 +10,8 @@ public interface GCEvent {
 
     String id();
 
+    String jvmId();
+
     Optional<String> parentEvent();
 
     String analyseId();

@@ -17,6 +17,15 @@ public class GCEventImpl implements GCEvent {
     }
 
     @Override
+    public String jvmId() {
+        return jvmId;
+    }
+    public GCEventImpl jvmId(String jvmId) {
+        this.jvmId = jvmId;
+        return this;
+    }
+
+    @Override
     public Optional<String> parentEvent() {
         return Optional.ofNullable(parentEvent);
     }
@@ -116,6 +125,7 @@ public class GCEventImpl implements GCEvent {
     }
 
     protected String id;
+    protected String jvmId;
     protected String parentEvent;
     protected String analyseId;
     protected String description;
