@@ -18,10 +18,10 @@ public interface GCAnalyseRepository {
 
     void newAnalyse(GCAnalyse analyse);
 
-    void analyseJvm(String id, String jvmId, String headers, MemoryDetails memoryDetails);
+    void analyseJvm(Identifier accountId, String id, String jvmId, String headers, MemoryDetails memoryDetails);
 
-    void removeAnalyse(String id);
+    void removeAnalyse(Identifier accountId, String id);
 
-    void updateLastEvent(String id, DateTime lastEvent);
+    void updateLastEvent(Identifier accountId, String id, DateTime lastEvent);
 
 }

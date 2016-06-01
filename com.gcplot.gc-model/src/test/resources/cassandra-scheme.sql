@@ -20,3 +20,5 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   jvm_md_swap_free map<varchar, bigint>,
   PRIMARY KEY (account_id, id)
 );
+
+CREATE INDEX analyse_ids ON gc_analyse( id );

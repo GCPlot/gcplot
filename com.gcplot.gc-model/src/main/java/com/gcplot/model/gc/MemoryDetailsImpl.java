@@ -64,4 +64,29 @@ public class MemoryDetailsImpl implements MemoryDetails {
 
     public MemoryDetailsImpl() {
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MemoryDetailsImpl that = (MemoryDetailsImpl) o;
+
+        if (pageSize != that.pageSize) return false;
+        if (physicalTotal != that.physicalTotal) return false;
+        if (physicalFree != that.physicalFree) return false;
+        if (swapTotal != that.swapTotal) return false;
+        return swapFree == that.swapFree;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (pageSize ^ (pageSize >>> 32));
+        result = 31 * result + (int) (physicalTotal ^ (physicalTotal >>> 32));
+        result = 31 * result + (int) (physicalFree ^ (physicalFree >>> 32));
+        result = 31 * result + (int) (swapTotal ^ (swapTotal >>> 32));
+        result = 31 * result + (int) (swapFree ^ (swapFree >>> 32));
+        return result;
+    }
 }

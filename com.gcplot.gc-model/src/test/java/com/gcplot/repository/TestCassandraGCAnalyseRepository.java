@@ -32,6 +32,36 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         GCAnalyse rawAnalyse = r.analyses().get(0);
         Assert.assertNotNull(rawAnalyse.id());
         Assert.assertEquals(2, rawAnalyse.jvmMemoryDetails().size());
+        Assert.assertEquals(true, rawAnalyse.isContinuous());
+        Assert.assertEquals(gcAnalyse.start(), rawAnalyse.start());
+        Assert.assertEquals(gcAnalyse.lastEvent(), rawAnalyse.lastEvent());
+        Assert.assertEquals(gcAnalyse.name(), rawAnalyse.name());
+        Assert.assertEquals(gcAnalyse.collectorType(), rawAnalyse.collectorType());
+        Assert.assertEquals(0, Sets.difference(gcAnalyse.jvmIds(), rawAnalyse.jvmIds()).size());
+        Assert.assertEquals("header1,header2", rawAnalyse.jvmHeaders().get("jvm1"));
+        Assert.assertEquals("header3", rawAnalyse.jvmHeaders().get("jvm2"));
+        Assert.assertEquals(gcAnalyse.jvmMemoryDetails().get("jvm1"), rawAnalyse.jvmMemoryDetails().get("jvm1"));
+        Assert.assertEquals(gcAnalyse.jvmMemoryDetails().get("jvm2"), rawAnalyse.jvmMemoryDetails().get("jvm2"));
+
+        Assert.assertTrue(r.analyse(rawAnalyse.id()).isPresent());
+        Assert.assertEquals(1, r.analysesFor(Identifier.fromStr("user1")).size());
+
+        DateTime newLastTime = DateTime.now().plusDays(1);
+        r.updateLastEvent(rawAnalyse.accountId(), rawAnalyse.id(), newLastTime);
+        rawAnalyse = r.analyse(rawAnalyse.id()).get();
+        Assert.assertEquals(rawAnalyse.lastEvent(), newLastTime);
+
+        MemoryDetails newMd = md(918, 3 * 1024, 2 * 1024, 17 * 1024, 9 * 1024);
+        r.analyseJvm(rawAnalyse.accountId(), rawAnalyse.id(), "jvm3", "header4,header10", newMd);
+
+        rawAnalyse = r.analyse(rawAnalyse.id()).get();
+        Assert.assertEquals(3, rawAnalyse.jvmMemoryDetails().size());
+        Assert.assertEquals(rawAnalyse.jvmMemoryDetails().get("jvm3"), newMd);
+        Assert.assertEquals(rawAnalyse.jvmHeaders().get("jvm3"), "header4,header10");
+        Assert.assertTrue(rawAnalyse.jvmIds().contains("jvm3"));
+
+        r.removeAnalyse(rawAnalyse.accountId(), rawAnalyse.id());
+        Assert.assertEquals(0, r.analyses().size());
     }
 
     private static MemoryDetails md(long pageSize, long physicalTotal, long physicalFree,

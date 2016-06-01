@@ -36,7 +36,7 @@ public class CassandraGCAnalyseRepository implements GCAnalyseRepository {
     @Override
     public Optional<GCAnalyse> analyse(String id) {
         Statement statement = QueryBuilder.select().all()
-                .from(TABLE_NAME).where(eq("id", UUID.fromString(id)));
+                .from(TABLE_NAME).allowFiltering().where(eq("id", UUID.fromString(id)));
         return Optional.ofNullable(analyseFrom(connector.session().execute(statement).one()));
     }
 
@@ -73,26 +73,28 @@ public class CassandraGCAnalyseRepository implements GCAnalyseRepository {
     }
 
     @Override
-    public void analyseJvm(String id, String jvmId, String headers, MemoryDetails memoryDetails) {
+    public void analyseJvm(Identifier accId, String id, String jvmId, String headers, MemoryDetails memoryDetails) {
         UUID uuid = UUID.fromString(id);
-        connector.session().execute(QueryBuilder.batch(updateTable(uuid).with(add("jvm_ids", jvmId)),
-                updateTable(uuid).with(put("jvm_headers", jvmId, headers)),
-                updateTable(uuid).with(put("jvm_md_page_size", jvmId, memoryDetails.pageSize())),
-                updateTable(uuid).with(put("jvm_md_phys_total", jvmId, memoryDetails.physicalTotal())),
-                updateTable(uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())),
-                updateTable(uuid).with(put("jvm_md_swap_total", jvmId, memoryDetails.swapTotal())),
-                updateTable(uuid).with(put("jvm_md_swap_free", jvmId, memoryDetails.swapFree())))
+        connector.session().execute(QueryBuilder.batch(updateTable(accId, uuid).with(add("jvm_ids", jvmId)),
+                updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)),
+                updateTable(accId, uuid).with(put("jvm_md_page_size", jvmId, memoryDetails.pageSize())),
+                updateTable(accId, uuid).with(put("jvm_md_phys_total", jvmId, memoryDetails.physicalTotal())),
+                updateTable(accId, uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())),
+                updateTable(accId, uuid).with(put("jvm_md_swap_total", jvmId, memoryDetails.swapTotal())),
+                updateTable(accId, uuid).with(put("jvm_md_swap_free", jvmId, memoryDetails.swapFree())))
                 .setConsistencyLevel(ConsistencyLevel.QUORUM));
     }
 
     @Override
-    public void removeAnalyse(String id) {
-        connector.session().execute(QueryBuilder.delete().all().from(TABLE_NAME).where(eq("id", UUID.fromString(id))));
+    public void removeAnalyse(Identifier accId, String id) {
+        connector.session().execute(QueryBuilder.delete().all().from(TABLE_NAME)
+                .where(eq("id", UUID.fromString(id))).and(eq("account_id", accId.toString())));
     }
 
     @Override
-    public void updateLastEvent(String id, DateTime lastEvent) {
+    public void updateLastEvent(Identifier accId, String id, DateTime lastEvent) {
         Statement s = QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(id)))
+                .and(eq("account_id", accId.toString()))
                 .with(set("last_event", lastEvent.toDateTime(DateTimeZone.UTC).toDate()));
         connector.session().execute(s);
     }
@@ -101,8 +103,8 @@ public class CassandraGCAnalyseRepository implements GCAnalyseRepository {
         this.connector = connector;
     }
 
-    protected Update.Where updateTable(UUID uuid) {
-        return QueryBuilder.update(TABLE_NAME).where(eq("id", uuid));
+    protected Update.Where updateTable(Identifier accId, UUID uuid) {
+        return QueryBuilder.update(TABLE_NAME).where(eq("id", uuid)).and(eq("account_id", accId.toString()));
     }
 
     protected CassandraConnector connector;
