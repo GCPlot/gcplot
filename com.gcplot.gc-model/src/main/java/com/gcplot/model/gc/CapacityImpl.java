@@ -1,5 +1,9 @@
 package com.gcplot.model.gc;
 
+import com.google.common.base.Preconditions;
+
+import java.util.List;
+
 public class CapacityImpl implements Capacity {
 
     @Override
@@ -29,6 +33,13 @@ public class CapacityImpl implements Capacity {
     protected long usedBefore;
     protected long usedAfter;
     protected long total;
+
+    public CapacityImpl(List<Long> list) {
+        Preconditions.checkState(list.size() == 3, "Wrong input list: {}", list);
+        this.usedBefore = list.get(0);
+        this.usedAfter = list.get(1);
+        this.total = list.get(2);
+    }
 
     public CapacityImpl(long usedBefore, long usedAfter, long total) {
         this.usedBefore = usedBefore;

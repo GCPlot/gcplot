@@ -18,7 +18,7 @@ public interface GCEvent {
 
     String description();
 
-    DateTime timestamp();
+    DateTime occurred();
 
     VMEventType vmEventType();
 
@@ -44,5 +44,7 @@ public interface GCEvent {
     EnumSet<Generation> generations();
 
     EventConcurrency concurrency();
+
+    String ext();
 
 }

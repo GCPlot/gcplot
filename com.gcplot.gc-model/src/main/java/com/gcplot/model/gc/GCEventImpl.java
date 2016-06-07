@@ -53,11 +53,11 @@ public class GCEventImpl implements GCEvent {
     }
 
     @Override
-    public DateTime timestamp() {
-        return timestamp;
+    public DateTime occurred() {
+        return occurred;
     }
-    public GCEventImpl timestamp(DateTime timestamp) {
-        this.timestamp = timestamp;
+    public GCEventImpl occurred(DateTime occurred) {
+        this.occurred = occurred;
         return this;
     }
 
@@ -124,12 +124,21 @@ public class GCEventImpl implements GCEvent {
         return this;
     }
 
+    @Override
+    public String ext() {
+        return ext;
+    }
+    public GCEventImpl ext(String ext) {
+        this.ext = ext;
+        return this;
+    }
+
     protected String id;
     protected String jvmId;
     protected String parentEvent;
     protected String analyseId;
     protected String description;
-    protected DateTime timestamp;
+    protected DateTime occurred;
     protected VMEventType vmEventType;
     protected CapacityImpl capacity;
     protected CapacityImpl totalCapacity;
@@ -137,5 +146,6 @@ public class GCEventImpl implements GCEvent {
     protected long durationMu;
     protected EnumSet<Generation> generations;
     protected EventConcurrency concurrency;
+    protected String ext;
 
 }

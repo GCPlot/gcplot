@@ -12,7 +12,7 @@ public class EnumSetUtilsTest {
     @Test
     public void test() {
         EnumSet<TestEnum> es = EnumSet.of(TestEnum.ONE, TestEnum.TWO);
-        int o = EnumSetUtils.encode(es);
+        long o = EnumSetUtils.encode(es);
         es = EnumSetUtils.decode(o, TestEnum.class);
 
         Assert.assertTrue(es.contains(TestEnum.ONE));

@@ -22,3 +22,25 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
 );
 
 CREATE INDEX analyse_ids ON gc_analyse( id );
+
+CREATE TABLE IF NOT EXISTS gc_event (
+  id uuid,
+  parent_id uuid,
+  analyse_id uuid,
+  date varchar,
+  jvm_id varchar,
+  description varchar,
+  occurred timeuuid,
+  vm_event_type int,
+  capacity list<bigint>,
+  total_capacity list<bigint>,
+  pause_mu bigint,
+  duration_mu bigint,
+  generations bigint,
+  concurrency int,
+  ext varchar,
+  PRIMARY KEY ((analyse_id, jvm_id, date), occurred)
+) WITH CLUSTERING ORDER BY (occurred DESC);
+
+CREATE INDEX gc_generations ON gc_event( generations );
+CREATE INDEX gc_event_ids ON gc_event( id );

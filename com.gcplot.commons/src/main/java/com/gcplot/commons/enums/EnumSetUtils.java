@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class EnumSetUtils {
 
-    public static <E extends Enum<E> & TypedEnum> int encode(EnumSet<E> set) {
-        int ret = 0;
+    public static <E extends Enum<E> & TypedEnum> long encode(EnumSet<E> set) {
+        long ret = 0;
 
         for (E val : set) {
             ret |= 1 << val.type();
@@ -26,7 +26,7 @@ public class EnumSetUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E extends Enum<E> & TypedEnum> EnumSet<E> decode(int code,
+    public static <E extends Enum<E> & TypedEnum> EnumSet<E> decode(long code,
                                                          final Class<E> enumType) {
         try {
             TIntObjectMap<E> types = cachedTypes.computeIfAbsent(enumType,
@@ -39,8 +39,8 @@ public class EnumSetUtils {
                     });
             EnumSet<E> result = EnumSet.noneOf(enumType);
             while (code != 0) {
-                int type = Integer.numberOfTrailingZeros(code);
-                code ^= Integer.lowestOneBit(code);
+                int type = Long.numberOfTrailingZeros(code);
+                code ^= Long.lowestOneBit(code);
                 result.add(types.get(type));
             }
             return result;
