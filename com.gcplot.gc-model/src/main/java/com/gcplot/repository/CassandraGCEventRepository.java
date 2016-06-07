@@ -1,5 +1,6 @@
 package com.gcplot.repository;
 
+import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.gcplot.cassandra.CassandraConnector;
@@ -57,13 +58,13 @@ public class CassandraGCEventRepository implements GCEventRepository {
 
     @Override
     public void add(GCEvent event) {
-        Statement st = addStatement(event);
-        connector.session().execute(st);
+        connector.session().execute(addStatement(event));
     }
 
     @Override
     public void add(List<GCEvent> events) {
-
+        connector.session().execute(
+                QueryBuilder.batch((RegularStatement[]) events.stream().map(this::addStatement).toArray()));
     }
 
     protected List<String> dates(Range range) {

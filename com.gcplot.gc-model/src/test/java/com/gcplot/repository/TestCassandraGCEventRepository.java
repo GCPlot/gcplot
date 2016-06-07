@@ -17,6 +17,8 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         Assert.assertEquals(0, r.events(analyseId, "jvm1",
                 wideDays(7)).size());
         r.erase(analyseId, "jvm1", wideDays(7));
+
+
     }
 
     protected Range wideDays(int days) {
