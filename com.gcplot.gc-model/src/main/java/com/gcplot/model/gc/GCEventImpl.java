@@ -74,7 +74,7 @@ public class GCEventImpl implements GCEvent {
     public Capacity capacity() {
         return capacity;
     }
-    public GCEventImpl capacity(CapacityImpl capacity) {
+    public GCEventImpl capacity(Capacity capacity) {
         this.capacity = capacity;
         return this;
     }
@@ -83,7 +83,7 @@ public class GCEventImpl implements GCEvent {
     public Capacity totalCapacity() {
         return totalCapacity;
     }
-    public GCEventImpl totalCapacity(CapacityImpl totalCapacity) {
+    public GCEventImpl totalCapacity(Capacity totalCapacity) {
         this.totalCapacity = totalCapacity;
         return this;
     }
@@ -140,8 +140,8 @@ public class GCEventImpl implements GCEvent {
     protected String description;
     protected DateTime occurred;
     protected VMEventType vmEventType;
-    protected CapacityImpl capacity;
-    protected CapacityImpl totalCapacity;
+    protected Capacity capacity;
+    protected Capacity totalCapacity;
     protected long pauseMu;
     protected long durationMu;
     protected EnumSet<Generation> generations;

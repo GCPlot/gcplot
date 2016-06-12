@@ -50,4 +50,8 @@ public class CapacityImpl implements Capacity {
     public CapacityImpl() {
     }
 
+    public static CapacityImpl of(long usedBefore, long usedAfter, long total) {
+        return new CapacityImpl(usedBefore, usedAfter, total);
+    }
+
 }

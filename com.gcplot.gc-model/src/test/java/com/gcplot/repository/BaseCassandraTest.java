@@ -6,9 +6,11 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -16,25 +18,33 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BaseCassandraTest extends BaseCassandra {
-    protected CassandraConnector connector;
+    protected static CassandraConnector connector;
+
+    @BeforeClass
+    public static void beforeCassandraTest() throws Exception {
+        initKeySpace();
+        connector.setKeyspace("gcplot");
+        connector.init();
+    }
 
     @Before
-    public void before() throws Exception {
-        super.before();
+    public void beforeTest() throws Exception {
+        beforeCassandraTest();
+    }
+
+    protected static void initKeySpace() throws IOException, URISyntaxException {
         connector = new CassandraConnector();
         connector.setHosts(new String[]{EmbeddedCassandraServerHelper.getHost()});
         connector.setPort(nativePort);
         connector.setKeyspace(null);
         connector.init();
-        String q = readFile(new File(getClass().getClassLoader().getResource("cassandra-scheme.sql").toURI()).getAbsolutePath(), Charsets.UTF_8);
+        String q = readFile(new File(BaseCassandraTest.class.getClassLoader().getResource("cassandra-scheme.sql").toURI()).getAbsolutePath(), Charsets.UTF_8);
         for (String qq : q.split(";")) {
             if (!Strings.isNullOrEmpty(qq.trim())) {
                 connector.session().execute(qq.trim());
             }
         }
         connector.destroy();
-        connector.setKeyspace("gcplot");
-        connector.init();
     }
 
     @SuppressWarnings("all")

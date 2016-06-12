@@ -6,20 +6,21 @@ import org.apache.commons.io.IOUtils;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 import java.io.File;
 import java.io.FileOutputStream;
 
 public class BaseCassandra {
-    protected File storagedir;
-    protected File tempDir;
-    protected File commitLog;
-    protected File savedCaches;
-    protected File dataFiles;
-    protected int nativePort;
+    protected static File storagedir;
+    protected static File tempDir;
+    protected static File commitLog;
+    protected static File savedCaches;
+    protected static File dataFiles;
+    protected static int nativePort;
 
-    @Before
-    public void before() throws Exception {
+    @BeforeClass
+    public static void before() throws Exception {
         storagedir = Files.createTempDir();
         tempDir = Files.createTempDir();
         commitLog = Files.createTempDir();
@@ -29,7 +30,7 @@ public class BaseCassandra {
         int[] ports = Utils.getFreePorts(4);
         synchronized (CassandraConnector.class) {
             System.setProperty("cassandra.storagedir", storagedir.getAbsolutePath());
-            String str = IOUtils.toString(getClass().getClassLoader().getResourceAsStream("cassandra.yaml"), "UTF-8");
+            String str = IOUtils.toString(BaseCassandra.class.getClassLoader().getResourceAsStream("cassandra.yaml"), "UTF-8");
             str = str.replace("{COMMIT_LOG}", commitLog.getAbsolutePath())
                     .replace("{SAVED_CACHES}", savedCaches.getAbsolutePath())
                     .replace("{DATA_FILES}", dataFiles.getAbsolutePath())

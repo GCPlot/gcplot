@@ -1,4 +1,4 @@
-CREATE KEYSPACE gcplot
+CREATE KEYSPACE IF NOT EXISTS gcplot
   WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
 
 USE gcplot;
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   PRIMARY KEY (account_id, id)
 );
 
-CREATE INDEX analyse_ids ON gc_analyse( id );
+CREATE INDEX IF NOT EXISTS analyse_ids ON gc_analyse( id );
 
 CREATE TABLE IF NOT EXISTS gc_event (
   id uuid,
@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS gc_event (
   date varchar,
   jvm_id varchar,
   description varchar,
-  occurred timeuuid,
+  written_at timeuuid,
+  occurred timestamp,
   vm_event_type int,
   capacity list<bigint>,
   total_capacity list<bigint>,
@@ -39,8 +40,8 @@ CREATE TABLE IF NOT EXISTS gc_event (
   generations bigint,
   concurrency int,
   ext varchar,
-  PRIMARY KEY ((analyse_id, jvm_id, date), occurred)
-) WITH CLUSTERING ORDER BY (occurred DESC);
+  PRIMARY KEY ((analyse_id, jvm_id, date), written_at)
+) WITH CLUSTERING ORDER BY (written_at DESC);
 
-CREATE INDEX gc_generations ON gc_event( generations );
-CREATE INDEX gc_event_ids ON gc_event( id );
+CREATE INDEX IF NOT EXISTS gc_event_ids ON gc_event( id );
+CREATE INDEX IF NOT EXISTS gc_event_occurred ON gc_event( occurred );

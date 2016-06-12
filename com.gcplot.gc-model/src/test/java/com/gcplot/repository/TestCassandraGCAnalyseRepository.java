@@ -4,6 +4,7 @@ import com.gcplot.Identifier;
 import com.gcplot.model.gc.*;
 import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,8 +34,8 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertNotNull(rawAnalyse.id());
         Assert.assertEquals(2, rawAnalyse.jvmMemoryDetails().size());
         Assert.assertEquals(true, rawAnalyse.isContinuous());
-        Assert.assertEquals(gcAnalyse.start(), rawAnalyse.start());
-        Assert.assertEquals(gcAnalyse.lastEvent(), rawAnalyse.lastEvent());
+        Assert.assertEquals(gcAnalyse.start().toDateTime(DateTimeZone.UTC), rawAnalyse.start());
+        Assert.assertEquals(gcAnalyse.lastEvent().toDateTime(DateTimeZone.UTC), rawAnalyse.lastEvent());
         Assert.assertEquals(gcAnalyse.name(), rawAnalyse.name());
         Assert.assertEquals(gcAnalyse.collectorType(), rawAnalyse.collectorType());
         Assert.assertEquals(0, Sets.difference(gcAnalyse.jvmIds(), rawAnalyse.jvmIds()).size());
@@ -46,7 +47,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertTrue(r.analyse(rawAnalyse.id()).isPresent());
         Assert.assertEquals(1, r.analysesFor(Identifier.fromStr("user1")).size());
 
-        DateTime newLastTime = DateTime.now().plusDays(1);
+        DateTime newLastTime = DateTime.now(DateTimeZone.UTC).plusDays(1);
         r.updateLastEvent(rawAnalyse.accountId(), rawAnalyse.id(), newLastTime);
         rawAnalyse = r.analyse(rawAnalyse.id()).get();
         Assert.assertEquals(rawAnalyse.lastEvent(), newLastTime);

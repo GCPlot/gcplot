@@ -66,9 +66,9 @@ public abstract class Mapper {
         }
         GCEventImpl gcEvent = new GCEventImpl();
         gcEvent.id(row.getUUID("id").toString())
-                .parentEvent(row.getUUID("parent_id") == null ? null : row.getUUID("parent_id").toString())
-                .analyseId(row.getUUID("analyse_id") == null ? null : row.getUUID("analyse_id").toString())
-                .jvmId(row.getString("jvm_id"))
+                .parentEvent(row.getUUID("parent_id") != null ? row.getUUID("parent_id").toString() : null)
+                .analyseId(row.getColumnDefinitions().contains("analyse_id") ? row.getUUID("analyse_id").toString() : null)
+                .jvmId(row.getColumnDefinitions().contains("jvm_id") ? row.getString("jvm_id") : null)
                 .description(row.getString("description"))
                 .occurred(new DateTime(row.getTimestamp("occurred"), DateTimeZone.UTC))
                 .vmEventType(VMEventType.get(row.getInt("vm_event_type")))
