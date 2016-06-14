@@ -47,6 +47,12 @@ public class CapacityImpl implements Capacity {
         this.total = total;
     }
 
+    public CapacityImpl(Capacity capacity) {
+        this.usedBefore = capacity.usedBefore();
+        this.usedAfter = capacity.usedAfter();
+        this.total = capacity.total();
+    }
+
     public CapacityImpl() {
     }
 
@@ -54,4 +60,24 @@ public class CapacityImpl implements Capacity {
         return new CapacityImpl(usedBefore, usedAfter, total);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CapacityImpl capacity = (CapacityImpl) o;
+
+        if (usedBefore != capacity.usedBefore) return false;
+        if (usedAfter != capacity.usedAfter) return false;
+        return total == capacity.total;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (usedBefore ^ (usedBefore >>> 32));
+        result = 31 * result + (int) (usedAfter ^ (usedAfter >>> 32));
+        result = 31 * result + (int) (total ^ (total >>> 32));
+        return result;
+    }
 }

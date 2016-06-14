@@ -27,10 +27,13 @@ import java.util.stream.IntStream;
 public class CassandraGCEventRepository implements GCEventRepository {
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
-    public static final String[] NON_KEY_FIELDS = new String[]{"id", "parent_id", "description",
+    public static final String[] NON_KEY_FIELDS = new String[] { "id", "parent_id", "description",
             "occurred", "vm_event_type", "capacity", "total_capacity",
             "pause_mu", "duration_mu", "generations", "concurrency",
             "ext"};
+    public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type",
+            "pause_mu", "duration_mu", "generations", "concurrency"
+    };
 
     public void init() {
         Preconditions.checkNotNull(connector, "Cassandra connector is required.");
@@ -38,12 +41,33 @@ public class CassandraGCEventRepository implements GCEventRepository {
 
     @Override
     public List<GCEvent> events(String analyseId, String jvmId, Range range) {
-        return eventsFrom(events0(analyseId, jvmId, range));
+        return eventsFrom(events0(analyseId, jvmId, range, NON_KEY_FIELDS));
     }
 
     @Override
     public Iterator<GCEvent> lazyEvents(String analyseId, String jvmId, Range range) {
-        final Iterator<Row> i = events0(analyseId, jvmId, range).iterator();
+        final Iterator<Row> i = events0(analyseId, jvmId, range, NON_KEY_FIELDS).iterator();
+        return new Iterator<GCEvent>() {
+            @Override
+            public boolean hasNext() {
+                return i.hasNext();
+            }
+
+            @Override
+            public GCEvent next() {
+                return eventFrom(i.next());
+            }
+        };
+    }
+
+    @Override
+    public List<GCEvent> pauseEvents(String analyseId, String jvmId, Range range) {
+        return eventsFrom(events0(analyseId, jvmId, range, PAUSE_EVENT_FIELDS));
+    }
+
+    @Override
+    public Iterator<GCEvent> lazyPauseEvents(String analyseId, String jvmId, Range range) {
+        final Iterator<Row> i = events0(analyseId, jvmId, range, PAUSE_EVENT_FIELDS).iterator();
         return new Iterator<GCEvent>() {
             @Override
             public boolean hasNext() {
@@ -84,8 +108,8 @@ public class CassandraGCEventRepository implements GCEventRepository {
                 QueryBuilder.batch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
     }
 
-    protected ResultSet events0(String analyseId, String jvmId, Range range) {
-        return connector.session().execute(QueryBuilder.select(NON_KEY_FIELDS).from(TABLE_NAME)
+    protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
+        return connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME)
                 .allowFiltering()
                 .where(eq("analyse_id", UUID.fromString(analyseId)))
                 .and(eq("jvm_id", jvmId))

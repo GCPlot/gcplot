@@ -3,6 +3,7 @@ package com.gcplot.repository;
 import com.gcplot.commons.Range;
 import com.gcplot.model.gc.*;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,6 +32,36 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         GCEvent ge = i.next();
         Assert.assertNotNull(ge);
         Assert.assertFalse(i.hasNext());
+
+        Assert.assertNotNull(ge.id());
+        // we don't load jvmId and analyseId in order to save traffic
+        // Assert.assertEquals(ge.jvmId(), jvmId);
+        // Assert.assertEquals(ge.analyseId(), analyseId);
+        Assert.assertNull(ge.jvmId());
+        Assert.assertNull(ge.analyseId());
+        Assert.assertEquals(ge.description(), event.description());
+        Assert.assertEquals(ge.occurred(), event.occurred().toDateTime(DateTimeZone.UTC));
+        Assert.assertEquals(ge.vmEventType(), event.vmEventType());
+        Assert.assertEquals(ge.capacity(), event.capacity());
+        Assert.assertEquals(ge.totalCapacity(), new CapacityImpl(event.totalCapacity()));
+        Assert.assertEquals(ge.pauseMu(), event.pauseMu());
+        Assert.assertEquals(ge.durationMu(), event.durationMu());
+        Assert.assertEquals(ge.generations(), event.generations());
+        Assert.assertEquals(ge.concurrency(), event.concurrency());
+
+        ge = r.lazyPauseEvents(analyseId, jvmId, wideDays(2)).next();
+        Assert.assertNull(ge.id());
+        Assert.assertNull(ge.jvmId());
+        Assert.assertNull(ge.analyseId());
+        Assert.assertNull(ge.description());
+        Assert.assertNotNull(ge.occurred());
+        Assert.assertNotNull(ge.vmEventType());
+        Assert.assertNull(ge.capacity());
+        Assert.assertNull(ge.totalCapacity());
+        Assert.assertNotEquals(ge.pauseMu(), 0);
+        Assert.assertNotEquals(ge.durationMu(), 0);
+        Assert.assertNotNull(ge.generations());
+        Assert.assertNotNull(ge.concurrency());
     }
 
     @Test
