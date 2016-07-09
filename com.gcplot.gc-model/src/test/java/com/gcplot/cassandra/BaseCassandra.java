@@ -42,7 +42,7 @@ public class BaseCassandra {
             try (FileOutputStream fos = new FileOutputStream(config)) {
                 IOUtils.write(str, fos, "UTF-8");
             }
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra(config, tempDir.getAbsolutePath(), 20_000);
+            EmbeddedCassandraServerHelper.startEmbeddedCassandra(config, tempDir.getAbsolutePath(), 60_000);
         }
     }
 
