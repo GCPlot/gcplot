@@ -18,6 +18,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -40,7 +41,18 @@ public class VertxDispatcher implements Dispatcher<String> {
     @Override
     public void close() {
         LOG.info("Shutting down Vert.x Dispatcher.");
-        httpServer.close();
+        CountDownLatch serverWait = new CountDownLatch(1);
+        httpServer.close(r -> serverWait.countDown());
+        try {
+            serverWait.await();
+        } catch (InterruptedException ignored) {
+        }
+        CountDownLatch closeWait = new CountDownLatch(1);
+        vertx.close(r -> closeWait.countDown());
+        try {
+            closeWait.await();
+        } catch (InterruptedException ignored) {
+        }
     }
 
     @Override

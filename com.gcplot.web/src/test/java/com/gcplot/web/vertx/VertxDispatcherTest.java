@@ -48,7 +48,7 @@ public class VertxDispatcherTest {
         vertx.close();
     }
 
-    //@Test
+    @Test
     public void testBasic() throws Exception {
         CountDownLatch l = new CountDownLatch(2);
         final String message = "This is test message.";
@@ -68,7 +68,7 @@ public class VertxDispatcherTest {
         Assert.assertTrue(l.await(TIMEOUT, TimeUnit.SECONDS));
     }
 
-    //@Test
+    @Test
     public void testNoAuth() throws Exception {
         final int[] count = { 0 };
         dispatcher.requireAuth().get("/get/me", c -> {
