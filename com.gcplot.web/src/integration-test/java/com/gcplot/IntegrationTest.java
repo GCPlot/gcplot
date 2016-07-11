@@ -68,7 +68,7 @@ public abstract class IntegrationTest {
         bootstrap.run();
         client = getApplicationContext().getBean(Vertx.class).createHttpClient();
         ConfigurationManager cm = getApplicationContext().getBean(ConfigurationManager.class);
-        cm.putProperty(ConfigProperty.API_HOST, LOCALHOST + ":" + port);
+        cm.putProperty(ConfigProperty.API_HOST, LOCALHOST + ":" + port.value);
         cm.putProperty(ConfigProperty.PUBLIC_HOST, LOCALHOST);
         cm.putProperty(ConfigProperty.EMAIL_USE_SSL, false);
         cm.putProperty(ConfigProperty.EMAIL_SMTP_PORT, smtpServer.getPort());
@@ -105,7 +105,7 @@ public abstract class IntegrationTest {
         tempDir = Files.createTempDir();
         port = Utils.getFreePorts(1)[0];
         StringBuilder sb = new StringBuilder();
-        sb.append("bootstrap.server.port=").append(port).append('\n');
+        sb.append("bootstrap.server.port=").append(port.value).append('\n');
         sb.append("bootstrap.server.host=").append(LOCALHOST).append('\n');
         sb.append("orientdb.connection.string=memory:").append(dbName);
         Files.write(sb.toString(), new File(tempDir, "gcplot.properties"), Charset.forName("UTF-8"));
