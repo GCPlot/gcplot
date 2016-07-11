@@ -4,10 +4,15 @@ import com.gcplot.commons.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,15 +21,32 @@ import java.util.function.Supplier;
 
 public abstract class Utils {
 
-    public static int[] getFreePorts(int portNumber) {
+    public static Port[] getFreePorts(int portNumber) {
         try {
-            int[] result = new int[portNumber];
+            Port[] result = new Port[portNumber];
             List<ServerSocket> servers = new ArrayList<>(portNumber);
             try {
                 for (int i = 0; i < portNumber; i++) {
                     ServerSocket tempServer = new ServerSocket(0);
-                    servers.add(tempServer);
-                    result[i] = tempServer.getLocalPort();
+                    File file = new File(System.getProperty("java.io.tmpdir"),
+                            tempServer.getLocalPort() + ".lock");
+
+                    try {
+                        FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
+                        FileLock lock = channel.lock();
+                        result[i] = new Port(tempServer.getLocalPort(), file, lock, channel);
+                        servers.add(tempServer);
+                    } catch (Throwable t) {
+                        try {
+                            tempServer.close();
+                        } catch (IOException ignored) {
+                        }
+                        try {
+                            file.delete();
+                        } catch (Throwable ignored) {
+                        }
+                        result[i] = getFreePorts(1)[0];
+                    }
                 }
             } finally {
                 for (ServerSocket server : servers) {
@@ -87,5 +109,35 @@ public abstract class Utils {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+
+    public static class Port {
+        public final int value;
+        private final File file;
+        private final FileLock lock;
+        private final FileChannel channel;
+
+        public Port(int port, File file, FileLock lock, FileChannel channel) {
+            this.value = port;
+            this.file = file;
+            this.lock = lock;
+            this.channel = channel;
+        }
+
+        public void unlock() {
+            try {
+                try {
+                    lock.release();
+                } catch (Throwable ignored) {
+                }
+                try {
+                    channel.close();
+                } catch (Throwable ignored) {
+                }
+            } catch (Throwable ignored) {
+            } finally {
+                file.delete();
+            }
+        }
+    }
 
 }

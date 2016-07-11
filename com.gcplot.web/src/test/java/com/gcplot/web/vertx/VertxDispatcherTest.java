@@ -25,6 +25,7 @@ import java.util.function.Predicate;
 import static org.easymock.EasyMock.*;
 
 public class VertxDispatcherTest {
+    protected static final int TIMEOUT = 10;
 
     @Before
     public void setUp() throws Exception {
@@ -33,7 +34,7 @@ public class VertxDispatcherTest {
         accountRepository = createMock(AccountRepository.class);
         dispatcher = new VertxDispatcher();
         dispatcher.setHost(HOST);
-        dispatcher.setPort(port);
+        dispatcher.setPort(port.value);
         dispatcher.setVertx(vertx);
         dispatcher.setAccountRepository(accountRepository);
         dispatcher.setMaxUploadSize(50*1024*1024);
@@ -42,6 +43,7 @@ public class VertxDispatcherTest {
 
     @After
     public void tearDown() throws Exception {
+        port.unlock();
         dispatcher.close();
         vertx.close();
     }
@@ -56,14 +58,14 @@ public class VertxDispatcherTest {
         });
 
         HttpClient client = vertx.createHttpClient();
-        client.get(port, HOST, "/get/me", r -> {
+        client.get(port.value, HOST, "/get/me", r -> {
             r.bodyHandler(b -> {
                 if (new String(b.getBytes()).equals(message))
                     l.countDown();
             });
         }).end();
 
-        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(l.await(TIMEOUT, TimeUnit.SECONDS));
     }
 
     @Test
@@ -88,39 +90,39 @@ public class VertxDispatcherTest {
         HttpClient client = vertx.createHttpClient();
         CountDownLatch auth = new CountDownLatch(1);
         final String[] _token = { "" };
-        client.get(port, HOST, "/auth", r -> {
+        client.get(port.value, HOST, "/auth", r -> {
             _token[0] = r.getHeader(Constants.AUTH_TOKEN_HEADER);
             auth.countDown();
         }).end();
-        Assert.assertTrue(auth.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(auth.await(TIMEOUT, TimeUnit.SECONDS));
 
         Account fakeAccount = new AccountImpl();
         expect(accountRepository.account(token)).andReturn(Optional.of(fakeAccount)).anyTimes();
         replay(accountRepository);
 
         CountDownLatch getMe = new CountDownLatch(1);
-        client.get(port, HOST, "/get/me", c -> {
+        client.get(port.value, HOST, "/get/me", c -> {
             c.bodyHandler(b -> {
                 if (b.toString().equals("{\"result\":{\"num\":5,\"str\":\"VertxDisp\",\"nums\":[3,4,5]}}"))
                     getMe.countDown();
             });
         }).putHeader(Constants.AUTH_TOKEN_HEADER, _token[0]).end();
 
-        Assert.assertTrue(getMe.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(getMe.await(TIMEOUT, TimeUnit.SECONDS));
     }
 
     protected void httpGet(HttpClient client, String path, Predicate<JsonObject> test) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
-        client.get(port, HOST, path, r -> r.bodyHandler(b -> {
+        client.get(port.value, HOST, path, r -> r.bodyHandler(b -> {
             JsonObject jo = new JsonObject(new String(b.getBytes()));
             if (test.test(jo)) {
                 l.countDown();
             }
         })).end();
-        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(l.await(TIMEOUT, TimeUnit.SECONDS));
     }
 
-    protected int port;
+    protected Utils.Port port;
     protected AccountRepository accountRepository;
     protected VertxDispatcher dispatcher;
     protected Vertx vertx;

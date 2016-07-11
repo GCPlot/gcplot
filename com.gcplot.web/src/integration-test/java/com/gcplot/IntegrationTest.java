@@ -46,9 +46,9 @@ public abstract class IntegrationTest {
     public File getTempDir() {
         return tempDir;
     }
-    private int port;
+    private Utils.Port port;
     public int getPort() {
-        return port;
+        return port.value;
     }
 
     private String dbName;
@@ -83,6 +83,7 @@ public abstract class IntegrationTest {
             FileUtils.delete(tempDir);
         } catch (Throwable ignored) {
         }
+        port.unlock();
         try {
             new ODatabaseDocumentTx("memory:" + dbName).open("admin", "admin").drop();
         } catch (Throwable t) {
@@ -126,7 +127,7 @@ public abstract class IntegrationTest {
         if (path.startsWith("http")) {
             client.getAbs(path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
         } else {
-            client.get(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
+            client.get(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
         }
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
     }
@@ -145,7 +146,7 @@ public abstract class IntegrationTest {
 
     protected void post(String path, String message, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
-        client.post(port, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end(message);
+        client.post(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end(message);
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
     }
 
