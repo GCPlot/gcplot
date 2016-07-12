@@ -35,6 +35,8 @@ public abstract class AbstractOrientDbRepository {
             }
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
+        } finally {
+            isClosed = true;
         }
     }
 
@@ -102,6 +104,7 @@ public abstract class AbstractOrientDbRepository {
         this.metrics = metrics;
     }
 
+    protected volatile boolean isClosed = false;
     protected OrientDbConfig config;
     protected OPartitionedDatabasePool pool;
 

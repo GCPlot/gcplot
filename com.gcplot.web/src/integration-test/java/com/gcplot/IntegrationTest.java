@@ -80,25 +80,29 @@ public abstract class IntegrationTest {
     @After
     public void tearDown() throws Exception {
         try {
-            FileUtils.delete(tempDir);
-        } catch (Throwable ignored) {
-        }
-        port.unlock();
-        try {
-            new ODatabaseDocumentTx("memory:" + dbName).open("admin", "admin").drop();
-        } catch (Throwable t) {
-            LOG.error(t.getMessage(), t);
+            ((ConfigurableApplicationContext) getApplicationContext()).close();
         } finally {
             try {
-                client.close();
-            } catch (Throwable ignored) {}
+                FileUtils.delete(tempDir);
+            } catch (Throwable ignored) {
+            }
+            port.unlock();
+            try {
+                new ODatabaseDocumentTx("memory:" + dbName).open("admin", "admin").drop();
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+            } finally {
+                try {
+                    client.close();
+                } catch (Throwable ignored) {
+                }
+            }
+            try {
+                smtpServer.close();
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+            }
         }
-        try {
-            smtpServer.close();
-        } catch (Throwable t) {
-            LOG.error(t.getMessage(), t);
-        }
-        ((ConfigurableApplicationContext)getApplicationContext()).close();
     }
 
     protected void makeTestPropertiesFile() throws IOException {

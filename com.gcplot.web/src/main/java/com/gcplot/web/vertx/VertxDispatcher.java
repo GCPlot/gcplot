@@ -39,19 +39,23 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
 
     @Override
-    public void close() {
-        LOG.info("Shutting down Vert.x Dispatcher.");
-        CountDownLatch serverWait = new CountDownLatch(1);
-        httpServer.close(r -> serverWait.countDown());
-        try {
-            serverWait.await();
-        } catch (InterruptedException ignored) {
-        }
-        CountDownLatch closeWait = new CountDownLatch(1);
-        vertx.close(r -> closeWait.countDown());
-        try {
-            closeWait.await();
-        } catch (InterruptedException ignored) {
+    public synchronized void close() {
+        if (!isClosed) {
+            isClosed = true;
+            LOG.info("Shutting down Vert.x Dispatcher.");
+            CountDownLatch serverWait = new CountDownLatch(1);
+            httpServer.close(r -> serverWait.countDown());
+            try {
+                serverWait.await();
+            } catch (InterruptedException ignored) {
+            }
+            CountDownLatch closeWait = new CountDownLatch(1);
+            vertx.close(r -> closeWait.countDown());
+            try {
+                closeWait.await();
+            } catch (InterruptedException ignored) {
+            }
+            LOG.info("Shut down Vert.x Dispatcher.");
         }
     }
 
@@ -274,6 +278,7 @@ public class VertxDispatcher implements Dispatcher<String> {
         }
     };
 
+    protected volatile boolean isClosed = false;
     protected HttpServer httpServer;
     protected Router router;
     protected BodyHandler bodyHandler = BodyHandler.create();

@@ -48,8 +48,10 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
                 LOG.info("Trying to reload configuration from main DB.");
                 putLock.writeLock().lock();
                 try {
-                    try (ODatabaseDocumentTx _db = docDb()) {
-                        fetchFromDb(_db);
+                    if (!isClosed) {
+                        try (ODatabaseDocumentTx _db = docDb()) {
+                            fetchFromDb(_db);
+                        }
                     }
                 } finally {
                     putLock.writeLock().unlock();
@@ -64,8 +66,13 @@ public class OrientDbConfigurationManager extends AbstractOrientDbRepository imp
 
     @Override
     public void destroy() {
-        super.destroy();
-        executor.shutdownNow();
+        putLock.writeLock().lock();
+        try {
+            super.destroy();
+            executor.shutdownNow();
+        } finally {
+            putLock.writeLock().unlock();
+        }
     }
 
     @Override
