@@ -108,6 +108,17 @@ public class CassandraGCEventRepository implements GCEventRepository {
                 QueryBuilder.batch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
     }
 
+    @Override
+    public void addAsync(GCEvent event) {
+        connector.session().executeAsync(addStatement(event));
+    }
+
+    @Override
+    public void addAsync(List<GCEvent> events) {
+        connector.session().executeAsync(
+                QueryBuilder.batch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
+    }
+
     protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
         return connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME)
                 .allowFiltering()

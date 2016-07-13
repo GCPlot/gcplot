@@ -41,4 +41,8 @@ public interface GCEventRepository {
 
     void add(List<GCEvent> events);
 
+    void addAsync(GCEvent event);
+
+    void addAsync(List<GCEvent> events);
+
 }
