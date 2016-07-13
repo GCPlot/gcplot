@@ -1,5 +1,6 @@
 package com.gcplot.web.vertx;
 
+import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.repository.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.serialization.JsonSerializer;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -34,7 +36,15 @@ public class VertxDispatcher implements Dispatcher<String> {
                 f.response().end(ErrorMessages.buildJson(ErrorMessages.NOT_FOUND));
             }
         });
-        httpServer.requestHandler(router::accept).listen(port, host);
+        CountDownLatch await = new CountDownLatch(1);
+        httpServer.requestHandler(router::accept).listen(port, host, r -> await.countDown());
+        try {
+            if (!await.await(30, TimeUnit.SECONDS)) {
+                throw new RuntimeException("Failed to start Vert.x server!");
+            }
+        } catch (Throwable t) {
+            throw Exceptions.runtime(t);
+        }
         router.route().handler(bodyHandler.setBodyLimit(maxUploadSize));
     }
 
