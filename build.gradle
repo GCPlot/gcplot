@@ -9,6 +9,9 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
+        maven {
+            url "http://mvn.gcplot.com"
+        }
     }
 
     dependencies {

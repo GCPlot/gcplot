@@ -1,4 +1,6 @@
 dependencies {
     compile project(":com.gcplot.commons")
     compile project(":com.gcplot.api")
+
+    compile group: 'com.github.chewiebug', name: 'gcviewer', version: '1.35.5-SNAPSHOT'
 }
