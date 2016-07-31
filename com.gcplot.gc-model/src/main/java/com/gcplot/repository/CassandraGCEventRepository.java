@@ -3,11 +3,8 @@ package com.gcplot.repository;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.utils.UUIDs;
 import com.gcplot.cassandra.CassandraConnector;
-import com.gcplot.commons.Constants;
 import com.gcplot.commons.Range;
 import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.model.gc.GCEvent;
@@ -15,14 +12,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.joda.time.Months;
 
-import static com.gcplot.model.gc.cassandra.Mapper.*;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
+import static com.gcplot.model.gc.cassandra.Mapper.eventFrom;
+import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 
 public class CassandraGCEventRepository implements GCEventRepository {
     protected static final String TABLE_NAME = "gc_event";

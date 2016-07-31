@@ -2,11 +2,9 @@ package com.gcplot.log_processor.parser.adapter;
 
 import com.gcplot.log_processor.parser.LogsParser;
 import com.gcplot.log_processor.parser.ParseResult;
-import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GarbageCollectorType;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
 import java.util.function.Consumer;
 

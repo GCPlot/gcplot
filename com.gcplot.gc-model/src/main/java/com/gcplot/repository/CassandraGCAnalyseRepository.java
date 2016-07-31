@@ -1,6 +1,7 @@
 package com.gcplot.repository;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.gcplot.Identifier;
@@ -17,8 +18,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.gcplot.model.gc.cassandra.Mapper.*;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
+import static com.gcplot.model.gc.cassandra.Mapper.analyseFrom;
+import static com.gcplot.model.gc.cassandra.Mapper.analysesFrom;
 
 public class CassandraGCAnalyseRepository implements GCAnalyseRepository {
     protected static final String TABLE_NAME = "gc_analyse";

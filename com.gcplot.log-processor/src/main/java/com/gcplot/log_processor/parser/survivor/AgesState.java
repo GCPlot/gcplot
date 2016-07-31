@@ -3,7 +3,7 @@ package com.gcplot.log_processor.parser.survivor;
 import gnu.trove.impl.unmodifiable.TUnmodifiableIntList;
 import gnu.trove.list.TIntList;
 
-import static com.gcplot.commons.TroveUtils.*;
+import static com.gcplot.commons.TroveUtils.emptyIntList;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

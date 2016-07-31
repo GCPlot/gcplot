@@ -1,15 +1,15 @@
 package com.gcplot.controllers;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gcplot.model.account.Account;
-import com.gcplot.model.account.AccountImpl;
-import com.gcplot.repository.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.mail.MailService;
 import com.gcplot.messages.LoginResult;
 import com.gcplot.messages.RegisterRequest;
+import com.gcplot.model.account.Account;
+import com.gcplot.model.account.AccountImpl;
+import com.gcplot.repository.AccountRepository;
 import com.gcplot.web.RequestContext;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;

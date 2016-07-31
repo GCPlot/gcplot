@@ -4,7 +4,6 @@ import org.joda.time.DateTime;
 
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalLong;
 
 public interface GCEvent {
 

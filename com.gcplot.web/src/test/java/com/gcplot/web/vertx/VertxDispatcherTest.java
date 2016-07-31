@@ -2,11 +2,11 @@ package com.gcplot.web.vertx;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gcplot.commons.ErrorMessages;
+import com.gcplot.commons.Utils;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
 import com.gcplot.repository.AccountRepository;
-import com.gcplot.commons.ErrorMessages;
-import com.gcplot.commons.Utils;
 import com.gcplot.web.Constants;
 import com.gcplot.web.LoginInfo;
 import io.vertx.core.Vertx;

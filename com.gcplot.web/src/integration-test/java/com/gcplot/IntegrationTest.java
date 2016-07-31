@@ -7,7 +7,6 @@ import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.configuration.ConfigurationManager;
-import com.gcplot.web.Dispatcher;
 import com.google.common.io.Files;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import io.vertx.core.Vertx;

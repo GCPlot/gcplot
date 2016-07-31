@@ -4,7 +4,6 @@ import com.gcplot.Identifier;
 import org.joda.time.DateTime;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

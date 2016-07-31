@@ -1,9 +1,9 @@
 package com.gcplot.web.vertx;
 
-import com.gcplot.model.account.Account;
-import com.gcplot.repository.AccountRepository;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.messages.Wrapper;
+import com.gcplot.model.account.Account;
+import com.gcplot.repository.AccountRepository;
 import com.gcplot.web.*;
 import com.google.common.base.Strings;
 import io.vertx.core.buffer.Buffer;

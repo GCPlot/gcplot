@@ -8,9 +8,11 @@ import com.gcplot.model.gc.*;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
-import java.util.function.LongFunction;
 import java.util.function.ToLongFunction;
 
 public abstract class Mapper {

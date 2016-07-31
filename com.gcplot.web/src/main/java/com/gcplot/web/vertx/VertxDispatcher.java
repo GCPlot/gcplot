@@ -1,9 +1,9 @@
 package com.gcplot.web.vertx;
 
-import com.gcplot.commons.exceptions.Exceptions;
-import com.gcplot.repository.AccountRepository;
 import com.gcplot.commons.ErrorMessages;
+import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.commons.serialization.JsonSerializer;
+import com.gcplot.repository.AccountRepository;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.HttpMethod;
 import com.gcplot.web.RequestContext;
