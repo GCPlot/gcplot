@@ -20,5 +20,5 @@ public class GCViewerLogsParser implements LogsParser {
     public ParseResult parse(InputStream reader, GarbageCollectorType type, Consumer<GCEvent> eventsConsumer) {
         return null;
     }
-    
+
 }
