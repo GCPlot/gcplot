@@ -5,6 +5,8 @@
 classes/
 classes/*
 
+!*log*.log
+
 # Build directory#
 build/
 bin/

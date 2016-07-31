@@ -1,0 +1,289 @@
+2016-04-12T18:00:00.551+0000: 5057.949: [GC (Allocation Failure) 2016-04-12T18:00:00.551+0000: 5057.949: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:    1317512 bytes,    1317512 total
+- age   2:     280904 bytes,    1598416 total
+- age   3:     173232 bytes,    1771648 total
+- age   4:     176704 bytes,    1948352 total
+- age   5:     158456 bytes,    2106808 total
+- age   6:     133080 bytes,    2239888 total
+: 617393K->3188K(691200K), 0.0076975 secs] 3487702K->2873643K(4531200K), 0.0078379 secs] [Times: user=0.04 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5057.957
+time_until_cms_gen_full 4504.1165733
+free=992814896
+contiguous_available=96014320
+promotion_rate=198336
+cms_allocation_rate=0
+occupancy=0.7475141
+initiatingOccupancy=0.9200000
+cms_time_since_begin=463.4429924
+cms_time_since_end=458.9401545
+metadata initialized 0
+2016-04-12T18:00:00.565+0000: 5057.964: [GC (GCLocker Initiated GC) 2016-04-12T18:00:00.565+0000: 5057.964: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     150568 bytes,     150568 total
+- age   2:    1075232 bytes,    1225800 total
+- age   3:     280880 bytes,    1506680 total
+- age   4:     173232 bytes,    1679912 total
+- age   5:     176704 bytes,    1856616 total
+- age   6:     158456 bytes,    2015072 total
+: 10055K->3192K(691200K), 0.0066421 secs] 2880509K->2873779K(4531200K), 0.0067627 secs] [Times: user=0.04 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5057.971
+time_until_cms_gen_full 2298.2492756
+free=992678976
+contiguous_available=96014320
+promotion_rate=388648
+cms_allocation_rate=0
+occupancy=0.7475487
+initiatingOccupancy=0.9200000
+cms_time_since_begin=463.4562515
+cms_time_since_end=458.9534141
+metadata initialized 0
+2016-04-12T18:00:01.252+0000: 5058.651: [GC (Allocation Failure) 2016-04-12T18:00:01.253+0000: 5058.651: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     433304 bytes,     433304 total
+- age   2:       3056 bytes,     436360 total
+- age   3:     847896 bytes,    1284256 total
+- age   4:     234824 bytes,    1519080 total
+- age   5:     137424 bytes,    1656504 total
+- age   6:     125808 bytes,    1782312 total
+: 617596K->3031K(691200K), 0.0104000 secs] 3488182K->2873737K(4531200K), 0.0105261 secs] [Times: user=0.06 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5058.662
+time_until_cms_gen_full 3583.3015472
+free=992556952
+contiguous_available=96014320
+promotion_rate=249249
+cms_allocation_rate=0
+occupancy=0.7475797
+initiatingOccupancy=0.9200000
+cms_time_since_begin=464.1476314
+cms_time_since_end=459.6447938
+metadata initialized 0
+2016-04-12T18:00:01.266+0000: 5058.665: [GC (GCLocker Initiated GC) 2016-04-12T18:00:01.266+0000: 5058.665: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:      47720 bytes,      47720 total
+- age   2:     340048 bytes,     387768 total
+- age   3:       2816 bytes,     390584 total
+- age   4:     845064 bytes,    1235648 total
+- age   5:     234824 bytes,    1470472 total
+- age   6:     137424 bytes,    1607896 total
+: 4178K->2474K(691200K), 0.0103652 secs] 2874884K->2873305K(4531200K), 0.0105096 secs] [Times: user=0.04 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5058.675
+time_until_cms_gen_full 1837.4563804
+free=992428696
+contiguous_available=96014320
+promotion_rate=486008
+cms_allocation_rate=0
+occupancy=0.7476123
+initiatingOccupancy=0.9200000
+cms_time_since_begin=464.1611276
+cms_time_since_end=459.6582902
+metadata initialized 0
+2016-04-12T18:00:01.928+0000: 5059.327: [GC (Allocation Failure) 2016-04-12T18:00:01.928+0000: 5059.327: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     485448 bytes,     485448 total
+- age   2:        520 bytes,     485968 total
+- age   3:     202160 bytes,     688128 total
+- age   4:       2736 bytes,     690864 total
+- age   5:     803952 bytes,    1494816 total
+- age   6:     209480 bytes,    1704296 total
+: 616874K->2391K(691200K), 0.0152970 secs] 3487705K->2873347K(4531200K), 0.0154215 secs] [Times: user=0.07 sys=0.00, real=0.02 secs]
+CMSCollector shouldConcurrentCollect: 5059.343
+time_until_cms_gen_full 3225.8450075
+free=992301176
+contiguous_available=96014320
+promotion_rate=276804
+cms_allocation_rate=0
+occupancy=0.7476448
+initiatingOccupancy=0.9200000
+cms_time_since_begin=464.8290016
+cms_time_since_end=460.3261643
+metadata initialized 0
+2016-04-12T18:00:02.592+0000: 5059.991: [GC (Allocation Failure) 2016-04-12T18:00:02.592+0000: 5059.991: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     574080 bytes,     574080 total
+- age   2:     238352 bytes,     812432 total
+- age   3:        248 bytes,     812680 total
+- age   4:     156328 bytes,     969008 total
+- age   5:       2512 bytes,     971520 total
+- age   6:     781384 bytes,    1752904 total
+: 616791K->2227K(691200K), 0.0171676 secs] 3487747K->2873383K(4531200K), 0.0172826 secs] [Times: user=0.08 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5060.008
+time_until_cms_gen_full 3023.7561056
+free=992096720
+contiguous_available=96014320
+promotion_rate=295219
+cms_allocation_rate=0
+occupancy=0.7476968
+initiatingOccupancy=0.9200000
+cms_time_since_begin=465.4938654
+cms_time_since_end=460.9910275
+metadata initialized 0
+2016-04-12T18:00:03.287+0000: 5060.686: [GC (Allocation Failure) 2016-04-12T18:00:03.287+0000: 5060.686: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:    1127600 bytes,    1127600 total
+- age   2:     377048 bytes,    1504648 total
+- age   3:     204576 bytes,    1709224 total
+- age   4:        248 bytes,    1709472 total
+- age   5:     150256 bytes,    1859728 total
+- age   6:       2512 bytes,    1862240 total
+: 616627K->2715K(691200K), 0.0081617 secs] 3487783K->2874512K(4531200K), 0.0083004 secs] [Times: user=0.05 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5060.694
+time_until_cms_gen_full 1362.8423584
+free=991439608
+contiguous_available=96014320
+promotion_rate=654192
+cms_allocation_rate=0
+occupancy=0.7478639
+initiatingOccupancy=0.9200000
+cms_time_since_begin=466.1797609
+cms_time_since_end=461.6769238
+metadata initialized 0
+2016-04-12T18:00:03.941+0000: 5061.340: [GC (Allocation Failure) 2016-04-12T18:00:03.941+0000: 5061.340: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     613392 bytes,     613392 total
+- age   2:     924952 bytes,    1538344 total
+- age   3:     307808 bytes,    1846152 total
+- age   4:     190848 bytes,    2037000 total
+- age   5:        248 bytes,    2037248 total
+- age   6:     144584 bytes,    2181832 total
+: 617115K->3110K(691200K), 0.0077097 secs] 3488912K->2874910K(4531200K), 0.0078471 secs] [Times: user=0.05 sys=0.01, real=0.00 secs]
+CMSCollector shouldConcurrentCollect: 5061.348
+time_until_cms_gen_full 2762.7257773
+free=991437032
+contiguous_available=96014320
+promotion_rate=322742
+cms_allocation_rate=0
+occupancy=0.7478645
+initiatingOccupancy=0.9200000
+cms_time_since_begin=466.8338245
+cms_time_since_end=462.3309877
+metadata initialized 0
+2016-04-12T18:00:04.608+0000: 5062.007: [GC (Allocation Failure) 2016-04-12T18:00:04.608+0000: 5062.007: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     478584 bytes,     478584 total
+- age   2:     333480 bytes,     812064 total
+- age   3:     888888 bytes,    1700952 total
+- age   4:     274008 bytes,    1974960 total
+- age   5:     186568 bytes,    2161528 total
+- age   6:        248 bytes,    2161776 total
+: 617510K->2863K(691200K), 0.0106430 secs] 3489310K->2874802K(4531200K), 0.0107896 secs] [Times: user=0.05 sys=0.01, real=0.02 secs]
+CMSCollector shouldConcurrentCollect: 5062.018
+time_until_cms_gen_full 3335.9322786
+free=991294424
+contiguous_available=96014320
+promotion_rate=267311
+cms_allocation_rate=0
+occupancy=0.7479008
+initiatingOccupancy=0.9200000
+cms_time_since_begin=467.5033868
+cms_time_since_end=463.0005491
+metadata initialized 0
+2016-04-12T18:00:05.284+0000: 5062.683: [GC (Allocation Failure) 2016-04-12T18:00:05.284+0000: 5062.683: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     449600 bytes,     449600 total
+- age   2:     281408 bytes,     731008 total
+- age   3:     216048 bytes,     947056 total
+- age   4:     873504 bytes,    1820560 total
+- age   5:     268728 bytes,    2089288 total
+- age   6:     180984 bytes,    2270272 total
+: 617287K->3314K(691200K), 0.0098706 secs] 3489226K->2875253K(4531200K), 0.0100147 secs] [Times: user=0.05 sys=0.00, real=0.01 secs]
+2016-04-12T18:00:05.296+0000: 5062.695: [GC (GCLocker Initiated GC) 2016-04-12T18:00:05.296+0000: 5062.695: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:      95544 bytes,      95544 total
+- age   2:     435696 bytes,     531240 total
+- age   3:     281408 bytes,     812648 total
+- age   4:     216048 bytes,    1028696 total
+- age   5:     873480 bytes,    1902176 total
+- age   6:     268728 bytes,    2170904 total
+: 5052K->2893K(691200K), 0.0072311 secs] 2876991K->2875012K(4531200K), 0.0073420 secs] [Times: user=0.04 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5062.702
+time_until_cms_gen_full 3447.0409273
+free=991109696
+contiguous_available=96014320
+promotion_rate=258675
+cms_allocation_rate=0
+occupancy=0.7479478
+initiatingOccupancy=0.9200000
+cms_time_since_begin=468.1878334
+cms_time_since_end=463.6849960
+metadata initialized 0
+2016-04-12T18:00:05.959+0000: 5063.358: [GC (Allocation Failure) 2016-04-12T18:00:05.960+0000: 5063.358: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:    1186392 bytes,    1186392 total
+- age   2:        352 bytes,    1186744 total
+- age   3:     213792 bytes,    1400536 total
+- age   4:     250048 bytes,    1650584 total
+- age   5:     206008 bytes,    1856592 total
+- age   6:     166384 bytes,    2022976 total
+: 617293K->3207K(691200K), 0.0077330 secs] 3489412K->2875585K(4531200K), 0.0078797 secs] [Times: user=0.05 sys=0.00, real=0.00 secs]
+CMSCollector shouldConcurrentCollect: 5063.366
+time_until_cms_gen_full 2538.3952758
+free=990845368
+contiguous_available=96014320
+promotion_rate=351148
+cms_allocation_rate=0
+occupancy=0.7480150
+initiatingOccupancy=0.9200000
+cms_time_since_begin=468.8519679
+cms_time_since_end=464.3491306
+metadata initialized 0
+2016-04-12T18:00:06.617+0000: 5064.016: [GC (Allocation Failure) 2016-04-12T18:00:06.618+0000: 5064.016: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     431672 bytes,     431672 total
+- age   2:     891096 bytes,    1322768 total
+- age   3:        232 bytes,    1323000 total
+- age   4:     195752 bytes,    1518752 total
+- age   5:     220736 bytes,    1739488 total
+- age   6:     185112 bytes,    1924600 total
+: 617607K->3014K(691200K), 0.0076578 secs] 3489985K->2875551K(4531200K), 0.0078014 secs] [Times: user=0.05 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5064.024
+time_until_cms_gen_full 3043.2424222
+free=990681840
+contiguous_available=96014320
+promotion_rate=292887
+cms_allocation_rate=0
+occupancy=0.7480566
+initiatingOccupancy=0.9200000
+cms_time_since_begin=469.5099291
+cms_time_since_end=465.0071017
+metadata initialized 0
+2016-04-12T18:00:07.294+0000: 5064.693: [GC (Allocation Failure) 2016-04-12T18:00:07.294+0000: 5064.693: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     428032 bytes,     428032 total
+- age   2:     206824 bytes,     634856 total
+- age   3:     873704 bytes,    1508560 total
+- age   4:        232 bytes,    1508792 total
+- age   5:     182944 bytes,    1691736 total
+- age   6:     208832 bytes,    1900568 total
+: 617414K->2861K(691200K), 0.0078507 secs] 3489951K->2875576K(4531200K), 0.0080456 secs] [Times: user=0.05 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5064.701
+time_until_cms_gen_full 3178.7476611
+free=990499336
+contiguous_available=96014320
+promotion_rate=280366
+cms_allocation_rate=0
+occupancy=0.7481030
+initiatingOccupancy=0.9200000
+cms_time_since_begin=470.1869093
+cms_time_since_end=465.6840728
+metadata initialized 0
+2016-04-12T18:00:07.976+0000: 5065.375: [GC (Allocation Failure) 2016-04-12T18:00:07.976+0000: 5065.375: [ParNew
+Desired survivor size 39321600 bytes, new threshold 6 (max 6)
+- age   1:     778032 bytes,     778032 total
+- age   2:     223400 bytes,    1001432 total
+- age   3:     176664 bytes,    1178096 total
+- age   4:     868352 bytes,    2046448 total
+- age   5:        232 bytes,    2046680 total
+- age   6:     173944 bytes,    2220624 total
+: 617261K->3244K(691200K), 0.0074700 secs] 3489976K->2876149K(4531200K), 0.0076352 secs] [Times: user=0.04 sys=0.00, real=0.01 secs]
+CMSCollector shouldConcurrentCollect: 5065.383
+time_until_cms_gen_full 3148.6527368
+free=990304744
+contiguous_available=96014320
+promotion_rate=282996
+cms_allocation_rate=0
+occupancy=0.7481525
+initiatingOccupancy=0.9200000
+cms_time_since_begin=470.8683168
+cms_time_since_end=466.3654799
+metadata initialized 0

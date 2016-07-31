@@ -1,0 +1,252 @@
+2016-04-13T04:38:47.480+0000: 43474.534: [GC pause (G1 Evacuation Pause) (young)
+Desired survivor size 127926272 bytes, new threshold 8 (max 8)
+- age   1:  118862872 bytes,  118862872 total
+- age   2:     461024 bytes,  119323896 total
+- age   3:     450064 bytes,  119773960 total
+- age   4:     441088 bytes,  120215048 total
+- age   5:     241048 bytes,  120456096 total
+- age   6:      48856 bytes,  120504952 total
+- age   7:      38656 bytes,  120543608 total
+- age   8:     308920 bytes,  120852528 total
+ 43474.534: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 16641, predicted base time: 9.59 ms, remaining time: 90.41 ms, target pause time: 100.00 ms]
+ 43474.534: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 912 regions, survivors: 61 regions, predicted young region time: 16.57 ms]
+ 43474.534: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 912 regions, survivors: 61 regions, old: 0 regions, predicted pause time: 26.16 ms, target pause time: 100.00 ms]
+2016-04-13T04:38:47.544+0000: 43474.598: [SoftReference, 0 refs, 0.0005589 secs]2016-04-13T04:38:47.544+0000: 43474.599: [WeakReference, 1 refs, 0.0001876 secs]2016-04-13T04:38:47.545+0000: 43474.599: [FinalReference, 610 refs, 0.0003199 secs]2016-04-13T04:38:47.545+0000: 43474.600: [PhantomReference, 0 refs, 0 refs, 0.0004261 secs]2016-04-13T04:38:47.545+0000: 43474.600: [JNI Weak Reference, 0.0000907 secs] 43474.601: [G1Ergonomics (Mixed GCs) start mixed GCs, reason: candidate old regions available, candidate old regions: 296 regions, reclaimable: 249935496 bytes (5.30 %), threshold: 5.00 %]
+, 0.0672097 secs]
+   [Parallel Time: 63.7 ms, GC Workers: 8]
+      [GC Worker Start (ms): Min: 43474534.5, Avg: 43474534.6, Max: 43474534.8, Diff: 0.3]
+      [Ext Root Scanning (ms): Min: 1.4, Avg: 3.4, Max: 4.5, Diff: 3.1, Sum: 26.9]
+      [Update RS (ms): Min: 5.1, Avg: 6.1, Max: 7.5, Diff: 2.4, Sum: 48.5]
+         [Processed Buffers: Min: 14, Avg: 18.8, Max: 26, Diff: 12, Sum: 150]
+      [Scan RS (ms): Min: 0.0, Avg: 0.1, Max: 0.2, Diff: 0.1, Sum: 1.1]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
+      [Object Copy (ms): Min: 53.6, Avg: 53.8, Max: 54.2, Diff: 0.6, Sum: 430.7]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
+         [Termination Attempts: Min: 1, Avg: 52.8, Max: 74, Diff: 73, Sum: 422]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.1, Max: 0.1, Diff: 0.1, Sum: 0.7]
+      [GC Worker Total (ms): Min: 63.2, Avg: 63.5, Max: 63.7, Diff: 0.4, Sum: 508.0]
+      [GC Worker End (ms): Min: 43474598.0, Avg: 43474598.1, Max: 43474598.2, Diff: 0.1]
+   [Code Root Fixup: 0.1 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.5 ms]
+   [Other: 2.9 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 1.8 ms]
+      [Ref Enq: 0.1 ms]
+      [Redirty Cards: 0.1 ms]
+      [Humongous Register: 0.1 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.6 ms]
+   [Eden: 1824.0M(1824.0M)->0.0B(94.0M) Survivors: 122.0M->130.0M Heap: 3915.5M(4500.0M)->2081.9M(4500.0M)]
+ [Times: user=0.47 sys=0.00, real=0.07 secs]
+2016-04-13T04:38:47.623+0000: 43474.678: [GC pause (G1 Evacuation Pause) (mixed)
+Desired survivor size 14680064 bytes, new threshold 2 (max 8)
+- age   1:    2330600 bytes,    2330600 total
+- age   2:  117925512 bytes,  120256112 total
+- age   3:     283688 bytes,  120539800 total
+- age   4:     429144 bytes,  120968944 total
+- age   5:     417200 bytes,  121386144 total
+- age   6:     206664 bytes,  121592808 total
+- age   7:      39032 bytes,  121631840 total
+- age   8:      33840 bytes,  121665680 total
+ 43474.678: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 11071, predicted base time: 9.16 ms, remaining time: 90.84 ms, target pause time: 100.00 ms]
+ 43474.678: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 47 regions, survivors: 65 regions, predicted young region time: 24.66 ms]
+ 43474.678: [G1Ergonomics (CSet Construction) finish adding old regions to CSet, reason: reclaimable percentage not over threshold, old: 10 regions, max: 225 regions, reclaimable: 235654408 bytes (4.99 %), threshold: 5.00 %]
+ 43474.678: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 47 regions, survivors: 65 regions, old: 10 regions, predicted pause time: 40.42 ms, target pause time: 100.00 ms]
+2016-04-13T04:38:47.695+0000: 43474.750: [SoftReference, 0 refs, 0.0004568 secs]2016-04-13T04:38:47.696+0000: 43474.750: [WeakReference, 1 refs, 0.0001264 secs]2016-04-13T04:38:47.696+0000: 43474.751: [FinalReference, 26 refs, 0.0001709 secs]2016-04-13T04:38:47.696+0000: 43474.751: [PhantomReference, 0 refs, 0 refs, 0.0004253 secs]2016-04-13T04:38:47.697+0000: 43474.751: [JNI Weak Reference, 0.0000964 secs] 43474.753: [G1Ergonomics (Concurrent Cycles) do not request concurrent cycle initiation, reason: still doing mixed collections, occupancy: 2162163712 bytes, allocation request: 0 bytes, threshold: 2123366400 bytes (45.00 %), source: end of GC]
+ 43474.753: [G1Ergonomics (Mixed GCs) do not continue mixed GCs, reason: reclaimable percentage not over threshold, candidate old regions: 286 regions, reclaimable: 235654408 bytes (4.99 %), threshold: 5.00 %]
+, 0.0747845 secs]
+   [Parallel Time: 71.6 ms, GC Workers: 8]
+      [GC Worker Start (ms): Min: 43474678.1, Avg: 43474678.6, Max: 43474682.2, Diff: 4.2]
+      [Ext Root Scanning (ms): Min: 0.0, Avg: 1.5, Max: 6.0, Diff: 5.9, Sum: 12.1]
+      [Update RS (ms): Min: 0.0, Avg: 2.6, Max: 3.8, Diff: 3.8, Sum: 20.4]
+         [Processed Buffers: Min: 0, Avg: 17.0, Max: 31, Diff: 31, Sum: 136]
+      [Scan RS (ms): Min: 4.4, Avg: 6.2, Max: 11.1, Diff: 6.7, Sum: 49.4]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.4, Diff: 0.4, Sum: 0.4]
+      [Object Copy (ms): Min: 55.7, Avg: 60.6, Max: 61.5, Diff: 5.8, Sum: 484.7]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Termination Attempts: Min: 1, Avg: 1.0, Max: 1, Diff: 0, Sum: 8]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.3]
+      [GC Worker Total (ms): Min: 67.3, Avg: 70.9, Max: 71.5, Diff: 4.2, Sum: 567.4]
+      [GC Worker End (ms): Min: 43474749.5, Avg: 43474749.5, Max: 43474749.6, Diff: 0.0]
+   [Code Root Fixup: 0.2 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.5 ms]
+   [Other: 2.6 ms]
+      [Choose CSet: 0.1 ms]
+      [Ref Proc: 1.5 ms]
+      [Ref Enq: 0.1 ms]
+      [Redirty Cards: 0.4 ms]
+      [Humongous Register: 0.1 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.2 ms]
+   [Eden: 94.0M(94.0M)->0.0B(1922.0M) Survivors: 130.0M->16.0M Heap: 2175.9M(4500.0M)->2069.5M(4500.0M)]
+ [Times: user=0.50 sys=0.00, real=0.07 secs]
+2016-04-13T04:38:50.462+0000: 43477.517: [GC pause (G1 Evacuation Pause) (young)
+Desired survivor size 127926272 bytes, new threshold 8 (max 8)
+- age   1:     302840 bytes,     302840 total
+- age   2:    2139288 bytes,    2442128 total
+ 43477.517: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 57786, predicted base time: 22.78 ms, remaining time: 77.22 ms, target pause time: 100.00 ms]
+ 43477.517: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 961 regions, survivors: 8 regions, predicted young region time: 29.35 ms]
+ 43477.517: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 961 regions, survivors: 8 regions, old: 0 regions, predicted pause time: 52.13 ms, target pause time: 100.00 ms]
+2016-04-13T04:38:50.483+0000: 43477.538: [SoftReference, 0 refs, 0.0003930 secs]2016-04-13T04:38:50.484+0000: 43477.538: [WeakReference, 1 refs, 0.0001981 secs]2016-04-13T04:38:50.484+0000: 43477.539: [FinalReference, 603 refs, 0.0007373 secs]2016-04-13T04:38:50.485+0000: 43477.539: [PhantomReference, 0 refs, 0 refs, 0.0002950 secs]2016-04-13T04:38:50.485+0000: 43477.540: [JNI Weak Reference, 0.0000866 secs] 43477.541: [G1Ergonomics (Concurrent Cycles) request concurrent cycle initiation, reason: occupancy higher than threshold, occupancy: 2162163712 bytes, allocation request: 0 bytes, threshold: 2123366400 bytes (45.00 %), source: end of GC]
+, 0.0244943 secs]
+   [Parallel Time: 20.7 ms, GC Workers: 8]
+      [GC Worker Start (ms): Min: 43477516.9, Avg: 43477517.2, Max: 43477518.2, Diff: 1.4]
+      [Ext Root Scanning (ms): Min: 0.0, Avg: 0.9, Max: 1.3, Diff: 1.3, Sum: 6.9]
+      [Update RS (ms): Min: 15.0, Avg: 15.4, Max: 15.9, Diff: 0.9, Sum: 123.2]
+         [Processed Buffers: Min: 28, Avg: 37.1, Max: 49, Diff: 21, Sum: 297]
+      [Scan RS (ms): Min: 0.6, Avg: 1.0, Max: 1.1, Diff: 0.5, Sum: 8.1]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+      [Object Copy (ms): Min: 2.1, Avg: 2.3, Max: 2.8, Diff: 0.7, Sum: 18.3]
+      [Termination (ms): Min: 0.0, Avg: 0.7, Max: 0.8, Diff: 0.8, Sum: 5.5]
+         [Termination Attempts: Min: 1, Avg: 13.6, Max: 20, Diff: 19, Sum: 109]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.3]
+      [GC Worker Total (ms): Min: 19.3, Avg: 20.3, Max: 20.6, Diff: 1.4, Sum: 162.3]
+      [GC Worker End (ms): Min: 43477537.5, Avg: 43477537.5, Max: 43477537.5, Diff: 0.0]
+   [Code Root Fixup: 0.1 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.6 ms]
+   [Other: 3.1 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 2.0 ms]
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.0 ms]
+      [Humongous Register: 0.1 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.6 ms]
+   [Eden: 1922.0M(1922.0M)->0.0B(1932.0M) Survivors: 16.0M->16.0M Heap: 3991.5M(4500.0M)->2069.5M(4500.0M)]
+ [Times: user=0.15 sys=0.01, real=0.02 secs]
+ 43480.348: [G1Ergonomics (Concurrent Cycles) initiate concurrent cycle, reason: concurrent cycle initiation requested]
+2016-04-13T04:38:53.294+0000: 43480.348: [GC pause (G1 Evacuation Pause) (young) (initial-mark)
+Desired survivor size 127926272 bytes, new threshold 8 (max 8)
+- age   1:    1394536 bytes,    1394536 total
+- age   2:     166968 bytes,    1561504 total
+- age   3:    1935568 bytes,    3497072 total
+ 43480.348: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 15993, predicted base time: 10.02 ms, remaining time: 89.98 ms, target pause time: 100.00 ms]
+ 43480.348: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 966 regions, survivors: 8 regions, predicted young region time: 17.14 ms]
+ 43480.348: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 966 regions, survivors: 8 regions, old: 0 regions, predicted pause time: 27.16 ms, target pause time: 100.00 ms]
+2016-04-13T04:38:53.305+0000: 43480.360: [SoftReference, 0 refs, 0.0003612 secs]2016-04-13T04:38:53.306+0000: 43480.360: [WeakReference, 1 refs, 0.0000991 secs]2016-04-13T04:38:53.306+0000: 43480.361: [FinalReference, 594 refs, 0.0001405 secs]2016-04-13T04:38:53.306+0000: 43480.361: [PhantomReference, 0 refs, 0 refs, 0.0003449 secs]2016-04-13T04:38:53.306+0000: 43480.361: [JNI Weak Reference, 0.0000837 secs], 0.0142456 secs]
+   [Parallel Time: 10.1 ms, GC Workers: 8]
+      [GC Worker Start (ms): Min: 43480348.4, Avg: 43480348.5, Max: 43480348.6, Diff: 0.2]
+      [Ext Root Scanning (ms): Min: 1.9, Avg: 2.1, Max: 2.2, Diff: 0.3, Sum: 16.8]
+      [Update RS (ms): Min: 5.0, Avg: 5.1, Max: 5.3, Diff: 0.2, Sum: 41.0]
+         [Processed Buffers: Min: 12, Avg: 17.6, Max: 28, Diff: 16, Sum: 141]
+      [Scan RS (ms): Min: 0.0, Avg: 0.1, Max: 0.2, Diff: 0.1, Sum: 1.0]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+      [Object Copy (ms): Min: 2.3, Avg: 2.4, Max: 2.7, Diff: 0.3, Sum: 19.5]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Termination Attempts: Min: 1, Avg: 1.5, Max: 2, Diff: 1, Sum: 12]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.1, Max: 0.1, Diff: 0.0, Sum: 0.4]
+      [GC Worker Total (ms): Min: 9.8, Avg: 9.9, Max: 9.9, Diff: 0.1, Sum: 78.9]
+      [GC Worker End (ms): Min: 43480358.4, Avg: 43480358.4, Max: 43480358.4, Diff: 0.0]
+   [Code Root Fixup: 0.2 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.4 ms]
+   [Other: 3.6 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 2.5 ms]
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.0 ms]
+      [Humongous Register: 0.0 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.6 ms]
+   [Eden: 1932.0M(1932.0M)->0.0B(1940.0M) Survivors: 16.0M->16.0M Heap: 4001.5M(4500.0M)->2069.5M(4500.0M)]
+ [Times: user=0.08 sys=0.01, real=0.01 secs]
+2016-04-13T04:38:53.308+0000: 43480.362: [GC concurrent-root-region-scan-start]
+2016-04-13T04:38:53.313+0000: 43480.368: [GC concurrent-root-region-scan-end, 0.0052550 secs]
+2016-04-13T04:38:53.313+0000: 43480.368: [GC concurrent-mark-start]
+2016-04-13T04:38:55.627+0000: 43482.682: [GC concurrent-mark-end, 2.3138558 secs]
+2016-04-13T04:38:55.629+0000: 43482.684: [GC remark 2016-04-13T04:38:55.629+0000: 43482.684: [Finalize Marking, 0.0006878 secs] 2016-04-13T04:38:55.630+0000: 43482.685: [GC ref-proc2016-04-13T04:38:55.630+0000: 43482.685: [SoftReference, 858 refs, 0.0005746 secs]2016-04-13T04:38:55.631+0000: 43482.685: [WeakReference, 465 refs, 0.0003607 secs]2016-04-13T04:38:55.631+0000: 43482.686: [FinalReference, 21 refs, 0.0004443 secs]2016-04-13T04:38:55.631+0000: 43482.686: [PhantomReference, 0 refs, 139 refs, 0.0009612 secs]2016-04-13T04:38:55.632+0000: 43482.687: [JNI Weak Reference, 0.0004881 secs], 0.0029293 secs] 2016-04-13T04:38:55.633+0000: 43482.688: [Unloading, 0.0216089 secs], 0.0310878 secs]
+ [Times: user=0.17 sys=0.01, real=0.04 secs]
+2016-04-13T04:38:55.662+0000: 43482.716: [GC cleanup 3638M->3544M(4500M), 0.0343794 secs]
+ [Times: user=0.24 sys=0.01, real=0.03 secs]
+2016-04-13T04:38:55.696+0000: 43482.751: [GC concurrent-cleanup-start]
+2016-04-13T04:38:55.696+0000: 43482.751: [GC concurrent-cleanup-end, 0.0001153 secs]
+2016-04-13T04:38:56.196+0000: 43483.250: [GC pause (G1 Evacuation Pause) (young)
+Desired survivor size 128974848 bytes, new threshold 8 (max 8)
+- age   1:    1528008 bytes,    1528008 total
+- age   2:     437888 bytes,    1965896 total
+- age   3:      25888 bytes,    1991784 total
+- age   4:    1891440 bytes,    3883224 total
+ 43483.250: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 16403, predicted base time: 10.68 ms, remaining time: 89.32 ms, target pause time: 100.00 ms]
+ 43483.250: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 970 regions, survivors: 8 regions, predicted young region time: 12.39 ms]
+ 43483.250: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 970 regions, survivors: 8 regions, old: 0 regions, predicted pause time: 23.07 ms, target pause time: 100.00 ms]
+2016-04-13T04:38:56.208+0000: 43483.263: [SoftReference, 0 refs, 0.0008020 secs]2016-04-13T04:38:56.209+0000: 43483.263: [WeakReference, 1 refs, 0.0002025 secs]2016-04-13T04:38:56.209+0000: 43483.264: [FinalReference, 649 refs, 0.0002782 secs]2016-04-13T04:38:56.209+0000: 43483.264: [PhantomReference, 0 refs, 2 refs, 0.0002945 secs]2016-04-13T04:38:56.210+0000: 43483.264: [JNI Weak Reference, 0.0000880 secs] 43483.266: [G1Ergonomics (Mixed GCs) start mixed GCs, reason: candidate old regions available, candidate old regions: 301 regions, reclaimable: 257249136 bytes (5.45 %), threshold: 5.00 %]
+, 0.0154104 secs]
+   [Parallel Time: 11.8 ms, GC Workers: 8]
+      [GC Worker Start (ms): Min: 43483250.4, Avg: 43483250.6, Max: 43483250.7, Diff: 0.3]
+      [Ext Root Scanning (ms): Min: 0.9, Avg: 1.2, Max: 1.6, Diff: 0.7, Sum: 9.5]
+      [Update RS (ms): Min: 6.3, Avg: 6.5, Max: 6.6, Diff: 0.3, Sum: 52.0]
+         [Processed Buffers: Min: 15, Avg: 18.1, Max: 22, Diff: 7, Sum: 145]
+      [Scan RS (ms): Min: 0.1, Avg: 0.1, Max: 0.2, Diff: 0.1, Sum: 1.1]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
+      [Object Copy (ms): Min: 3.6, Avg: 3.7, Max: 3.8, Diff: 0.2, Sum: 29.4]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Termination Attempts: Min: 1, Avg: 1.0, Max: 1, Diff: 0, Sum: 8]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.1, Max: 0.1, Diff: 0.1, Sum: 0.6]
+      [GC Worker Total (ms): Min: 11.4, Avg: 11.6, Max: 11.7, Diff: 0.3, Sum: 92.7]
+      [GC Worker End (ms): Min: 43483262.1, Avg: 43483262.2, Max: 43483262.2, Diff: 0.1]
+   [Code Root Fixup: 0.2 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.4 ms]
+   [Other: 3.0 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 1.9 ms]
+      [Ref Enq: 0.1 ms]
+      [Redirty Cards: 0.1 ms]
+      [Humongous Register: 0.1 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.6 ms]
+   [Eden: 1940.0M(1940.0M)->0.0B(214.0M) Survivors: 16.0M->10.0M Heap: 3915.5M(4500.0M)->1969.0M(4500.0M)]
+ [Times: user=0.09 sys=0.01, real=0.01 secs]
+2016-04-13T04:38:56.528+0000: 43483.583: [GC pause (G1 Evacuation Pause) (mixed)
+Desired survivor size 14680064 bytes, new threshold 8 (max 8)
+- age   1:    1670560 bytes,    1670560 total
+- age   2:     462160 bytes,    2132720 total
+- age   3:     384696 bytes,    2517416 total
+- age   4:      21456 bytes,    2538872 total
+- age   5:    1869712 bytes,    4408584 total
+ 43483.583: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 9858, predicted base time: 8.75 ms, remaining time: 91.25 ms, target pause time: 100.00 ms]
+ 43483.583: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 107 regions, survivors: 5 regions, predicted young region time: 2.99 ms]
+ 43483.583: [G1Ergonomics (CSet Construction) finish adding old regions to CSet, reason: reclaimable percentage not over threshold, old: 15 regions, max: 225 regions, reclaimable: 235730544 bytes (5.00 %), threshold: 5.00 %]
+ 43483.583: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 107 regions, survivors: 5 regions, old: 15 regions, predicted pause time: 20.30 ms, target pause time: 100.00 ms]
+2016-04-13T04:38:56.546+0000: 43483.601: [SoftReference, 0 refs, 0.0003795 secs]2016-04-13T04:38:56.547+0000: 43483.601: [WeakReference, 1 refs, 0.0003079 secs]2016-04-13T04:38:56.547+0000: 43483.602: [FinalReference, 60 refs, 0.0002693 secs]2016-04-13T04:38:56.547+0000: 43483.602: [PhantomReference, 0 refs, 4 refs, 0.0002748 secs]2016-04-13T04:38:56.548+0000: 43483.602: [JNI Weak Reference, 0.0000833 secs] 43483.603: [G1Ergonomics (Mixed GCs) do not continue mixed GCs, reason: reclaimable percentage not over threshold, candidate old regions: 286 regions, reclaimable: 235730544 bytes (5.00 %), threshold: 5.00 %]
+, 0.0206047 secs]
+   [Parallel Time: 17.7 ms, GC Workers: 8]
+      [GC Worker Start (ms): Min: 43483582.9, Avg: 43483584.0, Max: 43483587.1, Diff: 4.2]
+      [Ext Root Scanning (ms): Min: 0.0, Avg: 0.9, Max: 1.4, Diff: 1.4, Sum: 7.3]
+      [Update RS (ms): Min: 0.8, Avg: 3.3, Max: 6.5, Diff: 5.7, Sum: 26.1]
+         [Processed Buffers: Min: 4, Avg: 17.5, Max: 31, Diff: 27, Sum: 140]
+      [Scan RS (ms): Min: 2.2, Avg: 4.7, Max: 5.1, Diff: 2.9, Sum: 37.7]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.6, Diff: 0.6, Sum: 0.6]
+      [Object Copy (ms): Min: 6.9, Avg: 7.6, Max: 7.7, Diff: 0.8, Sum: 60.5]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+         [Termination Attempts: Min: 1, Avg: 2.9, Max: 5, Diff: 4, Sum: 23]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.2]
+      [GC Worker Total (ms): Min: 13.5, Avg: 16.5, Max: 17.6, Diff: 4.2, Sum: 132.4]
+      [GC Worker End (ms): Min: 43483600.5, Avg: 43483600.5, Max: 43483600.5, Diff: 0.0]
+   [Code Root Fixup: 0.2 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.5 ms]
+   [Other: 2.3 ms]
+      [Choose CSet: 0.1 ms]
+      [Ref Proc: 1.5 ms]
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.1 ms]
+      [Humongous Register: 0.1 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.2 ms]
+   [Eden: 214.0M(214.0M)->0.0B(2064.0M) Survivors: 10.0M->10.0M Heap: 2183.0M(4500.0M)->1948.0M(4500.0M)]
+ [Times: user=0.12 sys=0.02, real=0.02 secs]
+2016-04-13T04:38:59.582+0000: 43486.637: [GC pause (G1 Evacuation Pause) (young)
+Desired survivor size 136314880 bytes, new threshold 8 (max 8)
+- age   1:     231152 bytes,     231152 total
+- age   2:    1440512 bytes,    1671664 total
+- age   3:     448016 bytes,    2119680 total
+- age   4:     383600 bytes,    2503280 total
+- age   5:      21408 bytes,    2524688 total
+- age   6:    1868128 bytes,    4392816 total
+ 43486.637: [G1Ergonomics (CSet Construction) start choosing CSet, _pending_cards: 42698, predicted base time: 20.06 ms, remaining time: 79.94 ms, target pause time: 100.00 ms]
+ 43486.637: [G1Ergonomics (CSet Construction) add young regions to CSet, eden: 1032 regions, survivors: 5 regions, predicted young region time: 13.14 ms]
+ 43486.637: [G1Ergonomics (CSet Construction) finish choosing CSet, eden: 1032 regions, survivors: 5 regions, old: 0 regions, predicted pause time: 33.20 ms, target pause time: 100.00 ms]
