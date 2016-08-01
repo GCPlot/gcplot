@@ -23,4 +23,12 @@ public abstract class TroveUtils {
         return EMPTY_INT_SET;
     }
 
+    public static TIntList copy(TIntList list) {
+        return list.subList(0, list.size());
+    }
+
+    public static TIntSet copy(TIntSet set) {
+        return new TIntHashSet(set);
+    }
+
 }
