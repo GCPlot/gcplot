@@ -26,29 +26,29 @@ public class ParseResult {
         return Collections.unmodifiableList(notifications);
     }
 
-    private final AgesState agesState;
-    public AgesState getAgesState() {
-        return agesState;
+    private final List<AgesState> agesStates;
+    public List<AgesState> getAgesStates() {
+        return agesStates;
     }
 
-    private ParseResult(List<GCNotification> notifications, AgesState agesState) {
+    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState) {
         this(true, null, notifications, agesState);
     }
 
     private ParseResult(boolean isSuccessful, Throwable exception,
-                        List<GCNotification> notifications, AgesState agesState) {
+                        List<GCNotification> notifications, List<AgesState> agesStates) {
         this.isSuccessful = isSuccessful;
         this.notifications = notifications;
-        this.agesState = agesState;
+        this.agesStates = agesStates;
         this.exception = exception;
     }
 
-    public static ParseResult success(List<GCNotification> notifications, AgesState agesState) {
-        return new ParseResult(notifications, agesState);
+    public static ParseResult success(List<GCNotification> notifications, List<AgesState> agesStates) {
+        return new ParseResult(notifications, agesStates);
     }
 
     public static ParseResult failure(Throwable t) {
-        return new ParseResult(false, t, Collections.emptyList(), AgesState.NONE);
+        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList());
     }
 
 }

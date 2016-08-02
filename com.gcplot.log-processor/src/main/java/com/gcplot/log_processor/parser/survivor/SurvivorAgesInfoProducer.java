@@ -1,6 +1,5 @@
-package com.gcplot.log_processor.parser;
+package com.gcplot.log_processor.parser.survivor;
 
-import com.gcplot.log_processor.parser.survivor.AgesState;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
@@ -20,7 +19,7 @@ public class SurvivorAgesInfoProducer {
     private static final String AGE_OCCUPIED_GROUP = "occupied";
     private static final String AGE_TOTAL_GROUP = "total";
     private static final String AGES_PREFIX = "- age";
-    private static final Pattern AGE_PATTERN = Pattern.compile("- age[ \\t]+(?<" + AGE_NUM_GROUP + ">[0-9]+):[ \\t]+" +
+    private static final Pattern AGE_PATTERN = Pattern.compile(AGES_PREFIX + "[ \\t]+(?<" + AGE_NUM_GROUP + ">[0-9]+):[ \\t]+" +
             "(?<" + AGE_OCCUPIED_GROUP + ">[0-9]+)[ \\t]+bytes,[ \\t]+(?<" + AGE_TOTAL_GROUP + ">[0-9]+)[ \\t]+total");
     protected List<AgesState> agesStates = new ArrayList<>();
     protected TIntList occupied = new TIntArrayList();

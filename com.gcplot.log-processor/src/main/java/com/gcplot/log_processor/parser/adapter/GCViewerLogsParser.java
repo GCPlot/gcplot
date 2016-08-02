@@ -1,8 +1,9 @@
 package com.gcplot.log_processor.parser.adapter;
 
+import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.log_processor.parser.LogsParser;
 import com.gcplot.log_processor.parser.ParseResult;
-import com.gcplot.log_processor.parser.SurvivorAgesInfoProducer;
+import com.gcplot.log_processor.parser.survivor.SurvivorAgesInfoProducer;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.tagtraum.perf.gcviewer.imp.AbstractDataReaderSun;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
  *         7/24/16
  */
 public class GCViewerLogsParser implements LogsParser {
+    protected ConfigurationManager configurationManager;
 
     @Override
     public ParseResult parse(InputStream reader, Logger log, GarbageCollectorType type, Consumer<GCEvent> eventsConsumer) {
@@ -40,4 +42,7 @@ public class GCViewerLogsParser implements LogsParser {
         return null;
     }
 
+    public void setConfigurationManager(ConfigurationManager configurationManager) {
+        this.configurationManager = configurationManager;
+    }
 }
