@@ -128,8 +128,10 @@ public class CassandraGCEventRepository implements GCEventRepository {
     }
 
     protected List<String> dates(Range range) {
-        return IntStream.range(0, Months.monthsBetween(range.from, range.to).getMonths() + 1)
-                .mapToObj(i -> range.from.plusDays(i).toString(DATE_PATTERN)).collect(Collectors.toList());
+        return IntStream.range(0, Months.monthsBetween(
+                range.from.monthOfYear().roundFloorCopy(),
+                range.to.monthOfYear().roundCeilingCopy()).getMonths())
+                .mapToObj(i -> range.from.plusMonths(i).toString(DATE_PATTERN)).collect(Collectors.toList());
     }
 
     protected RegularStatement addStatement(GCEvent event) {
