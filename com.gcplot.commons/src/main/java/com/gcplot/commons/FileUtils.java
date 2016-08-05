@@ -5,6 +5,13 @@ import java.io.IOException;
 
 public abstract class FileUtils {
 
+    public static void deleteSilent(File f) {
+        try {
+            delete(f);
+        } catch (IOException ignored) {
+        }
+    }
+
     public static void delete(File f) throws IOException {
         clearFolder(f);
         f.delete();

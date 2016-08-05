@@ -1,5 +1,6 @@
 package com.gcplot.cassandra;
 
+import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
 import com.google.common.io.Files;
 import org.apache.commons.io.IOUtils;
@@ -17,6 +18,7 @@ public class BaseCassandra {
     protected static File commitLog;
     protected static File savedCaches;
     protected static File dataFiles;
+    protected static File configFile;
     protected static int nativePort;
     protected static Utils.Port[] ports;
 
@@ -27,7 +29,7 @@ public class BaseCassandra {
         commitLog = Files.createTempDir();
         savedCaches = Files.createTempDir();
         dataFiles = Files.createTempDir();
-        File config = java.nio.file.Files.createTempFile("csnd", ".yaml").toFile();
+        configFile = java.nio.file.Files.createTempFile("csnd", ".yaml").toFile();
         ports = Utils.getFreePorts(4);
         synchronized (CassandraConnector.class) {
             System.setProperty("cassandra.storagedir", storagedir.getAbsolutePath());
@@ -40,10 +42,10 @@ public class BaseCassandra {
                     .replace("{NATIVE_PORT}", ports[2].value + "")
                     .replace("{RPC_PORT}", ports[3].value + "");
             nativePort = ports[2].value;
-            try (FileOutputStream fos = new FileOutputStream(config)) {
+            try (FileOutputStream fos = new FileOutputStream(configFile)) {
                 IOUtils.write(str, fos, "UTF-8");
             }
-            EmbeddedCassandraServerHelper.startEmbeddedCassandra(config, tempDir.getAbsolutePath(), 60_000);
+            EmbeddedCassandraServerHelper.startEmbeddedCassandra(configFile, tempDir.getAbsolutePath(), 60_000);
         }
     }
 
@@ -52,6 +54,12 @@ public class BaseCassandra {
         for (Utils.Port port : ports) {
             port.unlock();
         }
+        FileUtils.deleteSilent(storagedir);
+        FileUtils.deleteSilent(tempDir);
+        FileUtils.deleteSilent(commitLog);
+        FileUtils.deleteSilent(savedCaches);
+        FileUtils.deleteSilent(dataFiles);
+        configFile.delete();
     }
 
     @After
