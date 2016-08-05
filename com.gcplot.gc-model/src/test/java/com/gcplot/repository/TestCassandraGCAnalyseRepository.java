@@ -12,7 +12,8 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
 
     @Test
     public void test() throws Exception {
-        CassandraGCAnalyseRepository r = new CassandraGCAnalyseRepository(connector);
+        CassandraGCAnalyseRepository r = new CassandraGCAnalyseRepository();
+        r.setConnector(connector);
         r.init();
         Assert.assertEquals(0, r.analyses().size());
 

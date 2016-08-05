@@ -22,12 +22,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 import static com.gcplot.model.gc.cassandra.Mapper.analyseFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.analysesFrom;
 
-public class CassandraGCAnalyseRepository implements GCAnalyseRepository {
+public class CassandraGCAnalyseRepository extends AbstractCassandraRepository implements GCAnalyseRepository {
     protected static final String TABLE_NAME = "gc_analyse";
-
-    public void init() {
-        Preconditions.checkNotNull(connector, "Cassandra connector is required.");
-    }
 
     @Override
     public List<GCAnalyse> analyses() {
@@ -101,19 +97,7 @@ public class CassandraGCAnalyseRepository implements GCAnalyseRepository {
         connector.session().execute(s);
     }
 
-    public CassandraGCAnalyseRepository(CassandraConnector connector) {
-        this.connector = connector;
-    }
-
     protected Update.Where updateTable(Identifier accId, UUID uuid) {
         return QueryBuilder.update(TABLE_NAME).where(eq("id", uuid)).and(eq("account_id", accId.toString()));
-    }
-
-    protected CassandraConnector connector;
-    public CassandraConnector getConnector() {
-        return connector;
-    }
-    public void setConnector(CassandraConnector connector) {
-        this.connector = connector;
     }
 }

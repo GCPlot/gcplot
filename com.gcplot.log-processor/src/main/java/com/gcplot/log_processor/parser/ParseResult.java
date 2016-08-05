@@ -1,7 +1,7 @@
 package com.gcplot.log_processor.parser;
 
-import com.gcplot.log_processor.parser.notifications.GCNotification;
 import com.gcplot.log_processor.parser.survivor.AgesState;
+import com.gcplot.model.notifications.GCNotification;
 
 import java.util.Collections;
 import java.util.List;

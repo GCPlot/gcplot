@@ -1,10 +1,10 @@
 package com.gcplot.log_processor.parser.survivor;
 
 import com.google.common.base.Preconditions;
-import gnu.trove.impl.unmodifiable.TUnmodifiableIntList;
-import gnu.trove.list.TIntList;
+import gnu.trove.impl.unmodifiable.TUnmodifiableLongList;
+import gnu.trove.list.TLongList;
 
-import static com.gcplot.commons.TroveUtils.emptyIntList;
+import static com.gcplot.commons.TroveUtils.emptyLongList;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -17,24 +17,24 @@ public class AgesState {
         return ages;
     }
 
-    private final TIntList occupied;
-    public TIntList getOccupied() {
+    private final TLongList occupied;
+    public TLongList getOccupied() {
         return occupied;
     }
 
-    private final TIntList total;
-    public TIntList getTotal() {
+    private final TLongList total;
+    public TLongList getTotal() {
         return total;
     }
 
-    public AgesState(TIntList occupied, TIntList total) {
+    public AgesState(TLongList occupied, TLongList total) {
         Preconditions.checkState(occupied.size() == total.size(), "Unknown situation where occupied.lenght != total.length");
         this.ages = occupied.size();
-        this.occupied = new TUnmodifiableIntList(occupied);
-        this.total = new TUnmodifiableIntList(total);
+        this.occupied = new TUnmodifiableLongList(occupied);
+        this.total = new TUnmodifiableLongList(total);
     }
 
-    public static final AgesState NONE = new AgesState(emptyIntList(), emptyIntList());
+    public static final AgesState NONE = new AgesState(emptyLongList(), emptyLongList());
 
     @Override
     public String toString() {

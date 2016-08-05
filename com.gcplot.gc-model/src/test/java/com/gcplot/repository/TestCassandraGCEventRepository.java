@@ -15,7 +15,8 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
     public void test() throws Exception {
         String analyseId = UUID.randomUUID().toString();
         String jvmId = "jvm1";
-        CassandraGCEventRepository r = new CassandraGCEventRepository(connector);
+        CassandraGCEventRepository r = new CassandraGCEventRepository();
+        r.setConnector(connector);
         r.init();
         Assert.assertEquals(0, r.events(analyseId, jvmId,
                 wideDays(7)).size());
@@ -69,7 +70,8 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         String analyseId = UUID.randomUUID().toString();
         String jvmId = "jvm1";
 
-        CassandraGCEventRepository r = new CassandraGCEventRepository(connector);
+        CassandraGCEventRepository r = new CassandraGCEventRepository();
+        r.setConnector(connector);
         r.setFetchSize(5);
         r.init();
 
@@ -101,10 +103,6 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
                 .durationMu(63124)
                 .generations(EnumSet.of(Generation.YOUNG, Generation.TENURED))
                 .concurrency(EventConcurrency.SERIAL);
-    }
-
-    protected Range wideDays(int days) {
-        return Range.of(DateTime.now().minusDays(days), DateTime.now().plusDays(days));
     }
 
 }

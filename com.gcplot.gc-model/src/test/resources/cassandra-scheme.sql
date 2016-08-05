@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   jvm_md_phys_free map<varchar, bigint>,
   jvm_md_swap_total map<varchar, bigint>,
   jvm_md_swap_free map<varchar, bigint>,
+  ext varchar,
   PRIMARY KEY (account_id, id)
 );
 
@@ -45,3 +46,16 @@ CREATE TABLE IF NOT EXISTS gc_event (
 
 CREATE INDEX IF NOT EXISTS gc_event_ids ON gc_event( id );
 CREATE INDEX IF NOT EXISTS gc_event_occurred ON gc_event( occurred );
+
+CREATE TABLE IF NOT EXISTS objects_ages (
+  analyse_id uuid,
+  occurred timestamp,
+  written_at timeuuid,
+  jvm_id varchar,
+  occupied list<bigint>,
+  total list<bigint>,
+  ext varchar,
+  PRIMARY KEY ((analyse_id, jvm_id), written_at)
+) WITH CLUSTERING ORDER BY (written_at DESC);
+
+CREATE INDEX IF NOT EXISTS objects_ages_occurred ON objects_ages( occurred );

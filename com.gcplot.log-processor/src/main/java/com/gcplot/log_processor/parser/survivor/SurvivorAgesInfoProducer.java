@@ -1,7 +1,9 @@
 package com.gcplot.log_processor.parser.survivor;
 
 import gnu.trove.list.TIntList;
+import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.array.TLongArrayList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +24,8 @@ public class SurvivorAgesInfoProducer {
     private static final Pattern AGE_PATTERN = Pattern.compile(AGES_PREFIX + "[ \\t]+(?<" + AGE_NUM_GROUP + ">[0-9]+):[ \\t]+" +
             "(?<" + AGE_OCCUPIED_GROUP + ">[0-9]+)[ \\t]+bytes,[ \\t]+(?<" + AGE_TOTAL_GROUP + ">[0-9]+)[ \\t]+total");
     protected List<AgesState> agesStates = new ArrayList<>();
-    protected TIntList occupied = new TIntArrayList();
-    protected TIntList total = new TIntArrayList();
+    protected TLongList occupied = new TLongArrayList();
+    protected TLongList total = new TLongArrayList();
     protected int lastAge = -1;
     protected int maxAge = 0;
     protected Runnable onFinished = () -> {};
@@ -70,9 +72,9 @@ public class SurvivorAgesInfoProducer {
         if (agesStates.size() == 1) {
             return agesStates.get(0);
         }
-        int[] occupied = new int[maxAge];
-        int[] total = new int[maxAge];
-        int[] count = new int[maxAge];
+        long[] occupied = new long[maxAge];
+        long[] total = new long[maxAge];
+        long[] count = new long[maxAge];
 
         for (AgesState as : agesStates) {
             for (int i = 0; i < as.getOccupied().size(); i++) {
@@ -86,7 +88,7 @@ public class SurvivorAgesInfoProducer {
             total[i] /= count[i];
         }
 
-        return new AgesState(new TIntArrayList(occupied), new TIntArrayList(total));
+        return new AgesState(new TLongArrayList(occupied), new TLongArrayList(total));
     }
 
     public void setOnFinished(Runnable onFinished) {

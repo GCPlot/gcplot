@@ -5,6 +5,7 @@ import com.datastax.driver.core.Row;
 import com.gcplot.Identifier;
 import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.model.gc.*;
+import com.google.common.base.Preconditions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -26,9 +27,7 @@ public abstract class Mapper {
     }
 
     public static GCAnalyse analyseFrom(Row row) {
-        if (row == null) {
-            return null;
-        }
+        Preconditions.checkNotNull(row);
         GCAnalyseImpl gcAnalyse = new GCAnalyseImpl();
         gcAnalyse.id(row.getUUID("id").toString())
                 .accountId(Identifier.fromStr(row.getString("account_id")))
@@ -38,7 +37,8 @@ public abstract class Mapper {
                 .lastEvent(new DateTime(row.getTimestamp("last_event"), DateTimeZone.UTC))
                 .collectorType(GarbageCollectorType.get(row.getInt("gc_type")))
                 .jvmIds(row.getSet("jvm_ids", String.class))
-                .jvmHeaders(row.getMap("jvm_headers", String.class, String.class));
+                .jvmHeaders(row.getMap("jvm_headers", String.class, String.class))
+                .ext(op(row, "ext", r -> r.getString("ext")));
         Map<String, MemoryDetails> memoryDetails = new HashMap<>();
         Map<String, Long> jvmPageSizes = row.getMap("jvm_md_page_size", String.class, Long.class);
         Map<String, Long> jvmPhysTotal = row.getMap("jvm_md_phys_total", String.class, Long.class);
@@ -66,9 +66,7 @@ public abstract class Mapper {
     }
 
     public static GCEvent eventFrom(Row row) {
-        if (row == null) {
-            return null;
-        }
+        Preconditions.checkNotNull(row);
         GCEventImpl gcEvent = new GCEventImpl();
         gcEvent.id(op(row, "id", r -> r.getUUID("id").toString()))
                 .parentEvent(sop(row, "parent_id", r -> r.getUUID("parent_id")))
@@ -85,6 +83,26 @@ public abstract class Mapper {
                 .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
                 .ext(op(row, "ext", r -> r.getString("ext")));
         return gcEvent;
+    }
+
+    public static List<ObjectsAges> objectsAgesFrom(ResultSet resultSet) {
+        List<ObjectsAges> events = new LinkedList<>();
+        for (Row row : resultSet) {
+            events.add(objectsAgeFrom(row));
+        }
+        return events;
+    }
+
+    public static ObjectsAges objectsAgeFrom(Row r) {
+        Preconditions.checkNotNull(r);
+        ObjectsAgesImpl objectsAge = new ObjectsAgesImpl();
+        objectsAge.analyseId(sop(r, "analyse_id", d -> d.getUUID("analyse_id")))
+                .ext(op(r, "ext", d -> d.getString("ext")))
+                .jvmId(op(r, "jvm_id", d -> d.getString("jvm_id")))
+                .occupied(r.getList("occupied", Long.class))
+                .total(r.getList("total", Long.class))
+                .occurred(new DateTime(r.getTimestamp("occurred"), DateTimeZone.UTC));
+        return objectsAge;
     }
 
     private static <T> T op(Row row, String name, Function<Row, T> f) {

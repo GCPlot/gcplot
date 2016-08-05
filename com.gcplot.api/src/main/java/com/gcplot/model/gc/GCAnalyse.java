@@ -28,4 +28,6 @@ public interface GCAnalyse {
 
     Map<String, MemoryDetails> jvmMemoryDetails();
 
+    String ext();
+
 }

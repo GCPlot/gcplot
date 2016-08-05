@@ -100,6 +100,15 @@ public class GCAnalyseImpl implements GCAnalyse {
         return this;
     }
 
+    @Override
+    public String ext() {
+        return ext;
+    }
+    public GCAnalyseImpl ext(String ext) {
+        this.ext = ext;
+        return this;
+    }
+
     protected String id;
     protected Identifier accountId;
     protected String name;
@@ -110,6 +119,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected Map<String, String> jvmHeaders = Collections.emptyMap();
     protected Set<String> jvmIds = Collections.emptySet();
     protected Map<String, MemoryDetails> jvmMemoryDetails = Collections.emptyMap();
+    protected String ext;
 
     @Override
     public boolean equals(Object o) {
@@ -158,6 +168,8 @@ public class GCAnalyseImpl implements GCAnalyse {
                 ", jvmHeaders=" + jvmHeaders +
                 ", jvmIds=" + jvmIds +
                 ", jvmMemoryDetails=" + jvmMemoryDetails +
+                ", ext='" + ext + '\'' +
                 '}';
     }
+    
 }

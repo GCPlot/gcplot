@@ -19,7 +19,9 @@ public enum ConfigProperty {
     EMAIL_CONFIRM_FROM("email.confirm.from", "support@gcplot.com"),
     EMAIL_CONFIRM_PASSWORD("email.confirm.password", "2w72PiKF3Q8hHH"),
 
-    TEST1_CONFIG("test.config.1", "test");
+    TEST1_CONFIG("test.config.1", "test"),
+
+    SURVIVOR_AGES_AVG_THRESHOLD("survivor.ages.avg.threshold", 100);
 
     private String key;
     public String getKey() {

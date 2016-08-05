@@ -1,4 +1,4 @@
-package com.gcplot.log_processor.parser.notifications;
+package com.gcplot.model.notifications;
 
 /**
  * TBD

@@ -22,7 +22,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 import static com.gcplot.model.gc.cassandra.Mapper.eventFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 
-public class CassandraGCEventRepository implements GCEventRepository {
+public class CassandraGCEventRepository extends AbstractJVMEventsCassandraRepository<GCEvent> implements GCEventRepository {
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
     public static final String[] NON_KEY_FIELDS = new String[] { "id", "parent_id", "description",
@@ -32,10 +32,6 @@ public class CassandraGCEventRepository implements GCEventRepository {
     public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type",
             "pause_mu", "duration_mu", "generations", "concurrency"
     };
-
-    public void init() {
-        Preconditions.checkNotNull(connector, "Cassandra connector is required.");
-    }
 
     @Override
     public List<GCEvent> events(String analyseId, String jvmId, Range range) {
@@ -95,27 +91,7 @@ public class CassandraGCEventRepository implements GCEventRepository {
                 .and(in("date", dates(range))));
     }
 
-    @Override
-    public void add(GCEvent event) {
-        connector.session().execute(addStatement(event));
-    }
 
-    @Override
-    public void add(List<GCEvent> events) {
-        connector.session().execute(
-                QueryBuilder.batch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
-    }
-
-    @Override
-    public void addAsync(GCEvent event) {
-        connector.session().executeAsync(addStatement(event));
-    }
-
-    @Override
-    public void addAsync(List<GCEvent> events) {
-        connector.session().executeAsync(
-                QueryBuilder.batch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
-    }
 
     protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
         return connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME)
@@ -151,26 +127,6 @@ public class CassandraGCEventRepository implements GCEventRepository {
                 .value("generations", EnumSetUtils.encode(event.generations()))
                 .value("concurrency", event.concurrency().type())
                 .value("ext", event.ext());
-    }
-
-    public CassandraGCEventRepository(CassandraConnector connector) {
-        this.connector = connector;
-    }
-
-    protected CassandraConnector connector;
-    public CassandraConnector getConnector() {
-        return connector;
-    }
-    public void setConnector(CassandraConnector connector) {
-        this.connector = connector;
-    }
-
-    protected int fetchSize = 2000;
-    public int getFetchSize() {
-        return fetchSize;
-    }
-    public void setFetchSize(int fetchSize) {
-        this.fetchSize = fetchSize;
     }
 
 }

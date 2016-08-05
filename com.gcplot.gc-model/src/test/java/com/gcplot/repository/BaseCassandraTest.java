@@ -2,9 +2,11 @@ package com.gcplot.repository;
 
 import com.gcplot.cassandra.BaseCassandra;
 import com.gcplot.cassandra.CassandraConnector;
+import com.gcplot.commons.Range;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -60,6 +62,10 @@ public class BaseCassandraTest extends BaseCassandra {
         }
 
         return map;
+    }
+
+    protected Range wideDays(int days) {
+        return Range.of(DateTime.now().minusDays(days), DateTime.now().plusDays(days));
     }
 
     private static String readFile(String path, Charset encoding)
