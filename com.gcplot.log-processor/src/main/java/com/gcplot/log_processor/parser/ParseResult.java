@@ -5,6 +5,7 @@ import com.gcplot.model.notifications.GCNotification;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -17,8 +18,8 @@ public class ParseResult {
     }
 
     private final Throwable exception;
-    public Throwable getException() {
-        return exception;
+    public Optional<Throwable> getException() {
+        return Optional.of(exception);
     }
 
     private final List<GCNotification> notifications;
@@ -31,24 +32,31 @@ public class ParseResult {
         return agesStates;
     }
 
-    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState) {
-        this(true, null, notifications, agesState);
+    private final LogMetadata logMetadata;
+    public Optional<LogMetadata> getLogMetadata() {
+        return Optional.of(logMetadata);
+    }
+
+    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState, LogMetadata logMetadata) {
+        this(true, null, notifications, agesState, logMetadata);
     }
 
     private ParseResult(boolean isSuccessful, Throwable exception,
-                        List<GCNotification> notifications, List<AgesState> agesStates) {
+                        List<GCNotification> notifications, List<AgesState> agesStates, LogMetadata logMetadata) {
         this.isSuccessful = isSuccessful;
         this.notifications = notifications;
         this.agesStates = agesStates;
         this.exception = exception;
+        this.logMetadata = logMetadata;
     }
 
-    public static ParseResult success(List<GCNotification> notifications, List<AgesState> agesStates) {
-        return new ParseResult(notifications, agesStates);
+    public static ParseResult success(List<GCNotification> notifications, List<AgesState> agesStates,
+                                      LogMetadata logMetadata) {
+        return new ParseResult(notifications, agesStates, logMetadata);
     }
 
     public static ParseResult failure(Throwable t) {
-        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList());
+        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList(), null);
     }
 
 }

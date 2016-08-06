@@ -3,7 +3,8 @@ package com.gcplot.log_processor.parser.adapter;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.log_processor.parser.LogsParser;
 import com.gcplot.log_processor.parser.ParseResult;
-import com.gcplot.log_processor.parser.survivor.SurvivorAgesInfoProducer;
+import com.gcplot.log_processor.parser.producers.v8.MetadataInfoProducer;
+import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.tagtraum.perf.gcviewer.imp.AbstractDataReaderSun;
@@ -26,6 +27,7 @@ public class GCViewerLogsParser implements LogsParser {
     @Override
     public ParseResult parse(InputStream reader, Logger log, GarbageCollectorType type, Consumer<GCEvent> eventsConsumer) {
         SurvivorAgesInfoProducer agesInfoProducer = new SurvivorAgesInfoProducer();
+        MetadataInfoProducer metadataInfoProducer = new MetadataInfoProducer();
         GCResource gcResource = new GCResource("default");
         gcResource.setLogger(log);
         AbstractDataReaderSun dr;
@@ -39,6 +41,8 @@ public class GCViewerLogsParser implements LogsParser {
             return ParseResult.failure(e);
         }
         dr.setExcludedHandler(agesInfoProducer::parse);
+        dr.setHeaderHandler(metadataInfoProducer::parse);
+
         return null;
     }
 

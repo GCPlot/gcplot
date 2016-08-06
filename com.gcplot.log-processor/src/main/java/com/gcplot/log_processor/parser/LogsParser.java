@@ -18,6 +18,8 @@ public interface LogsParser {
      * @param eventsConsumer the consumer of newly produced events
      * @return the number of events produced
      */
-    ParseResult parse(InputStream reader, Logger log, GarbageCollectorType type, Consumer<GCEvent> eventsConsumer);
+    ParseResult parse(InputStream reader, Logger log,
+                      GarbageCollectorType type,
+                      Consumer<GCEvent> eventsConsumer);
 
 }
