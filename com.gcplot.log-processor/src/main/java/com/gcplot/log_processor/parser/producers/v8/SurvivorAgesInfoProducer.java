@@ -1,9 +1,7 @@
 package com.gcplot.log_processor.parser.producers.v8;
 
-import com.gcplot.log_processor.parser.survivor.AgesState;
-import gnu.trove.list.TIntList;
+import com.gcplot.log_processor.survivor.AgesState;
 import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 
 import java.util.ArrayList;

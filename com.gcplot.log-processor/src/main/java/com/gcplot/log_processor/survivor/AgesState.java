@@ -1,4 +1,4 @@
-package com.gcplot.log_processor.parser.survivor;
+package com.gcplot.log_processor.survivor;
 
 import com.google.common.base.Preconditions;
 import gnu.trove.impl.unmodifiable.TUnmodifiableLongList;

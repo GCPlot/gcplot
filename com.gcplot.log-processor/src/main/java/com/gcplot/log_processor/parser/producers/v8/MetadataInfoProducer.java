@@ -1,6 +1,6 @@
 package com.gcplot.log_processor.parser.producers.v8;
 
-import com.gcplot.log_processor.parser.LogMetadata;
+import com.gcplot.log_processor.LogMetadata;
 import com.google.common.base.Strings;
 
 import java.util.regex.Matcher;
