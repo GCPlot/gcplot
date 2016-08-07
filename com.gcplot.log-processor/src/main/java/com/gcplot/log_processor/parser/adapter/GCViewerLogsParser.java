@@ -9,8 +9,8 @@ import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.tagtraum.perf.gcviewer.imp.AbstractDataReaderSun;
-import com.tagtraum.perf.gcviewer.imp.DataReaderSun1_6_0G1;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
+import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
 import com.tagtraum.perf.gcviewer.model.GCResource;
 
 import java.io.InputStream;
@@ -33,9 +33,9 @@ public class GCViewerLogsParser implements LogsParser {
         AbstractDataReaderSun dr;
         try {
             if (pc.collectorType() == GarbageCollectorType.ORACLE_G1) {
-                dr = new DataReaderSun1_6_0G1(gcResource, reader, GcLogType.SUN1_8G1);
+                dr = new HotSpotG1DataReader(e -> eventsConsumer.accept(map(e)), gcResource, reader, GcLogType.SUN1_8G1);
             } else {
-                dr = new DataReaderSun1_6_0G1(gcResource, reader, GcLogType.SUN1_8);
+                dr = new HotSpotDataReader(e -> eventsConsumer.accept(map(e)), gcResource, reader, GcLogType.SUN1_8);
             }
         } catch (UnsupportedEncodingException e) {
             return ParseResult.failure(e);
@@ -43,6 +43,10 @@ public class GCViewerLogsParser implements LogsParser {
         dr.setExcludedHandler(agesInfoProducer::parse);
         dr.setHeaderHandler(metadataInfoProducer::parse);
 
+        return null;
+    }
+
+    public GCEvent map(AbstractGCEvent<?> event) {
         return null;
     }
 
