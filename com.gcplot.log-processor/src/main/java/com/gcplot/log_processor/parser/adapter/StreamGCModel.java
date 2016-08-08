@@ -20,7 +20,7 @@ public class StreamGCModel extends GCModel {
         return batchSize;
     }
     public StreamGCModel setBatchSize(int batchSize) {
-        Preconditions.checkArgument(Integer.bitCount(batchSize) != 1, "Batch size should be of power of 2 (bs=2^N)!");
+        Preconditions.checkArgument(Integer.bitCount(batchSize) == 1, "Batch size should be of power of 2 (bs=2^N)!");
         Preconditions.checkArgument(batchSize > BATCH_SIZE_MIN_THRESHOLD, "Batch size should be higher than %s!", BATCH_SIZE_MIN_THRESHOLD);
         this.batchSize = batchSize;
         return this;
@@ -33,7 +33,7 @@ public class StreamGCModel extends GCModel {
 
     @Override
     public void add(AbstractGCEvent<?> abstractEvent) {
-        if (allEvents.size() % batchSize == 0) {
+        if (allEvents.size() % batchSize == 0 && allEvents.size() > 0) {
             processNextBatch();
         }
         if (abstractEvent != null) {

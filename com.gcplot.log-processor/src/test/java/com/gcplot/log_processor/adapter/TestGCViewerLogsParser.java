@@ -1,6 +1,7 @@
 package com.gcplot.log_processor.adapter;
 
 import com.gcplot.log_processor.common.TestGCEventFactory;
+import com.gcplot.log_processor.parser.ParseResult;
 import com.gcplot.log_processor.parser.ParserContext;
 import com.gcplot.log_processor.parser.adapter.GCViewerLogsParser;
 import com.gcplot.model.gc.GCEvent;
@@ -27,13 +28,32 @@ public class TestGCViewerLogsParser {
         List<GCEvent> events = new ArrayList<>();
         GCViewerLogsParser p = new GCViewerLogsParser();
         p.setEventFactory(new TestGCEventFactory());
-        p.parse(log, events::add, new ParserContext(LOG, GarbageCollectorType.ORACLE_CMS));
+        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, GarbageCollectorType.ORACLE_CMS));
 
-        Assert.assertEquals(events.stream().filter(GCEvent::isFull).count(), 1);
+        Assert.assertEquals(1, events.stream().filter(GCEvent::isFull).count());
         GCEvent fullGcEvent = events.stream().filter(GCEvent::isFull).findFirst().get();
-        Assert.assertEquals(fullGcEvent.pauseMu(), 5_072_694);
-        Assert.assertEquals(events.stream().filter(GCEvent::isMetaspace).count(), 1);
-        Assert.assertEquals(events.stream().filter(GCEvent::isPerm).count(), 0);
+        Assert.assertEquals(5_072_694, fullGcEvent.pauseMu());
+        Assert.assertEquals(1, events.stream().filter(GCEvent::isMetaspace).count());
+        Assert.assertEquals(0, events.stream().filter(GCEvent::isPerm).count());
+
+        Assert.assertNotNull(pr);
+        Assert.assertTrue(pr.isSuccessful());
+        Assert.assertEquals(1, pr.getAgesStates().size());
+        Assert.assertFalse(pr.getLogMetadata().isPresent());
+    }
+
+    @Test
+    public void testStreaming() {
+        InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_long_log_young_only.log");
+        List<GCEvent> events = new ArrayList<>();
+        GCViewerLogsParser p = new GCViewerLogsParser();
+        p.setEventFactory(new TestGCEventFactory());
+        p.setBatchSize(64);
+        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, GarbageCollectorType.ORACLE_CMS));
+
+        Assert.assertNotNull(pr);
+        Assert.assertEquals(0, events.stream().filter(GCEvent::isFull).count());
+        Assert.assertEquals(81, events.size());
     }
 
 }

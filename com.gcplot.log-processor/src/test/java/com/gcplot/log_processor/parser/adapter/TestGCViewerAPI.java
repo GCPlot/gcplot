@@ -17,11 +17,12 @@ public class TestGCViewerAPI {
 
     @Test
     public void test() throws Exception {
-        InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_full_gc_log.log");
+        InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_long_log_young_only.log");
         DataReaderSun1_6_0 r = new DataReaderSun1_6_0(new GCResource("res1"), log, GcLogType.SUN1_8);
         r.setExcludedHandler(s -> System.out.println("| " + s));
         r.setHeaderHandler(s -> System.out.println("+ " + s));
         GCModel model = r.read();
+        System.out.println(model.getAllEvents().size());
         System.out.println(model);
     }
 
