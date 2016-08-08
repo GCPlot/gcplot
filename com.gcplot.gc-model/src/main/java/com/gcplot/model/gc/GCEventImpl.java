@@ -98,15 +98,6 @@ public class GCEventImpl implements GCEvent {
     }
 
     @Override
-    public long durationMu() {
-        return durationMu;
-    }
-    public GCEventImpl durationMu(long durationMu) {
-        this.durationMu = durationMu;
-        return this;
-    }
-
-    @Override
     public EnumSet<Generation> generations() {
         return generations;
     }
@@ -143,7 +134,6 @@ public class GCEventImpl implements GCEvent {
     protected Capacity capacity;
     protected Capacity totalCapacity;
     protected long pauseMu;
-    protected long durationMu;
     protected EnumSet<Generation> generations;
     protected EventConcurrency concurrency;
     protected String ext;

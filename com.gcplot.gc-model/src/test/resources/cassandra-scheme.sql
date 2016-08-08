@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS gc_event (
   capacity list<bigint>,
   total_capacity list<bigint>,
   pause_mu bigint,
-  duration_mu bigint,
   generations bigint,
   concurrency int,
   ext varchar,

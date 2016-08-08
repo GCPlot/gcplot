@@ -34,29 +34,40 @@ public class StreamGCModel extends GCModel {
     @Override
     public void add(AbstractGCEvent<?> abstractEvent) {
         if (allEvents.size() % batchSize == 0) {
-            List<AbstractGCEvent<?>> toConsume = allEvents.subList(0, allEvents.size() / 2);
-            allEvents = cutBy(allEvents, 2);
-            if (stopTheWorldEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
-                stopTheWorldEvents = cutBy(stopTheWorldEvents, 2);
-            }
-            if (gcEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
-                gcEvents = cutBy(gcEvents, 2);
-            }
-            if (vmOperationEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
-                vmOperationEvents = cutBy(vmOperationEvents, 2);
-            }
-            if (concurrentGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
-                concurrentGCEvents = cutBy(concurrentGCEvents, 2);
-            }
-            if (currentNoFullGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
-                currentNoFullGCEvents = cutBy(currentNoFullGCEvents, 2);
-            }
-            if (fullGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
-                fullGCEvents = cutBy(fullGCEvents, 2);
-            }
-            eventsConsumer.accept(toConsume);
+            processNextBatch();
         }
-        super.add(abstractEvent);
+        if (abstractEvent != null) {
+            super.add(abstractEvent);
+        }
+    }
+
+    public StreamGCModel finish() {
+        eventsConsumer.accept(allEvents);
+        return this;
+    }
+
+    private void processNextBatch() {
+        List<AbstractGCEvent<?>> toConsume = allEvents.subList(0, allEvents.size() / 2);
+        allEvents = cutBy(allEvents, 2);
+        if (stopTheWorldEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
+            stopTheWorldEvents = cutBy(stopTheWorldEvents, 2);
+        }
+        if (gcEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
+            gcEvents = cutBy(gcEvents, 2);
+        }
+        if (vmOperationEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
+            vmOperationEvents = cutBy(vmOperationEvents, 2);
+        }
+        if (concurrentGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
+            concurrentGCEvents = cutBy(concurrentGCEvents, 2);
+        }
+        if (currentNoFullGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
+            currentNoFullGCEvents = cutBy(currentNoFullGCEvents, 2);
+        }
+        if (fullGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
+            fullGCEvents = cutBy(fullGCEvents, 2);
+        }
+        eventsConsumer.accept(toConsume);
     }
 
     private <T> List<T> cutBy(List<T> list, int ratio) {

@@ -17,7 +17,7 @@ public class TestGCViewerAPI {
 
     @Test
     public void test() throws Exception {
-        InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_full_gc_log_2.log");
+        InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_full_gc_log.log");
         DataReaderSun1_6_0 r = new DataReaderSun1_6_0(new GCResource("res1"), log, GcLogType.SUN1_8);
         r.setExcludedHandler(s -> System.out.println("| " + s));
         r.setHeaderHandler(s -> System.out.println("+ " + s));

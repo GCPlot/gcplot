@@ -28,12 +28,6 @@ public interface GCEvent extends JVMEvent, DatedEvent {
     long pauseMu();
 
     /**
-     * Duration of the event. If this event is not sub-event of some
-     * other event, then duration = pause.
-     */
-    long durationMu();
-
-    /**
      * Generations, affected by this event.
      */
     EnumSet<Generation> generations();
@@ -41,5 +35,18 @@ public interface GCEvent extends JVMEvent, DatedEvent {
     EventConcurrency concurrency();
 
     String ext();
+
+    default boolean isFull() {
+        return generations().size() > 1 && generations().contains(Generation.TENURED) &&
+                generations().contains(Generation.TENURED);
+    }
+
+    default boolean isMetaspace() {
+        return generations().size() == 1 && generations().contains(Generation.METASPACE);
+    }
+
+    default boolean isPerm() {
+        return generations().size() == 1 && generations().contains(Generation.PERM);
+    }
 
 }

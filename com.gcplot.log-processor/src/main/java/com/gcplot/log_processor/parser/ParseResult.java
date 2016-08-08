@@ -20,7 +20,7 @@ public class ParseResult {
 
     private final Throwable exception;
     public Optional<Throwable> getException() {
-        return Optional.of(exception);
+        return Optional.ofNullable(exception);
     }
 
     private final List<GCNotification> notifications;
@@ -35,7 +35,7 @@ public class ParseResult {
 
     private final LogMetadata logMetadata;
     public Optional<LogMetadata> getLogMetadata() {
-        return Optional.of(logMetadata);
+        return Optional.ofNullable(logMetadata);
     }
 
     private ParseResult(List<GCNotification> notifications, List<AgesState> agesState, LogMetadata logMetadata) {

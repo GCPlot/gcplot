@@ -75,10 +75,9 @@ public abstract class Mapper {
                 .description(op(row, "description", r -> r.getString("description")))
                 .occurred(op(row, "occurred", r -> new DateTime(r.getTimestamp("occurred"), DateTimeZone.UTC)))
                 .vmEventType(op(row, "vm_event_type", r -> VMEventType.get(r.getInt("vm_event_type"))))
-                .capacity(op(row, "capacity", r -> new CapacityImpl(r.getList("capacity", Long.class))))
-                .totalCapacity(op(row, "total_capacity", r -> new CapacityImpl(r.getList("total_capacity", Long.class))))
+                .capacity(op(row, "capacity", r -> new Capacity(r.getList("capacity", Long.class))))
+                .totalCapacity(op(row, "total_capacity", r -> new Capacity(r.getList("total_capacity", Long.class))))
                 .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
-                .durationMu(lop(row, "duration_mu", r -> r.getLong("duration_mu")))
                 .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
                 .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
                 .ext(op(row, "ext", r -> r.getString("ext")));

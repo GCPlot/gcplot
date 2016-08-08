@@ -27,11 +27,9 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
     protected static final String DATE_PATTERN = "yyyy-MM";
     public static final String[] NON_KEY_FIELDS = new String[] { "id", "parent_id", "description",
             "occurred", "vm_event_type", "capacity", "total_capacity",
-            "pause_mu", "duration_mu", "generations", "concurrency",
+            "pause_mu", "generations", "concurrency",
             "ext"};
-    public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type",
-            "pause_mu", "duration_mu", "generations", "concurrency"
-    };
+    public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "generations", "concurrency" };
 
     @Override
     public List<GCEvent> events(String analyseId, String jvmId, Range range) {
@@ -123,7 +121,6 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
                 .value("capacity", Lists.newArrayList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))
                 .value("total_capacity", Lists.newArrayList(event.totalCapacity().usedBefore(), event.totalCapacity().usedAfter(), event.totalCapacity().total()))
                 .value("pause_mu", event.pauseMu())
-                .value("duration_mu", event.durationMu())
                 .value("generations", EnumSetUtils.encode(event.generations()))
                 .value("concurrency", event.concurrency().type())
                 .value("ext", event.ext());

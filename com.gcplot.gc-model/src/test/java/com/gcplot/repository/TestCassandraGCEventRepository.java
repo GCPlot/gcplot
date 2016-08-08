@@ -44,9 +44,8 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         Assert.assertEquals(ge.occurred(), event.occurred().toDateTime(DateTimeZone.UTC));
         Assert.assertEquals(ge.vmEventType(), event.vmEventType());
         Assert.assertEquals(ge.capacity(), event.capacity());
-        Assert.assertEquals(ge.totalCapacity(), new CapacityImpl(event.totalCapacity()));
+        Assert.assertEquals(ge.totalCapacity(), new Capacity(event.totalCapacity()));
         Assert.assertEquals(ge.pauseMu(), event.pauseMu());
-        Assert.assertEquals(ge.durationMu(), event.durationMu());
         Assert.assertEquals(ge.generations(), event.generations());
         Assert.assertEquals(ge.concurrency(), event.concurrency());
 
@@ -60,7 +59,6 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         Assert.assertNull(ge.capacity());
         Assert.assertNull(ge.totalCapacity());
         Assert.assertNotEquals(ge.pauseMu(), 0);
-        Assert.assertNotEquals(ge.durationMu(), 0);
         Assert.assertNotNull(ge.generations());
         Assert.assertNotNull(ge.concurrency());
     }
@@ -97,10 +95,9 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         event.jvmId(jvmId).analyseId(analyseId).description("descr1")
                 .occurred(DateTime.now().minusDays(1))
                 .vmEventType(VMEventType.GARBAGE_COLLECTION)
-                .capacity(CapacityImpl.of(3000, 1000, 6000))
+                .capacity(Capacity.of(3000, 1000, 6000))
                 .totalCapacity(Capacity.NONE)
                 .pauseMu(51321)
-                .durationMu(63124)
                 .generations(EnumSet.of(Generation.YOUNG, Generation.TENURED))
                 .concurrency(EventConcurrency.SERIAL);
     }
