@@ -54,6 +54,9 @@ public class TestGCViewerLogsParser {
         Assert.assertNotNull(pr);
         Assert.assertEquals(0, events.stream().filter(GCEvent::isFull).count());
         Assert.assertEquals(81, events.size());
+        for (int i = 2; i < events.size(); i++) {
+            Assert.assertTrue("" + i, events.get(i).occurred().isAfter(events.get(i - 1).occurred()));
+        }
     }
 
 }
