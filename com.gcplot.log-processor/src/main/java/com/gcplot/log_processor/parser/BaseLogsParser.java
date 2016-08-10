@@ -1,5 +1,6 @@
 package com.gcplot.log_processor.parser;
 
+import com.gcplot.logs.LogsParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

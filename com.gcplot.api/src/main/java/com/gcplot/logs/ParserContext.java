@@ -1,10 +1,8 @@
-package com.gcplot.log_processor.parser;
+package com.gcplot.logs;
 
+import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
-
-import java.util.Optional;
 
 /**
  * Had to move some parameters, which must be passed to the parser, into
@@ -27,9 +25,16 @@ public class ParserContext {
         return collectorType;
     }
 
-    public ParserContext(Logger logger, GarbageCollectorType collectorType) {
+    private final VMVersion vmVersion;
+    public VMVersion vmVersion() {
+        return vmVersion;
+    }
+
+    public ParserContext(Logger logger, GarbageCollectorType collectorType,
+                         VMVersion vmVersion) {
         this.logger = logger;
         this.collectorType = collectorType;
+        this.vmVersion = vmVersion;
     }
 
 }

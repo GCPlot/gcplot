@@ -2,8 +2,9 @@ package com.gcplot.log_processor.adapter;
 
 import com.gcplot.log_processor.common.TestGCEventFactory;
 import com.gcplot.log_processor.parser.ParseResult;
-import com.gcplot.log_processor.parser.ParserContext;
 import com.gcplot.log_processor.parser.adapter.GCViewerLogsParser;
+import com.gcplot.logs.ParserContext;
+import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GarbageCollectorType;
 import org.junit.Assert;
@@ -28,7 +29,8 @@ public class TestGCViewerLogsParser {
         List<GCEvent> events = new ArrayList<>();
         GCViewerLogsParser p = new GCViewerLogsParser();
         p.setEventFactory(new TestGCEventFactory());
-        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, GarbageCollectorType.ORACLE_CMS));
+        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG,
+                GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
 
         Assert.assertEquals(1, events.stream().filter(GCEvent::isFull).count());
         GCEvent fullGcEvent = events.stream().filter(GCEvent::isFull).findFirst().get();
@@ -49,7 +51,8 @@ public class TestGCViewerLogsParser {
         GCViewerLogsParser p = new GCViewerLogsParser();
         p.setEventFactory(new TestGCEventFactory());
         p.setBatchSize(64);
-        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, GarbageCollectorType.ORACLE_CMS));
+        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, GarbageCollectorType.ORACLE_CMS,
+                VMVersion.HOTSPOT_1_8));
 
         Assert.assertNotNull(pr);
         Assert.assertEquals(0, events.stream().filter(GCEvent::isFull).count());

@@ -1,11 +1,11 @@
-package com.gcplot.log_processor.parser;
+package com.gcplot.logs;
 
 import com.gcplot.model.gc.GCEvent;
 
 import java.io.InputStream;
 import java.util.function.Consumer;
 
-public interface LogsParser {
+public interface LogsParser<ParseResult> {
 
     /**
      * Parses the input GC log stream and produces appropriate GC Events.

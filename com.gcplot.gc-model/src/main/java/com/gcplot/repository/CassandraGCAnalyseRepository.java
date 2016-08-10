@@ -54,6 +54,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("start", analyse.start().toDateTime(DateTimeZone.UTC).toDate())
                 .value("last_event", analyse.lastEvent().toDateTime(DateTimeZone.UTC).toDate())
                 .value("gc_type", analyse.collectorType().type())
+                .value("vm_version", analyse.vmVersion().type())
                 .value("jvm_ids", analyse.jvmIds())
                 .value("jvm_headers", analyse.jvmHeaders())
                 .value("jvm_md_page_size", analyse.jvmMemoryDetails().entrySet()

@@ -1,6 +1,7 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.VMVersion;
 import org.joda.time.DateTime;
 
 import java.util.Map;
@@ -19,6 +20,8 @@ public interface GCAnalyse {
     DateTime start();
 
     DateTime lastEvent();
+
+    VMVersion vmVersion();
 
     GarbageCollectorType collectorType();
 

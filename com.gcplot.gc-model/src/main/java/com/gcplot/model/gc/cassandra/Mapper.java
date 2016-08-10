@@ -4,6 +4,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.gcplot.Identifier;
 import com.gcplot.commons.enums.EnumSetUtils;
+import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
 import com.google.common.base.Preconditions;
 import org.joda.time.DateTime;
@@ -35,6 +36,7 @@ public abstract class Mapper {
                 .isContinuous(row.getBool("is_continuous"))
                 .start(new DateTime(row.getTimestamp("start"), DateTimeZone.UTC))
                 .lastEvent(new DateTime(row.getTimestamp("last_event"), DateTimeZone.UTC))
+                .vmVersion(VMVersion.get(row.getInt("vm_version")))
                 .collectorType(GarbageCollectorType.get(row.getInt("gc_type")))
                 .jvmIds(row.getSet("jvm_ids", String.class))
                 .jvmHeaders(row.getMap("jvm_headers", String.class, String.class))

@@ -1,14 +1,13 @@
 package com.gcplot.log_processor.parser.adapter;
 
 import com.gcplot.configuration.ConfigurationManager;
-import com.gcplot.log_processor.parser.LogsParser;
 import com.gcplot.log_processor.parser.ParseResult;
-import com.gcplot.log_processor.parser.ParserContext;
 import com.gcplot.log_processor.parser.producers.v8.MetadataInfoProducer;
 import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
+import com.gcplot.logs.LogsParser;
+import com.gcplot.logs.ParserContext;
 import com.gcplot.model.gc.*;
 import com.gcplot.model.gc.GCEvent;
-import com.tagtraum.perf.gcviewer.imp.AbstractDataReaderSun;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
 import com.tagtraum.perf.gcviewer.model.*;
 import org.joda.time.DateTime;
@@ -24,7 +23,7 @@ import java.util.function.Consumer;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         7/24/16
  */
-public class GCViewerLogsParser implements LogsParser {
+public class GCViewerLogsParser implements LogsParser<ParseResult> {
     protected ConfigurationManager configurationManager;
     protected GCEventFactory eventFactory;
     protected int batchSize = -1;
@@ -39,10 +38,10 @@ public class GCViewerLogsParser implements LogsParser {
         try {
             if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
                 dr = new HotSpotG1DataReader(e -> map(ctx, e).forEach(eventsConsumer), batchSize,
-                        gcResource, reader, GcLogType.SUN1_8G1);
+                        gcResource, reader, fetchLogType(ctx));
             } else {
                 dr = new HotSpotDataReader(e -> map(ctx, e).forEach(eventsConsumer), batchSize,
-                        gcResource, reader, GcLogType.SUN1_8);
+                        gcResource, reader, fetchLogType(ctx));
             }
         } catch (UnsupportedEncodingException e) {
             return ParseResult.failure(e);
@@ -60,6 +59,32 @@ public class GCViewerLogsParser implements LogsParser {
         return ParseResult.success(Collections.emptyList(),
                 Collections.singletonList(agesInfoProducer.averageAgesState()),
                 metadataInfoProducer.getLogMetadata());
+    }
+
+    private GcLogType fetchLogType(ParserContext ctx) {
+        switch (ctx.vmVersion()) {
+            case HOTSPOT_1_2_2: return GcLogType.SUN1_2_2;
+            case HOTSPOT_1_3_1: return GcLogType.SUN1_3_1;
+            case HOTSPOT_1_4: return GcLogType.SUN1_4;
+            case HOTSPOT_1_5: return GcLogType.SUN1_5;
+            case HOTSPOT_1_6: if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
+                return GcLogType.SUN1_6G1;
+            } else {
+                return GcLogType.SUN1_6;
+            }
+            case HOTSPOT_1_7: if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
+                return GcLogType.SUN1_7G1;
+            } else {
+                return GcLogType.SUN1_7;
+            }
+            case HOTSPOT_1_8:
+            case HOTSPOT_1_9: if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
+                return GcLogType.SUN1_8G1;
+            } else {
+                return GcLogType.SUN1_8;
+            }
+            default: throw new RuntimeException("Unsupported VM version " + ctx.vmVersion());
+        }
     }
 
     public List<GCEvent> map(ParserContext ctx, AbstractGCEvent<?> event) {

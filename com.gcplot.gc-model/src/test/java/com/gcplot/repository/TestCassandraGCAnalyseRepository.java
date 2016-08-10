@@ -1,6 +1,7 @@
 package com.gcplot.repository;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
 import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
@@ -23,6 +24,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
                 .start(DateTime.now().minusDays(5))
                 .lastEvent(DateTime.now().minusDays(1))
                 .name("Analyse 1")
+                .vmVersion(VMVersion.HOTSPOT_1_8)
                 .collectorType(GarbageCollectorType.ORACLE_G1)
                 .jvmIds(Sets.newHashSet("jvm1", "jvm2"))
                 .jvmHeaders(map("jvm1", "header1,header2", "jvm2", "header3"))
@@ -38,6 +40,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(gcAnalyse.start().toDateTime(DateTimeZone.UTC), rawAnalyse.start());
         Assert.assertEquals(gcAnalyse.lastEvent().toDateTime(DateTimeZone.UTC), rawAnalyse.lastEvent());
         Assert.assertEquals(gcAnalyse.name(), rawAnalyse.name());
+        Assert.assertEquals(gcAnalyse.vmVersion(), rawAnalyse.vmVersion());
         Assert.assertEquals(gcAnalyse.collectorType(), rawAnalyse.collectorType());
         Assert.assertEquals(0, Sets.difference(gcAnalyse.jvmIds(), rawAnalyse.jvmIds()).size());
         Assert.assertEquals("header1,header2", rawAnalyse.jvmHeaders().get("jvm1"));

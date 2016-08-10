@@ -1,6 +1,8 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.VMVersion;
+import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
 
 import java.util.Collections;
@@ -64,8 +66,21 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
+    public VMVersion vmVersion() {
+        return vmVersion;
+    }
+    public GCAnalyseImpl vmVersion(VMVersion vmVersion) {
+        this.vmVersion = vmVersion;
+        return this;
+    }
+
+    @Override
     public GarbageCollectorType collectorType() {
         return collectorType;
+    }
+    public GCAnalyseImpl collectorType(GarbageCollectorType collectorType) {
+        this.collectorType = collectorType;
+        return this;
     }
 
     @Override
@@ -74,11 +89,6 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
     public GCAnalyseImpl jvmHeaders(Map<String, String> jvmHeaders) {
         this.jvmHeaders = jvmHeaders;
-        return this;
-    }
-
-    public GCAnalyseImpl collectorType(GarbageCollectorType collectorType) {
-        this.collectorType = collectorType;
         return this;
     }
 
@@ -115,6 +125,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected boolean isContinuous;
     protected DateTime start;
     protected DateTime lastEvent;
+    protected VMVersion vmVersion;
     protected GarbageCollectorType collectorType;
     protected Map<String, String> jvmHeaders = Collections.emptyMap();
     protected Set<String> jvmIds = Collections.emptySet();
@@ -134,10 +145,14 @@ public class GCAnalyseImpl implements GCAnalyse {
         if (name != null ? !name.equals(gcAnalyse.name) : gcAnalyse.name != null) return false;
         if (start != null ? !start.equals(gcAnalyse.start) : gcAnalyse.start != null) return false;
         if (lastEvent != null ? !lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent != null) return false;
+        if (vmVersion != gcAnalyse.vmVersion) return false;
         if (collectorType != gcAnalyse.collectorType) return false;
         if (jvmHeaders != null ? !jvmHeaders.equals(gcAnalyse.jvmHeaders) : gcAnalyse.jvmHeaders != null) return false;
         if (jvmIds != null ? !jvmIds.equals(gcAnalyse.jvmIds) : gcAnalyse.jvmIds != null) return false;
-        return jvmMemoryDetails != null ? jvmMemoryDetails.equals(gcAnalyse.jvmMemoryDetails) : gcAnalyse.jvmMemoryDetails == null;
+        if (jvmMemoryDetails != null ? !jvmMemoryDetails.equals(gcAnalyse.jvmMemoryDetails) : gcAnalyse.jvmMemoryDetails != null)
+            return false;
+        return ext != null ? ext.equals(gcAnalyse.ext) : gcAnalyse.ext == null;
+
     }
 
     @Override
@@ -148,28 +163,30 @@ public class GCAnalyseImpl implements GCAnalyse {
         result = 31 * result + (isContinuous ? 1 : 0);
         result = 31 * result + (start != null ? start.hashCode() : 0);
         result = 31 * result + (lastEvent != null ? lastEvent.hashCode() : 0);
+        result = 31 * result + (vmVersion != null ? vmVersion.hashCode() : 0);
         result = 31 * result + (collectorType != null ? collectorType.hashCode() : 0);
         result = 31 * result + (jvmHeaders != null ? jvmHeaders.hashCode() : 0);
         result = 31 * result + (jvmIds != null ? jvmIds.hashCode() : 0);
         result = 31 * result + (jvmMemoryDetails != null ? jvmMemoryDetails.hashCode() : 0);
+        result = 31 * result + (ext != null ? ext.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "GCAnalyseImpl{" +
-                "id='" + id + '\'' +
-                ", accountId=" + accountId +
-                ", name='" + name + '\'' +
-                ", isContinuous=" + isContinuous +
-                ", start=" + start +
-                ", lastEvent=" + lastEvent +
-                ", collectorType=" + collectorType +
-                ", jvmHeaders=" + jvmHeaders +
-                ", jvmIds=" + jvmIds +
-                ", jvmMemoryDetails=" + jvmMemoryDetails +
-                ", ext='" + ext + '\'' +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("accountId", accountId)
+                .add("name", name)
+                .add("isContinuous", isContinuous)
+                .add("start", start)
+                .add("lastEvent", lastEvent)
+                .add("vmVersion", vmVersion)
+                .add("collectorType", collectorType)
+                .add("jvmHeaders", jvmHeaders)
+                .add("jvmIds", jvmIds)
+                .add("jvmMemoryDetails", jvmMemoryDetails)
+                .add("ext", ext)
+                .toString();
     }
-    
 }
