@@ -47,6 +47,7 @@ dependencies {
     compile project(":com.gcplot.log-processor")
 
     compile "io.vertx:vertx-web:$vertxVersion"
+    compile "io.vertx:vertx-codegen:$vertxVersion"
     compile "org.springframework:spring-context:$springVersion"
     compile "org.springframework:spring-beans:$springVersion"
     compile "io.dropwizard.metrics:metrics-core:$metricsVersion"

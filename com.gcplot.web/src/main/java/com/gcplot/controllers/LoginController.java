@@ -21,9 +21,7 @@ import java.util.regex.Pattern;
 public class LoginController extends Controller {
 
     @PostConstruct
-    @Override
     public void init() {
-        super.init();
         dispatcher.noAuth().filter(c -> c.hasParam("username") && c.hasParam("password"),
                 "Username and password are required!").get("/user/login", this::login);
         dispatcher.noAuth().blocking().post("/user/register", RegisterRequest.class, this::register);

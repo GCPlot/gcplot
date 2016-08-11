@@ -72,6 +72,9 @@
 
     <!-- CONTROLLERS -->
 
+    <bean class="com.gcplot.controllers.DefaultDispatcherHandlers"/>
+
     <bean id="loginController" class="com.gcplot.controllers.LoginController"/>
+    <bean id="gcLogsController" class="com.gcplot.controllers.GCLogsController"/>
 
 </beans>

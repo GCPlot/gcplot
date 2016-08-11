@@ -9,8 +9,22 @@ import java.util.function.Predicate;
 
 public interface Dispatcher<Route> extends Closeable {
 
+    boolean isOpen();
+
+    /**
+     * Chains the handlers.
+     *
+     * @param handler
+     * @return
+     */
     Dispatcher<Route> preHandle(Consumer<RequestContext> handler);
 
+    /**
+     * Chains the handlers.
+     *
+     * @param handler
+     * @return
+     */
     Dispatcher<Route> postHandle(Consumer<RequestContext> handler);
 
     Dispatcher<Route> get(Route route, Consumer<RequestContext> handler);
@@ -50,6 +64,12 @@ public interface Dispatcher<Route> extends Closeable {
 
     Dispatcher<Route> mimeTypes(String... mimeTypes);
 
+    /**
+     * Chains the handlers.
+     *
+     * @param handler
+     * @return
+     */
     Dispatcher<Route> exceptionHandler(BiConsumer<Throwable, RequestContext> handler);
 
 }

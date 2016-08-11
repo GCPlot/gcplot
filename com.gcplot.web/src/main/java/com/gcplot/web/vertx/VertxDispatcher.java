@@ -46,12 +46,13 @@ public class VertxDispatcher implements Dispatcher<String> {
             throw Exceptions.runtime(t);
         }
         router.route().handler(bodyHandler.setBodyLimit(maxUploadSize));
+        isOpen = true;
     }
 
     @Override
     public synchronized void close() {
-        if (!isClosed) {
-            isClosed = true;
+        if (isOpen) {
+            isOpen = false;
             LOG.info("Shutting down Vert.x Dispatcher.");
             CountDownLatch serverWait = new CountDownLatch(1);
             httpServer.close(r -> serverWait.countDown());
@@ -70,14 +71,19 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
 
     @Override
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    @Override
     public Dispatcher<String> preHandle(Consumer<RequestContext> handler) {
-        this.preHandler = handler;
+        this.preHandler = preHandler.andThen(handler);
         return this;
     }
 
     @Override
     public Dispatcher<String> postHandle(Consumer<RequestContext> handler) {
-        this.postHandler = handler;
+        this.postHandler = postHandler.andThen(handler);
         return this;
     }
 
@@ -182,7 +188,7 @@ public class VertxDispatcher implements Dispatcher<String> {
 
     @Override
     public Dispatcher<String> exceptionHandler(BiConsumer<Throwable, RequestContext> handler) {
-        this.exceptionHandler = handler;
+        this.exceptionHandler = exceptionHandler.andThen(handler);
         return this;
     }
 
@@ -223,9 +229,7 @@ public class VertxDispatcher implements Dispatcher<String> {
             final Handler<RoutingContext> r = rc -> {
                 VertxRequestContext c = contexts.get().reset(rc);
                 try {
-                    if (preHandler != null) {
-                        preHandler.accept(c);
-                    }
+                    preHandler.accept(c);
                     if (c.loginInfo().isPresent() && c.loginInfo().get().getAccount().isBlocked()) {
                         c.finish(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
                     } else {
@@ -249,12 +253,10 @@ public class VertxDispatcher implements Dispatcher<String> {
                         LOG.error("DISPATCH: ", t);
                     }
                 } finally {
-                    if (postHandler != null) {
-                        try {
-                            postHandler.accept(c);
-                        } catch (Throwable t) {
-                            LOG.error("DISPATCH POST HANDLE: ", t);
-                        }
+                    try {
+                        postHandler.accept(c);
+                    } catch (Throwable t) {
+                        LOG.error("DISPATCH POST HANDLE: ", t);
                     }
                     if (!c.isFinished()) {
                         c.finish();
@@ -288,7 +290,7 @@ public class VertxDispatcher implements Dispatcher<String> {
         }
     };
 
-    protected volatile boolean isClosed = false;
+    protected volatile boolean isOpen = false;
     protected HttpServer httpServer;
     protected Router router;
     protected BodyHandler bodyHandler = BodyHandler.create();
@@ -297,9 +299,9 @@ public class VertxDispatcher implements Dispatcher<String> {
     protected boolean requireAuth = true;
     protected boolean requireConfirmed = false;
     protected String[] mimeTypes;
-    protected BiConsumer<Throwable, RequestContext> exceptionHandler;
-    protected Consumer<RequestContext> preHandler;
-    protected Consumer<RequestContext> postHandler;
+    protected BiConsumer<Throwable, RequestContext> exceptionHandler = (r,q) -> {};
+    protected Consumer<RequestContext> preHandler = r -> {};
+    protected Consumer<RequestContext> postHandler = r -> {};
     protected Predicate<RequestContext> filter;
     protected String filterMessage;
 
