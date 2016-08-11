@@ -1,14 +1,13 @@
-package com.gcplot.repository;
+package com.gcplot.repository.cassandra;
 
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.gcplot.cassandra.CassandraConnector;
 import com.gcplot.commons.Range;
 import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.model.gc.GCEvent;
-import com.google.common.base.Preconditions;
+import com.gcplot.repository.GCEventRepository;
 import com.google.common.collect.Lists;
 import org.joda.time.Months;
 

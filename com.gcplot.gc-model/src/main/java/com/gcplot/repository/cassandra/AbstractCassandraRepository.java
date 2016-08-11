@@ -1,4 +1,4 @@
-package com.gcplot.repository;
+package com.gcplot.repository.cassandra;
 
 import com.gcplot.cassandra.CassandraConnector;
 import com.google.common.base.Preconditions;

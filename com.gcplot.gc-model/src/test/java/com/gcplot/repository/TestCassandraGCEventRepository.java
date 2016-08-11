@@ -1,7 +1,7 @@
 package com.gcplot.repository;
 
-import com.gcplot.commons.Range;
 import com.gcplot.model.gc.*;
+import com.gcplot.repository.cassandra.CassandraGCEventRepository;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Assert;

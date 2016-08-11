@@ -1,4 +1,4 @@
-package com.gcplot.repository;
+package com.gcplot.repository.cassandra;
 
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;

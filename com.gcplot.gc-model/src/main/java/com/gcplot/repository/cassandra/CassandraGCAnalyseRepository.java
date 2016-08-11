@@ -1,14 +1,13 @@
-package com.gcplot.repository;
+package com.gcplot.repository.cassandra;
 
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.gcplot.Identifier;
-import com.gcplot.cassandra.CassandraConnector;
 import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.MemoryDetails;
-import com.google.common.base.Preconditions;
+import com.gcplot.repository.GCAnalyseRepository;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 

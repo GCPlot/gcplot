@@ -6,16 +6,14 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
     <context:annotation-config/>
 
-    <import resource="applicationContext-controllers.xml"/>
-    <import resource="applicationContext-orientdb.xml"/>
-    <import resource="applicationContext-metrics.xml"/>
     <import resource="applicationContext-config.xml"/>
-    <import resource="applicationContext-mail.xml"/>
     <import resource="applicationContext-web.xml"/>
-    <import resource="applicationContext-orientdb.xml"/>
-    <import resource="applicationContext-inmemory.xml"/>
-    <import resource="applicationContext-gc.xml"/>
 
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+    <bean id="mailService" class="com.gcplot.mail.MailService" init-method="init" destroy-method="destroy">
+        <property name="config" ref="config"/>
+        <property name="urlBuilder" ref="urlBuilder"/>
+        <property name="threadPoolSize" value="${mail.thread.pool.size:30}"/>
+        <property name="metrics" ref="metrics"/>
+    </bean>
 
 </beans>

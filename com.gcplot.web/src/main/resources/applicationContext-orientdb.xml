@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+    <context:annotation-config/>
+
+    <import resource="applicationContext-metrics.xml"/>
+
+    <bean id="orientDbPool" class="com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory">
+        <constructor-arg value="${orientdb.pool.size:100}"/>
+    </bean>
+
+    <bean id="orientDbConfig" class="com.gcplot.repository.OrientDbConfig">
+        <constructor-arg value="${orientdb.connection.string}"/>
+        <constructor-arg value="${orientdb.user}"/>
+        <constructor-arg value="${orientdb.password}"/>
+    </bean>
+
+    <bean id="accountRepository" class="com.gcplot.repository.AccountOrientDbRepository" init-method="init"
+          destroy-method="destroy">
+        <constructor-arg ref="orientDbConfig"/>
+        <constructor-arg ref="orientDbPool"/>
+        <property name="metrics" ref="metrics"/>
+    </bean>
+
+    <bean id="filtersRepository" class="com.gcplot.repository.FiltersOrientDbRepository" init-method="init"
+          destroy-method="destroy">
+        <constructor-arg ref="orientDbConfig"/>
+        <constructor-arg ref="orientDbPool"/>
+        <property name="metrics" ref="metrics"/>
+    </bean>
+
+</beans>

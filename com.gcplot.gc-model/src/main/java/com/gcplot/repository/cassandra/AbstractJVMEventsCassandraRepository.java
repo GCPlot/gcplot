@@ -1,8 +1,9 @@
-package com.gcplot.repository;
+package com.gcplot.repository.cassandra;
 
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.gcplot.model.JVMEvent;
+import com.gcplot.repository.JVMEventsRepository;
 
 import java.util.List;
 

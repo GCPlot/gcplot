@@ -2,6 +2,7 @@ package com.gcplot.repository;
 
 import com.gcplot.model.gc.ObjectsAges;
 import com.gcplot.model.gc.ObjectsAgesImpl;
+import com.gcplot.repository.cassandra.CassandraObjectsAgesRepository;
 import com.google.common.primitives.Longs;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

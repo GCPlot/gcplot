@@ -3,6 +3,7 @@ package com.gcplot.repository;
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
+import com.gcplot.repository.cassandra.CassandraGCAnalyseRepository;
 import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

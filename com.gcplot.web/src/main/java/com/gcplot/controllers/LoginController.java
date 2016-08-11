@@ -29,6 +29,15 @@ public class LoginController extends Controller {
                 "Salt should be provided!").get("/user/confirm", this::confirm);
     }
 
+    /**
+     * GET /user/login
+     * No Auth
+     * Params:
+     *   - username (String)
+     *   - password (String)
+     *
+     * @param request
+     */
     public void login(RequestContext request) {
         String username = request.param("username");
         String password = request.param("password");
@@ -42,11 +51,18 @@ public class LoginController extends Controller {
         }
     }
 
+    /**
+     * POST /user/register
+     * No Auth
+     * Body: RegisterRequest (JSON)
+     *
+     * @param request
+     * @param c
+     */
     public void register(RegisterRequest request, RequestContext c) {
         Account newAccount = AccountImpl.createNew(request.username, request.firstName, request.lastName,
                 request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
                 hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()));
-
         try {
             getAccountRepository().store(newAccount);
         } catch (NotUniqueException e) {
@@ -63,6 +79,14 @@ public class LoginController extends Controller {
         c.response(SUCCESS);
     }
 
+    /**
+     * GET /user/confirm
+     * Require Auth (token)
+     * Params:
+     *   - salt (String)
+     *
+     * @param context
+     */
     public void confirm(RequestContext context) {
         if (getAccountRepository().confirm(context.loginInfo().get().token(), context.param("salt"))) {
             context.response(SUCCESS);
