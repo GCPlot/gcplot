@@ -11,7 +11,7 @@ import java.util.EnumSet;
 public interface GCEventFactory {
 
     GCEvent create(String id, String parentId, DateTime occurred, String description, VMEventType vmEventType,
-                   Capacity capacity, Capacity totalCapacity, long pauseMu,
+                   Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu,
                    EnumSet<Generation> generations, EventConcurrency concurrency, String ext);
 
 }

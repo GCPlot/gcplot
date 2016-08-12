@@ -21,6 +21,8 @@ public interface GCEvent extends JVMEvent, DatedEvent {
 
     Capacity totalCapacity();
 
+    double timestamp();
+
     /**
      * Pause value in microseconds of the whole step (which
      * might include sub steps as well)

@@ -4,6 +4,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.policies.ConstantReconnectionPolicy;
+import com.datastax.driver.core.policies.DowngradingConsistencyRetryPolicy;
 import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,8 @@ public class CassandraConnector {
         LOG.info("Starting Cassandra connector initialization.");
         Cluster.Builder builder = Cluster.builder()
                 .addContactPoints(hosts)
+                .withRetryPolicy(DowngradingConsistencyRetryPolicy.INSTANCE)
+                .withReconnectionPolicy(new ConstantReconnectionPolicy(reconnectionDelayMs))
                 .withPort(port);
         if (poolingOptions != null) {
             builder.withPoolingOptions(poolingOptions);
@@ -57,6 +61,11 @@ public class CassandraConnector {
     protected String password;
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    protected long reconnectionDelayMs = 100L;
+    public void setReconnectionDelayMs(long reconnectionDelayMs) {
+        this.reconnectionDelayMs = reconnectionDelayMs;
     }
 
     protected MetricRegistry metrics;

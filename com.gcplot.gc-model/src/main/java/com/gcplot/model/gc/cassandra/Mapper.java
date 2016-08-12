@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 
 public abstract class Mapper {
@@ -75,6 +76,7 @@ public abstract class Mapper {
                 .analyseId(sop(row, "analyse_id", r -> r.getUUID("analyse_id")))
                 .jvmId(op(row, "jvm_id", r -> r.getString("jvm_id")))
                 .description(op(row, "description", r -> r.getString("description")))
+                .timestamp(dop(row, "tmstm", r -> r.getDouble("tmstm")))
                 .occurred(op(row, "occurred", r -> new DateTime(r.getTimestamp("occurred"), DateTimeZone.UTC)))
                 .vmEventType(op(row, "vm_event_type", r -> VMEventType.get(r.getInt("vm_event_type"))))
                 .capacity(op(row, "capacity", r -> new Capacity(r.getList("capacity", Long.class))))
@@ -119,6 +121,14 @@ public abstract class Mapper {
             return f.applyAsLong(row);
         } else {
             return 0;
+        }
+    }
+
+    private static double dop(Row row, String name, ToDoubleFunction<Row> f) {
+        if (row.getColumnDefinitions().contains(name)) {
+            return f.applyAsDouble(row);
+        } else {
+            return 0d;
         }
     }
 

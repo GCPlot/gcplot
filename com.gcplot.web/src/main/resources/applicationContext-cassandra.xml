@@ -6,6 +6,38 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
     <context:annotation-config/>
 
+    <import resource="applicationContext-metrics.xml"/>
 
+    <bean id="cassandraConnector" class="com.gcplot.cassandra.CassandraConnector" init-method="init"
+          destroy-method="destroy" lazy-init="true">
+        <property name="hosts" value="#{T(java.util.Arrays).asList('${cassandra.hosts}')}"/>
+        <property name="port" value="${cassandra.port}"/>
+        <property name="metrics" ref="metrics"/>
+        <property name="username" value="${cassandra.username}"/>
+        <property name="password" value="${cassandra.password}"/>
+        <property name="reconnectionDelayMs" value="${cassandra.reconnect.delay.ms}"/>
+        <property name="keyspace" value="${cassandra.keyspace}"/>
+        <property name="poolingOptions">
+            <bean class="com.datastax.driver.core.PoolingOptions"/>
+        </property>
+    </bean>
+
+    <bean id="cassandraGCAnalyseRepository" class="com.gcplot.repository.cassandra.CassandraGCAnalyseRepository"
+          init-method="init" lazy-init="true">
+        <property name="connector" ref="cassandraConnector"/>
+        <property name="fetchSize" value="${gc.cassandra.fetchSize}"/>
+    </bean>
+
+    <bean id="cassandraGCEventRepository" class="com.gcplot.repository.cassandra.CassandraGCEventRepository"
+          init-method="init" lazy-init="true">
+        <property name="connector" ref="cassandraConnector"/>
+        <property name="fetchSize" value="${gc.cassandra.fetchSize}"/>
+    </bean>
+
+    <bean id="cassandraObjectsAgesRepository" class="com.gcplot.repository.cassandra.CassandraObjectsAgesRepository"
+          init-method="init" lazy-init="true">
+        <property name="connector" ref="cassandraConnector"/>
+        <property name="fetchSize" value="${gc.cassandra.fetchSize}"/>
+    </bean>
 
 </beans>

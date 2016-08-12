@@ -132,11 +132,11 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             generations = EnumSet.of(Generation.OTHER);
         }
         events.add(eventFactory.create(null, null, datestamp, description, vmEventType, capacity, totalCapacity,
-                (long)(event.getPause() * 1_000_000), generations, concurrency, ""));
+                event.getTimestamp(), (long)(event.getPause() * 1_000_000), generations, concurrency, ""));
         if (!event.isVmEvent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
             com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
             events.add(eventFactory.create(null, null, datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,
-                    of(perm), totalCapacity, 0, EnumSet.of(metaspaceGeneration(perm.getTypeAsString())),
+                    of(perm), totalCapacity, event.getTimestamp(), 0, EnumSet.of(metaspaceGeneration(perm.getTypeAsString())),
                     EventConcurrency.SERIAL, ""));
         }
 

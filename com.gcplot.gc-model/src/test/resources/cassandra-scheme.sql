@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS gc_event (
   jvm_id varchar,
   description varchar,
   written_at timeuuid,
+  tmstm double,
   occurred timestamp,
   vm_event_type int,
   capacity list<bigint>,

@@ -6,9 +6,11 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.gcplot.commons.Range;
 import com.gcplot.model.gc.ObjectsAges;
+import org.joda.time.DateTime;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
@@ -21,6 +23,11 @@ import static com.gcplot.model.gc.cassandra.Mapper.*;
 public class CassandraObjectsAgesRepository extends AbstractJVMEventsCassandraRepository<ObjectsAges> {
     protected static final String TABLE_NAME = "objects_ages";
     protected static final String[] FIELDS = new String[] { "occurred", "occupied", "total", "ext"};
+
+    @Override
+    public Optional<ObjectsAges> lastEvent(String analyseId, String jvmId, DateTime start) {
+        return singleEvent(analyseId, jvmId, FIELDS).flatMap(e -> Optional.of(objectsAgeFrom(e)));
+    }
 
     @Override
     public List<ObjectsAges> events(String analyseId, String jvmId, Range range) {
@@ -55,6 +62,18 @@ public class CassandraObjectsAgesRepository extends AbstractJVMEventsCassandraRe
         connector.session().execute(QueryBuilder.delete().all().from(TABLE_NAME)
                 .where(eq("analyse_id", UUID.fromString(analyseId)))
                 .and(in("jvm_id", jvmIds)));
+    }
+
+    protected Optional<Row> singleEvent(String analyseId, String jvmId, String[] fields) {
+        ResultSet rs = connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME)
+                .limit(1).where(eq("analyse_id", UUID.fromString(analyseId)))
+                .and(eq("jvm_id", jvmId)));
+        List<Row> all = rs.all();
+        if (all.size() == 0) {
+            return Optional.empty();
+        } else {
+            return Optional.of(all.get(0));
+        }
     }
 
     protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {

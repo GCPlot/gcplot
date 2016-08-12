@@ -12,9 +12,9 @@
     <import resource="applicationContext-config.xml"/>
     <import resource="applicationContext-mail.xml"/>
     <import resource="applicationContext-web.xml"/>
-    <import resource="applicationContext-orientdb.xml"/>
     <import resource="applicationContext-inmemory.xml"/>
     <import resource="applicationContext-gc.xml"/>
+    <import resource="applicationContext-cassandra.xml"/>
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 

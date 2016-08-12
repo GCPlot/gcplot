@@ -45,6 +45,10 @@ public class TestCassandraObjectsAgesRepository extends BaseCassandraTest {
         Assert.assertEquals(event.occurred(), oa.occurred());
         Assert.assertArrayEquals(Longs.toArray(event.occupied()), Longs.toArray(oa.occupied()));
         Assert.assertArrayEquals(Longs.toArray(event.total()), Longs.toArray(oa.total()));
+
+        Optional<ObjectsAges> ooa = r.lastEvent(analyseId, jvmId, DateTime.now(DateTimeZone.UTC));
+        Assert.assertTrue(ooa.isPresent());
+        Assert.assertEquals(event, ooa.get());
     }
 
     @Test
@@ -75,6 +79,10 @@ public class TestCassandraObjectsAgesRepository extends BaseCassandraTest {
         Assert.assertEquals(15, r.events(analyseId, jvmId, wideDays(7)).size());
         // because ORDER BY DESC
         Assert.assertEquals((long) fetched.get(0).occupied().get(0), 20L);
+
+        Optional<ObjectsAges> ooa = r.lastEvent(analyseId, jvmId, DateTime.now(DateTimeZone.UTC));
+        Assert.assertTrue(ooa.isPresent());
+        Assert.assertEquals(fetched.get(0), ooa.get());
     }
 
     private void fillEvent(String analyseId, String jvmId, ObjectsAgesImpl oa) {

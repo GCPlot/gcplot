@@ -9,11 +9,11 @@ import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.repository.GCEventRepository;
 import com.google.common.collect.Lists;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Months;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -25,10 +25,14 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
     public static final String[] NON_KEY_FIELDS = new String[] { "id", "parent_id", "description",
-            "occurred", "vm_event_type", "capacity", "total_capacity",
-            "pause_mu", "generations", "concurrency",
-            "ext"};
+            "occurred", "vm_event_type", "capacity", "total_capacity", "tmstm",
+            "pause_mu", "generations", "concurrency", "ext"};
     public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "generations", "concurrency" };
+
+    @Override
+    public Optional<GCEvent> lastEvent(String analyseId, String jvmId, DateTime start) {
+        return singleEvent(analyseId, jvmId, start, NON_KEY_FIELDS).flatMap(e -> Optional.of(eventFrom(e)));
+    }
 
     @Override
     public List<GCEvent> events(String analyseId, String jvmId, Range range) {
@@ -88,7 +92,19 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
                 .and(in("date", dates(range))));
     }
 
-
+    protected Optional<Row> singleEvent(String analyseId, String jvmId, DateTime start, String[] fields) {
+        List<String> dates = dates(Range.of(start, DateTime.now(DateTimeZone.UTC)));
+        for (String date : dates) {
+            List<Row> rows = connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME).limit(1)
+                    .where(eq("analyse_id", UUID.fromString(analyseId)))
+                    .and(eq("jvm_id", jvmId))
+                    .and(eq("date", date))).all();
+            if (rows.size() > 0) {
+                return Optional.of(rows.get(0));
+            }
+        }
+        return Optional.empty();
+    }
 
     protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
         return connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME)
@@ -100,6 +116,12 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
                 .and(lte("occurred", range.to.toDate())).setFetchSize(fetchSize));
     }
 
+    /**
+     * Returns a range of dates in format YYYY-MM, starting from the most recent one.
+     *
+     * @param range
+     * @return
+     */
     protected List<String> dates(Range range) {
         return IntStream.range(0, Months.monthsBetween(
                 range.from.monthOfYear().roundFloorCopy(),
@@ -114,6 +136,7 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
                 .value("date", event.occurred().toString(DATE_PATTERN))
                 .value("jvm_id", event.jvmId())
                 .value("description", event.description())
+                .value("tmstm", event.timestamp())
                 .value("written_at", now())
                 .value("occurred", event.occurred().toDate())
                 .value("vm_event_type", event.vmEventType().type())

@@ -44,23 +44,28 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         Assert.assertEquals(ge.occurred(), event.occurred().toDateTime(DateTimeZone.UTC));
         Assert.assertEquals(ge.vmEventType(), event.vmEventType());
         Assert.assertEquals(ge.capacity(), event.capacity());
+        Assert.assertEquals(ge.timestamp(), event.timestamp(), 0.0001);
         Assert.assertEquals(ge.totalCapacity(), new Capacity(event.totalCapacity()));
         Assert.assertEquals(ge.pauseMu(), event.pauseMu());
         Assert.assertEquals(ge.generations(), event.generations());
         Assert.assertEquals(ge.concurrency(), event.concurrency());
 
-        ge = r.lazyPauseEvents(analyseId, jvmId, wideDays(2)).next();
-        Assert.assertNull(ge.id());
-        Assert.assertNull(ge.jvmId());
-        Assert.assertNull(ge.analyseId());
-        Assert.assertNull(ge.description());
-        Assert.assertNotNull(ge.occurred());
-        Assert.assertNotNull(ge.vmEventType());
-        Assert.assertNull(ge.capacity());
-        Assert.assertNull(ge.totalCapacity());
-        Assert.assertNotEquals(ge.pauseMu(), 0);
-        Assert.assertNotNull(ge.generations());
-        Assert.assertNotNull(ge.concurrency());
+        GCEvent pauseGe = r.lazyPauseEvents(analyseId, jvmId, wideDays(2)).next();
+        Assert.assertNull(pauseGe.id());
+        Assert.assertNull(pauseGe.jvmId());
+        Assert.assertNull(pauseGe.analyseId());
+        Assert.assertNull(pauseGe.description());
+        Assert.assertNotNull(pauseGe.occurred());
+        Assert.assertNotNull(pauseGe.vmEventType());
+        Assert.assertNull(pauseGe.capacity());
+        Assert.assertNull(pauseGe.totalCapacity());
+        Assert.assertNotEquals(pauseGe.pauseMu(), 0);
+        Assert.assertNotNull(pauseGe.generations());
+        Assert.assertNotNull(pauseGe.concurrency());
+
+        Optional<GCEvent> oe = r.lastEvent(analyseId, jvmId, DateTime.now(DateTimeZone.UTC).minusDays(1));
+        Assert.assertTrue(oe.isPresent());
+        Assert.assertEquals(ge, oe.get());
     }
 
     @Test
@@ -89,12 +94,17 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
 
         Assert.assertEquals(15, events.size());
         Assert.assertEquals(15, r.events(analyseId, jvmId, wideDays(7)).size());
+
+        Optional<GCEvent> oe = r.lastEvent(analyseId, jvmId, DateTime.now(DateTimeZone.UTC).minusDays(1));
+        Assert.assertTrue(oe.isPresent());
+        Assert.assertEquals(events.get(0), oe.get());
     }
 
     protected void fillEvent(String analyseId, String jvmId, GCEventImpl event) {
         event.jvmId(jvmId).analyseId(analyseId).description("descr1")
-                .occurred(DateTime.now().minusDays(1))
+                .occurred(DateTime.now(DateTimeZone.UTC).minusDays(1))
                 .vmEventType(VMEventType.GARBAGE_COLLECTION)
+                .timestamp(123.456)
                 .capacity(Capacity.of(3000, 1000, 6000))
                 .totalCapacity(Capacity.NONE)
                 .pauseMu(51321)

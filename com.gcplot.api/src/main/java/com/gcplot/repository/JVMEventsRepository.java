@@ -2,15 +2,19 @@ package com.gcplot.repository;
 
 import com.gcplot.commons.Range;
 import com.gcplot.model.JVMEvent;
+import org.joda.time.DateTime;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/3/16
  */
 public interface JVMEventsRepository<T extends JVMEvent> {
+
+    Optional<T> lastEvent(String analyseId, String jvmId, DateTime start);
 
     List<T> events(String analyseId, String jvmId, Range range);
 
