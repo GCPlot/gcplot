@@ -10,7 +10,6 @@ public class GCLogsController extends Controller {
 
     @PostConstruct
     public void init() {
-
     }
 
 }
