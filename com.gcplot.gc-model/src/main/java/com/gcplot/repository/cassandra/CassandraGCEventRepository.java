@@ -4,7 +4,9 @@ import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
 import com.gcplot.commons.Range;
+import com.gcplot.commons.Utils;
 import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.repository.GCEventRepository;
@@ -21,17 +23,23 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 import static com.gcplot.model.gc.cassandra.Mapper.eventFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 
-public class CassandraGCEventRepository extends AbstractJVMEventsCassandraRepository<GCEvent> implements GCEventRepository {
+public class CassandraGCEventRepository extends AbstractVMEventsCassandraRepository<GCEvent> implements GCEventRepository {
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
     public static final String[] NON_KEY_FIELDS = new String[] { "id", "parent_id", "description",
             "occurred", "vm_event_type", "capacity", "total_capacity", "tmstm",
             "pause_mu", "generations", "concurrency", "ext"};
+    public static final String[] LAST_EVENT_FIELDS = Utils.concat(NON_KEY_FIELDS, new String[] { "bucket_id" });
     public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "generations", "concurrency" };
 
     @Override
+    public Optional<GCEvent> lastEvent(String analyseId, String jvmId, String bucketId, DateTime start) {
+        return singleEvent(analyseId, jvmId, bucketId, start, LAST_EVENT_FIELDS).flatMap(e -> Optional.of(eventFrom(e)));
+    }
+
+    @Override
     public Optional<GCEvent> lastEvent(String analyseId, String jvmId, DateTime start) {
-        return singleEvent(analyseId, jvmId, start, NON_KEY_FIELDS).flatMap(e -> Optional.of(eventFrom(e)));
+        return singleEvent(analyseId, jvmId, null, start, NON_KEY_FIELDS).flatMap(e -> Optional.of(eventFrom(e)));
     }
 
     @Override
@@ -92,13 +100,20 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
                 .and(in("date", dates(range))));
     }
 
-    protected Optional<Row> singleEvent(String analyseId, String jvmId, DateTime start, String[] fields) {
+    protected Optional<Row> singleEvent(String analyseId, String jvmId, String bucketId,
+                                        DateTime start, String[] fields) {
         List<String> dates = dates(Range.of(start, DateTime.now(DateTimeZone.UTC)));
         for (String date : dates) {
-            List<Row> rows = connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME).limit(1)
+            Select from = QueryBuilder.select(fields).from(TABLE_NAME);
+            Select.Where statement = from.limit(1)
                     .where(eq("analyse_id", UUID.fromString(analyseId)))
                     .and(eq("jvm_id", jvmId))
-                    .and(eq("date", date))).all();
+                    .and(eq("date", date));
+            if (bucketId != null) {
+                from.allowFiltering();
+                statement.and(eq("bucket_id", bucketId));
+            }
+            List<Row> rows = connector.session().execute(statement).all();
             if (rows.size() > 0) {
                 return Optional.of(rows.get(0));
             }
@@ -133,6 +148,7 @@ public class CassandraGCEventRepository extends AbstractJVMEventsCassandraReposi
         return QueryBuilder.insertInto(TABLE_NAME).value("id", event.id() != null ? UUID.fromString(event.id()) : uuid())
                 .value("parent_id", event.parentEvent().isPresent() ? UUID.fromString(event.parentEvent().orElse(null)) : null)
                 .value("analyse_id", UUID.fromString(event.analyseId()))
+                .value("bucket_id", event.bucketId())
                 .value("date", event.occurred().toString(DATE_PATTERN))
                 .value("jvm_id", event.jvmId())
                 .value("description", event.description())

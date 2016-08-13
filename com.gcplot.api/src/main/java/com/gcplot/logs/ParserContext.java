@@ -20,6 +20,11 @@ public class ParserContext {
         return logger;
     }
 
+    private final String streamChecksum;
+    public String streamChecksum() {
+        return streamChecksum;
+    }
+
     private final GarbageCollectorType collectorType;
     public GarbageCollectorType collectorType() {
         return collectorType;
@@ -30,9 +35,10 @@ public class ParserContext {
         return vmVersion;
     }
 
-    public ParserContext(Logger logger, GarbageCollectorType collectorType,
-                         VMVersion vmVersion) {
+    public ParserContext(Logger logger, String streamChecksum,
+                         GarbageCollectorType collectorType, VMVersion vmVersion) {
         this.logger = logger;
+        this.streamChecksum = streamChecksum;
         this.collectorType = collectorType;
         this.vmVersion = vmVersion;
     }

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS gc_event (
   id uuid,
   parent_id uuid,
   analyse_id uuid,
+  bucket_id varchar,
   date varchar,
   jvm_id varchar,
   description varchar,

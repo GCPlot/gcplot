@@ -1,17 +1,18 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.model.DatedEvent;
-import com.gcplot.model.JVMEvent;
-import org.joda.time.DateTime;
+import com.gcplot.model.VMEvent;
 
 import java.util.EnumSet;
 import java.util.Optional;
 
-public interface GCEvent extends JVMEvent, DatedEvent {
+public interface GCEvent extends VMEvent, DatedEvent {
 
     String id();
 
     Optional<String> parentEvent();
+
+    String bucketId();
 
     String description();
 

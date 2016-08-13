@@ -36,6 +36,15 @@ public class GCEventImpl implements GCEvent {
     }
 
     @Override
+    public String bucketId() {
+        return bucketId;
+    }
+    public GCEventImpl bucketId(String bucketId) {
+        this.bucketId = bucketId;
+        return this;
+    }
+
+    @Override
     public String analyseId() {
         return analyseId;
     }
@@ -136,6 +145,7 @@ public class GCEventImpl implements GCEvent {
 
     protected String id;
     protected String jvmId;
+    protected String bucketId;
     protected String parentEvent;
     protected String analyseId;
     protected String description;
@@ -160,6 +170,7 @@ public class GCEventImpl implements GCEvent {
         if (pauseMu != gcEvent.pauseMu) return false;
         if (id != null ? !id.equals(gcEvent.id) : gcEvent.id != null) return false;
         if (jvmId != null ? !jvmId.equals(gcEvent.jvmId) : gcEvent.jvmId != null) return false;
+        if (bucketId != null ? !bucketId.equals(gcEvent.bucketId) : gcEvent.bucketId != null) return false;
         if (parentEvent != null ? !parentEvent.equals(gcEvent.parentEvent) : gcEvent.parentEvent != null) return false;
         if (analyseId != null ? !analyseId.equals(gcEvent.analyseId) : gcEvent.analyseId != null) return false;
         if (description != null ? !description.equals(gcEvent.description) : gcEvent.description != null) return false;
@@ -171,7 +182,6 @@ public class GCEventImpl implements GCEvent {
         if (generations != null ? !generations.equals(gcEvent.generations) : gcEvent.generations != null) return false;
         if (concurrency != gcEvent.concurrency) return false;
         return ext != null ? ext.equals(gcEvent.ext) : gcEvent.ext == null;
-
     }
 
     @Override
@@ -180,6 +190,7 @@ public class GCEventImpl implements GCEvent {
         long temp;
         result = id != null ? id.hashCode() : 0;
         result = 31 * result + (jvmId != null ? jvmId.hashCode() : 0);
+        result = 31 * result + (bucketId != null ? bucketId.hashCode() : 0);
         result = 31 * result + (parentEvent != null ? parentEvent.hashCode() : 0);
         result = 31 * result + (analyseId != null ? analyseId.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
@@ -201,6 +212,7 @@ public class GCEventImpl implements GCEvent {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
                 .add("jvmId", jvmId)
+                .add("bucketId", bucketId)
                 .add("parentEvent", parentEvent)
                 .add("analyseId", analyseId)
                 .add("description", description)

@@ -2,8 +2,8 @@ package com.gcplot.repository.cassandra;
 
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.gcplot.model.JVMEvent;
-import com.gcplot.repository.JVMEventsRepository;
+import com.gcplot.model.VMEvent;
+import com.gcplot.repository.VMEventsRepository;
 
 import java.util.List;
 
@@ -11,8 +11,8 @@ import java.util.List;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/5/16
  */
-public abstract class AbstractJVMEventsCassandraRepository<T extends JVMEvent> extends AbstractCassandraRepository
-        implements JVMEventsRepository<T> {
+public abstract class AbstractVMEventsCassandraRepository<T extends VMEvent> extends AbstractCassandraRepository
+        implements VMEventsRepository<T> {
 
     abstract RegularStatement addStatement(T event);
 

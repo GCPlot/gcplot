@@ -74,6 +74,7 @@ public abstract class Mapper {
         gcEvent.id(op(row, "id", r -> r.getUUID("id").toString()))
                 .parentEvent(sop(row, "parent_id", r -> r.getUUID("parent_id")))
                 .analyseId(sop(row, "analyse_id", r -> r.getUUID("analyse_id")))
+                .bucketId(op(row, "bucket_id", r -> r.getString("bucket_id")))
                 .jvmId(op(row, "jvm_id", r -> r.getString("jvm_id")))
                 .description(op(row, "description", r -> r.getString("description")))
                 .timestamp(dop(row, "tmstm", r -> r.getDouble("tmstm")))

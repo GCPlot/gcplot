@@ -1,7 +1,7 @@
 package com.gcplot.repository;
 
 import com.gcplot.commons.Range;
-import com.gcplot.model.JVMEvent;
+import com.gcplot.model.VMEvent;
 import org.joda.time.DateTime;
 
 import java.util.Iterator;
@@ -12,7 +12,7 @@ import java.util.Optional;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/3/16
  */
-public interface JVMEventsRepository<T extends JVMEvent> {
+public interface VMEventsRepository<T extends VMEvent> {
 
     Optional<T> lastEvent(String analyseId, String jvmId, DateTime start);
 

@@ -29,7 +29,7 @@ public class TestGCViewerLogsParser {
         List<GCEvent> events = new ArrayList<>();
         GCViewerLogsParser p = new GCViewerLogsParser();
         p.setEventFactory(new TestGCEventFactory());
-        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG,
+        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, "chcksm",
                 GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
 
         Assert.assertEquals(1, events.stream().filter(GCEvent::isFull).count());
@@ -37,6 +37,7 @@ public class TestGCViewerLogsParser {
         Assert.assertEquals(5_072_694, fullGcEvent.pauseMu());
         Assert.assertEquals(1, events.stream().filter(GCEvent::isMetaspace).count());
         Assert.assertEquals(0, events.stream().filter(GCEvent::isPerm).count());
+        Assert.assertEquals("chcksm", events.get(0).bucketId());
 
         Assert.assertNotNull(pr);
         Assert.assertTrue(pr.isSuccessful());
@@ -51,8 +52,8 @@ public class TestGCViewerLogsParser {
         GCViewerLogsParser p = new GCViewerLogsParser();
         p.setEventFactory(new TestGCEventFactory());
         p.setBatchSize(64);
-        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, GarbageCollectorType.ORACLE_CMS,
-                VMVersion.HOTSPOT_1_8));
+        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, "chcksm",
+                GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
 
         Assert.assertNotNull(pr);
         Assert.assertEquals(0, events.stream().filter(GCEvent::isFull).count());

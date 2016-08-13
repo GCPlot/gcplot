@@ -20,7 +20,7 @@ import static com.gcplot.model.gc.cassandra.Mapper.*;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/3/16
  */
-public class CassandraObjectsAgesRepository extends AbstractJVMEventsCassandraRepository<ObjectsAges> {
+public class CassandraObjectsAgesRepository extends AbstractVMEventsCassandraRepository<ObjectsAges> {
     protected static final String TABLE_NAME = "objects_ages";
     protected static final String[] FIELDS = new String[] { "occurred", "occupied", "total", "ext"};
 

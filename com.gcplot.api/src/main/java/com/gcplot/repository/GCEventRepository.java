@@ -2,11 +2,15 @@ package com.gcplot.repository;
 
 import com.gcplot.commons.Range;
 import com.gcplot.model.gc.GCEvent;
+import org.joda.time.DateTime;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
-public interface GCEventRepository extends JVMEventsRepository<GCEvent> {
+public interface GCEventRepository extends VMEventsRepository<GCEvent> {
+
+    Optional<GCEvent> lastEvent(String analyseId, String jvmId, String bucketId, DateTime start);
 
     /**
      * Shortened events which contains only basic info about pauses, GC types, etc.

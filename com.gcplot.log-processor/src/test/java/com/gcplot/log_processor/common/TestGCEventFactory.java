@@ -14,7 +14,7 @@ import java.util.Optional;
 public class TestGCEventFactory implements GCEventFactory {
 
     @Override
-    public GCEvent create(String id, String parentId, DateTime occurred, String description, VMEventType vmEventType,
+    public GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description, VMEventType vmEventType,
                           Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, EnumSet<Generation> generations,
                           EventConcurrency concurrency, String ext) {
         return new GCEvent() {
@@ -26,6 +26,11 @@ public class TestGCEventFactory implements GCEventFactory {
             @Override
             public Optional<String> parentEvent() {
                 return Optional.ofNullable(parentId);
+            }
+
+            @Override
+            public String bucketId() {
+                return bucketId;
             }
 
             @Override
@@ -93,6 +98,7 @@ public class TestGCEventFactory implements GCEventFactory {
                 return MoreObjects.toStringHelper(this)
                         .add("id", id())
                         .add("parentEvent", parentEvent())
+                        .add("bucketId", bucketId())
                         .add("description", description())
                         .add("vmEventType", vmEventType())
                         .add("capacity", capacity())
