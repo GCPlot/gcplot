@@ -32,4 +32,11 @@
         <property name="metrics" ref="metrics"/>
     </bean>
 
+    <bean id="rolesRepository" class="com.gcplot.repository.RolesOrientDbRepository" init-method="init"
+          destroy-method="destroy">
+        <constructor-arg ref="orientDbConfig"/>
+        <constructor-arg ref="orientDbPool"/>
+        <property name="metrics" ref="metrics"/>
+    </bean>
+
 </beans>

@@ -4,10 +4,10 @@ import com.gcplot.commons.ConfigProperty;
 import com.gcplot.configuration.OrientDbConfigurationManager;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
-import com.gcplot.repository.AccountOrientDbRepository;
-import com.gcplot.repository.AccountRepository;
-import com.gcplot.repository.FiltersOrientDbRepository;
-import com.gcplot.repository.OrientDbConfig;
+import com.gcplot.model.role.RestrictionType;
+import com.gcplot.model.role.RoleImpl;
+import com.gcplot.repository.*;
+import com.google.common.collect.Lists;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import org.junit.After;
@@ -15,6 +15,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class OrientDbRepositoryTest {
@@ -40,7 +42,7 @@ public class OrientDbRepositoryTest {
         repository.init();
         Assert.assertFalse(repository.account("token").isPresent());
         AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
-                "artem@reveno.org", "token", "pass", "salt");
+                "artem@reveno.org", "token", "pass", "salt", new ArrayList<>());
         account = (AccountImpl) repository.store(account);
         Assert.assertNotNull(account.getOId());
         Assert.assertTrue(repository.account("token").isPresent());
@@ -62,6 +64,32 @@ public class OrientDbRepositoryTest {
         repository.delete(account1);
         Assert.assertEquals(repository.accounts().size(), 0);
         repository.destroy();
+    }
+
+    @Test
+    public void testRoles() throws Exception {
+        OPartitionedDatabasePoolFactory poolFactory = new OPartitionedDatabasePoolFactory();
+        AccountOrientDbRepository accRep = new AccountOrientDbRepository(config, poolFactory);
+        accRep.init();
+        RolesOrientDbRepository rolesRep = new RolesOrientDbRepository(config, poolFactory);
+        rolesRep.init();
+
+        RoleImpl role = new RoleImpl("test_role", Lists.newArrayList(
+                new RoleImpl.RestrictionImpl(RestrictionType.SINGLE, "one", 0, Collections.emptyMap()),
+                new RoleImpl.RestrictionImpl(RestrictionType.QUANTITATIVE, "two", 5, Collections.emptyMap())));
+        role = (RoleImpl) rolesRep.store(role);
+
+        Assert.assertEquals(1, rolesRep.roles().size());
+
+        AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
+                "artem@reveno.org", "token", "pass", "salt", Lists.newArrayList(role));
+        accRep.store(account);
+        account = (AccountImpl) accRep.account("token").get();
+
+        Assert.assertEquals(1, account.roles().size());
+
+        accRep.destroy();
+        rolesRep.destroy();
     }
 
     @Test

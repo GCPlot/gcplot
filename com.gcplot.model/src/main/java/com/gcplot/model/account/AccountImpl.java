@@ -1,8 +1,13 @@
 package com.gcplot.model.account;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.role.Role;
+import com.gcplot.model.role.RoleImpl;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 @Table(name = "Account", uniqueConstraints =
         @UniqueConstraint(columnNames={"username", "email", "token"}))
@@ -92,6 +97,22 @@ public class AccountImpl implements Account {
         this.confirmationSalt = confirmationSalt;
     }
 
+    @Override
+    public List<Role> roles() {
+        return (List<Role>) roles;
+    }
+    public void addRole(RoleImpl role) {
+        roles.add(role);
+    }
+    public void removeRole(RoleImpl role) {
+        Iterator<RoleImpl> i = (Iterator<RoleImpl>) roles.iterator();
+        while (i.hasNext()) {
+            if (i.next().id().equals(role.id())) {
+                i.remove();
+            }
+        }
+    }
+
     @Version
     private Object version;
     public Object getVersion() {
@@ -110,7 +131,8 @@ public class AccountImpl implements Account {
 
     protected AccountImpl(String username, String firstName, String lastName,
                           String email, String token,
-                          String passHash, boolean confirmed, String confirmationSalt) {
+                          String passHash, boolean confirmed, String confirmationSalt,
+                          ArrayList<RoleImpl> roles) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -119,14 +141,15 @@ public class AccountImpl implements Account {
         this.passHash = passHash;
         this.confirmed = confirmed;
         this.confirmationSalt = confirmationSalt;
+        this.roles = roles;
     }
 
     public static AccountImpl createNew(String username,
                                         String firstName, String lastName,
                                         String email, String token, String passHash,
-                                        String confirmationSalt) {
+                                        String confirmationSalt, ArrayList<RoleImpl> roles) {
         return new AccountImpl(username, firstName, lastName,
-                email, token, passHash, false, confirmationSalt);
+                email, token, passHash, false, confirmationSalt, roles);
     }
 
     @Id
@@ -142,4 +165,6 @@ public class AccountImpl implements Account {
     protected boolean confirmed;
     protected boolean blocked;
     protected String confirmationSalt;
+    @OneToMany(orphanRemoval = false, targetEntity = RoleImpl.class)
+    protected ArrayList<? super RoleImpl> roles;
 }

@@ -1,6 +1,9 @@
 package com.gcplot.model.account;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.role.Role;
+
+import java.util.List;
 
 public interface Account {
 
@@ -23,4 +26,6 @@ public interface Account {
     boolean isBlocked();
 
     String confirmationSalt();
+
+    List<Role> roles();
 }

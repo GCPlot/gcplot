@@ -15,6 +15,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -62,7 +64,7 @@ public class LoginController extends Controller {
     public void register(RegisterRequest request, RequestContext c) {
         Account newAccount = AccountImpl.createNew(request.username, request.firstName, request.lastName,
                 request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
-                hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()));
+                hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()), new ArrayList<>());
         try {
             getAccountRepository().store(newAccount);
         } catch (NotUniqueException e) {
