@@ -6,6 +6,8 @@ import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
+import com.gcplot.model.role.Role;
+import com.gcplot.model.role.RoleImpl;
 import com.google.common.collect.Lists;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.id.ORID;
@@ -24,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AccountOrientDbRepository extends AbstractOrientDbRepository implements AccountRepository {
 
@@ -31,7 +34,12 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
         super(config, poolFactory);
     }
 
+    @Override
     public void init(OObjectDatabaseTx db, OSchema schema) {
+        if (schema.getClass(RoleImpl.class) == null) {
+            db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
+            db.getEntityManager().registerEntityClass(RoleImpl.class);
+        }
         if (schema.getClass(ACCOUNT_DOCUMENT_NAME) == null) {
             db.getEntityManager().registerEntityClass(AccountImpl.class);
             OClass cls = db.getMetadata().getSchema().getClass(AccountImpl.class);
@@ -56,8 +64,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
         metrics.meter(ALL_ACCOUNTS_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             List<Account> l = db.query(new OSQLSynchQuery<>(ALL_ACCOUNTS_QUERY));
-            l.forEach(i -> db.detachAll(i, true));
-            return l;
+            return l.stream().map(i -> (AccountImpl) db.detachAll(i, true)).collect(Collectors.toList());
         }
     }
 
@@ -156,6 +163,18 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     @Override
     public void unblock(String username) {
         block(username, false);
+    }
+
+    @Override
+    public void attachRole(Account account, Role role) {
+        ((AccountImpl)account).addRole((RoleImpl) role);
+        store(account);
+    }
+
+    @Override
+    public void removeRole(Account account, Role role) {
+        ((AccountImpl)account).removeRole((RoleImpl) role);
+        store(account);
     }
 
     protected void block(String username, boolean block) {
