@@ -81,6 +81,20 @@ public class OrientDbRepositoryTest {
 
         Assert.assertEquals(1, rolesRep.roles().size());
 
+        Assert.assertEquals("test_role", role.title());
+        Assert.assertEquals(true, role.enabled());
+        Assert.assertEquals(2, role.restrictions().size());
+
+        Assert.assertEquals(RestrictionType.SINGLE, role.restrictions().get(0).type());
+        Assert.assertEquals("one", role.restrictions().get(0).action());
+        Assert.assertEquals(0, role.restrictions().get(0).amount());
+        Assert.assertEquals(0, role.restrictions().get(0).properties().size());
+
+        Assert.assertEquals(RestrictionType.QUANTITATIVE, role.restrictions().get(1).type());
+        Assert.assertEquals("two", role.restrictions().get(1).action());
+        Assert.assertEquals(5L, role.restrictions().get(1).amount());
+        Assert.assertEquals(0, role.restrictions().get(1).properties().size());
+
         AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
                 "artem@reveno.org", "token", "pass", "salt", Lists.newArrayList(role));
         accRep.store(account);
