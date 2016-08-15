@@ -1,6 +1,7 @@
 package com.gcplot.model.role;
 
 import com.gcplot.Identifier;
+import com.google.common.base.MoreObjects;
 import com.orientechnologies.orient.core.annotation.ODocumentInstance;
 
 import javax.persistence.*;
@@ -101,6 +102,17 @@ public class RoleImpl implements Role {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("identifier", identifier)
+                .add("restrictions", restrictions)
+                .add("enabled", enabled)
+                .add("title", title)
+                .toString();
+    }
+
     public static class RestrictionImpl implements Restriction {
 
         @Override
@@ -173,6 +185,16 @@ public class RoleImpl implements Role {
             result = 31 * result + (int) (amount ^ (amount >>> 32));
             result = 31 * result + (properties != null ? properties.hashCode() : 0);
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("type", type)
+                    .add("action", action)
+                    .add("amount", amount)
+                    .add("properties", properties)
+                    .toString();
         }
     }
 }

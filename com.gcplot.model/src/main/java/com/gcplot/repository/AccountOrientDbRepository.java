@@ -71,14 +71,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     @Override
     public Optional<Account> account(Identifier id) {
         metrics.meter(ACCOUNT_METRIC).mark();
-        try (OObjectDatabaseTx db = db()) {
-            Object oid = mapToEntityId(id.toString());
-            if (oid != null) {
-                return Optional.ofNullable(db.detachAll(db.load((ORID) oid), true));
-            } else {
-                return Optional.empty();
-            }
-        }
+        return get(id);
     }
 
     @Override
@@ -95,16 +88,33 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
-    public Account store(Account account) {
-        // TODO rewrite using simple update command, in order to prevent
-        // cascade overriding of roles, etc.
-        metrics.meter(ACCOUNT_STORE_METRIC).mark();
+    public Account insert(Account account) {
+        metrics.meter(ACCOUNT_INSERT_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             try {
                 return db.detachAll(db.save(account), true);
             } catch (ORecordDuplicatedException e) {
                 throw new NotUniqueException(e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public Account updateInfo(Account account) {
+        metrics.meter(ACCOUNT_UPDATE_INFO_METRIC).mark();
+        try (OObjectDatabaseTx db = db()) {
+            int i;
+            try {
+                i = db.command(new OCommandSQL(String.format(UPDATE_INFO_COMMAND, account.id().toString(),
+                        account.username(), account.email(), account.firstName(), account.lastName(),
+                        account.passHash()))).execute();
+            } catch (Throwable t) {
+                throw Exceptions.runtime(t);
+            }
+            if (i != 1) {
+                throw new IllegalArgumentException(String.format("Can't update account %s with data %s", account.id(), account));
+            }
+            return account;
         }
     }
 
@@ -170,13 +180,29 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     @Override
     public void attachRole(Account account, Role role) {
         ((AccountImpl)account).addRole((RoleImpl) role);
-        store(account);
+        updateRoles(((AccountImpl)account).rolesImpl(), account);
     }
 
     @Override
     public void removeRole(Account account, Role role) {
         ((AccountImpl)account).removeRole((RoleImpl) role);
-        store(account);
+        updateRoles(((AccountImpl)account).rolesImpl(), account);
+    }
+
+    protected void updateRoles(List<RoleImpl> roles, Account account) {
+        metrics.meter(ACCOUNT_UPDATE_ROLES_METRIC).mark();
+        try (OObjectDatabaseTx db = db()) {
+            int i;
+            try {
+                i = db.command(new OCommandSQL(String.format(UPDATE_ROLES_COMMAND, account.id().toString(),
+                        roles.stream().map(r -> r.id().toString()).collect(Collectors.joining(","))))).execute();
+            } catch (Throwable t) {
+                throw Exceptions.runtime(t);
+            }
+            if (i != 1) {
+                throw new IllegalArgumentException(String.format("Can't udate account %s with roles %s", account.id(), roles));
+            }
+        }
     }
 
     protected void block(String username, boolean block) {
@@ -204,17 +230,23 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String ACCOUNT_BY_USERNAME_QUERY = "select from " + ACCOUNT_DOCUMENT_NAME +
             " where %s = \"%s\" and passHash = \"%s\"";
     private static final String UPDATE_TOKEN_QUERY = "update " + ACCOUNT_DOCUMENT_NAME +
-            " set token=\"%s\" where token=\"%s\"";
+            " set token=\"%s\" where token=\"%s\" LOCK RECORD";
     private static final String CONFIRM_ACCOUNT_QUERY = "update " + ACCOUNT_DOCUMENT_NAME +
-            " set confirmed=true where token=\"%s\" and confirmationSalt=\"%s\"";
+            " set confirmed=true where token=\"%s\" and confirmationSalt=\"%s\" LOCK RECORD";
     private static final String SET_BLOCKED_COMMAND = "update " + ACCOUNT_DOCUMENT_NAME +
-            " set blocked=%s where username=\"%s\"";
-
+            " set blocked=%s where username=\"%s\" LOCK RECORD";
+    private static final String UPDATE_ROLES_COMMAND = "update %s" +
+            " set roles=[%s] LOCK RECORD";
+    private static final String UPDATE_INFO_COMMAND = "update %s" +
+            " set username=\"%s\", email=\"%s\", firstName=\"%s\", lastName=\"%s\", " +
+            " passHash=\"%s\" LOCK RECORD";
 
     private static final String ALL_ACCOUNTS_METRIC = Metrics.name(AccountOrientDbRepository.class, "all_accounts");
     private static final String ACCOUNT_METRIC = Metrics.name(AccountOrientDbRepository.class, "account");
     private static final String ACCOUNT_TOKEN_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "token");
-    private static final String ACCOUNT_STORE_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "store");
+    private static final String ACCOUNT_INSERT_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "insert");
+    private static final String ACCOUNT_UPDATE_ROLES_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "update", "roles");
+    private static final String ACCOUNT_UPDATE_INFO_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "update", "info");
     private static final String ACCOUNT_DELETE_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "delete");
     private static final String ACCOUNT_NEW_TOKEN_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "new_token");
     private static final String ACCOUNT_CONFIRM_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "confirm");

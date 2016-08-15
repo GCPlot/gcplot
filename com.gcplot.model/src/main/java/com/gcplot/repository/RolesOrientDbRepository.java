@@ -48,14 +48,7 @@ public class RolesOrientDbRepository extends AbstractOrientDbRepository implemen
     @Override
     public Optional<Role> role(Identifier id) {
         metrics.meter(SINGLE_ROLE_METRIC).mark();
-        try (OObjectDatabaseTx db = db()) {
-            Object oid = mapToEntityId(id.toString());
-            if (oid != null) {
-                return Optional.ofNullable(db.detachAll(db.load((ORID) oid), true));
-            } else {
-                return Optional.empty();
-            }
-        }
+        return get(id);
     }
 
     @Override

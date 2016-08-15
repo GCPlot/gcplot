@@ -66,7 +66,7 @@ public class LoginController extends Controller {
                 request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
                 hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()), new ArrayList<>());
         try {
-            getAccountRepository().store(newAccount);
+            getAccountRepository().insert(newAccount);
         } catch (NotUniqueException e) {
             c.write(ErrorMessages.buildJson(ErrorMessages.NOT_UNIQUE_FIELDS, "Username/E-mail must be unique."));
             return;

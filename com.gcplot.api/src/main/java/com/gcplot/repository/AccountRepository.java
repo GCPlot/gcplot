@@ -17,7 +17,9 @@ public interface AccountRepository {
 
     Optional<Account> account(String username, String passHash, LoginType type);
 
-    Account store(Account account);
+    Account insert(Account account);
+
+    Account updateInfo(Account account);
 
     void delete(Account account);
 

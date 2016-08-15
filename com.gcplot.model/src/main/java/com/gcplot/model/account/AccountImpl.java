@@ -3,6 +3,7 @@ package com.gcplot.model.account;
 import com.gcplot.Identifier;
 import com.gcplot.model.role.Role;
 import com.gcplot.model.role.RoleImpl;
+import com.google.common.base.MoreObjects;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -101,6 +102,9 @@ public class AccountImpl implements Account {
     public List<Role> roles() {
         return (List<Role>) roles;
     }
+    public List<RoleImpl> rolesImpl() {
+        return (List<RoleImpl>) roles;
+    }
     public void addRole(RoleImpl role) {
         roles.add(role);
     }
@@ -152,6 +156,62 @@ public class AccountImpl implements Account {
                 email, token, passHash, false, confirmationSalt, roles);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AccountImpl account = (AccountImpl) o;
+
+        if (confirmed != account.confirmed) return false;
+        if (blocked != account.blocked) return false;
+        if (identifier != null ? !identifier.equals(account.identifier) : account.identifier != null) return false;
+        if (username != null ? !username.equals(account.username) : account.username != null) return false;
+        if (email != null ? !email.equals(account.email) : account.email != null) return false;
+        if (firstName != null ? !firstName.equals(account.firstName) : account.firstName != null) return false;
+        if (lastName != null ? !lastName.equals(account.lastName) : account.lastName != null) return false;
+        if (token != null ? !token.equals(account.token) : account.token != null) return false;
+        if (passHash != null ? !passHash.equals(account.passHash) : account.passHash != null) return false;
+        if (confirmationSalt != null ? !confirmationSalt.equals(account.confirmationSalt) : account.confirmationSalt != null)
+            return false;
+        return roles != null ? roles.equals(account.roles) : account.roles == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = identifier != null ? identifier.hashCode() : 0;
+        result = 31 * result + (username != null ? username.hashCode() : 0);
+        result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
+        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
+        result = 31 * result + (token != null ? token.hashCode() : 0);
+        result = 31 * result + (passHash != null ? passHash.hashCode() : 0);
+        result = 31 * result + (confirmed ? 1 : 0);
+        result = 31 * result + (blocked ? 1 : 0);
+        result = 31 * result + (confirmationSalt != null ? confirmationSalt.hashCode() : 0);
+        result = 31 * result + (roles != null ? roles.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("identifier", identifier)
+                .add("username", username)
+                .add("email", email)
+                .add("firstName", firstName)
+                .add("lastName", lastName)
+                .add("token", token)
+                .add("passHash", passHash)
+                .add("confirmed", confirmed)
+                .add("blocked", blocked)
+                .add("confirmationSalt", confirmationSalt)
+                .add("roles", roles)
+                .add("version", version)
+                .toString();
+    }
+
     @Id
     protected Object id;
     @Transient
@@ -165,6 +225,6 @@ public class AccountImpl implements Account {
     protected boolean confirmed;
     protected boolean blocked;
     protected String confirmationSalt;
-    @OneToMany(orphanRemoval = false, targetEntity = RoleImpl.class)
+    @OneToMany(targetEntity = RoleImpl.class)
     protected ArrayList<? super RoleImpl> roles;
 }

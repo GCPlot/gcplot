@@ -1,6 +1,7 @@
 package com.gcplot.repository;
 
 import com.codahale.metrics.MetricRegistry;
+import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
@@ -80,6 +81,17 @@ public abstract class AbstractOrientDbRepository {
             }
             if (result.size() > 0) {
                 return Optional.of(db.detachAll(result.get(0), true));
+            } else {
+                return Optional.empty();
+            }
+        }
+    }
+
+    protected <T> Optional<T> get(Identifier id) {
+        try (OObjectDatabaseTx db = db()) {
+            Object oid = mapToEntityId(id.toString());
+            if (oid != null) {
+                return Optional.ofNullable(db.detachAll(db.load((ORID) oid), true));
             } else {
                 return Optional.empty();
             }

@@ -43,7 +43,7 @@ public class OrientDbRepositoryTest {
         Assert.assertFalse(repository.account("token").isPresent());
         AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
                 "artem@reveno.org", "token", "pass", "salt", new ArrayList<>());
-        account = (AccountImpl) repository.store(account);
+        account = (AccountImpl) repository.insert(account);
         Assert.assertNotNull(account.getOId());
         Assert.assertTrue(repository.account("token").isPresent());
         Assert.assertFalse(repository.account("token").get().isConfirmed());
@@ -59,6 +59,13 @@ public class OrientDbRepositoryTest {
 
         repository.block("abc");
         account1 = repository.account("token").get();
+        Assert.assertTrue(account1.isBlocked());
+
+        account.setEmail("another@mail.ru");
+        repository.updateInfo(account);
+
+        account1 = repository.account("token").get();
+        Assert.assertEquals(account.email(), account1.email());
         Assert.assertTrue(account1.isBlocked());
 
         repository.delete(account1);
@@ -97,7 +104,7 @@ public class OrientDbRepositoryTest {
 
         AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
                 "artem@reveno.org", "token", "pass", "salt", Lists.newArrayList(role));
-        accRep.store(account);
+        accRep.insert(account);
         account = (AccountImpl) accRep.account("token").get();
 
         Assert.assertEquals(1, account.roles().size());
@@ -108,6 +115,17 @@ public class OrientDbRepositoryTest {
         account = (AccountImpl) accRep.account("token").get();
 
         Assert.assertEquals(role, account.roles().get(0));
+
+        // add new existing role to the existing account
+        RoleImpl role2 = new RoleImpl("empty_role", Lists.newArrayList(), true);
+        role2 = (RoleImpl) rolesRep.store(role2);
+
+        accRep.attachRole(account, role2);
+
+        account = (AccountImpl) accRep.account("token").get();
+
+        Assert.assertEquals(2, account.roles().size());
+        Assert.assertEquals(role2, account.roles().get(1));
 
         accRep.destroy();
         rolesRep.destroy();
