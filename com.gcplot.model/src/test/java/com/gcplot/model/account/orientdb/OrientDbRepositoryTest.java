@@ -103,7 +103,6 @@ public class OrientDbRepositoryTest {
         Assert.assertEquals(1, account.roles().size());
         Assert.assertEquals(role, account.roles().get(0));
 
-        role = (RoleImpl) rolesRep.role(role.id()).get();
         role.setTitle("another_title");
         role = (RoleImpl) rolesRep.store(role);
         account = (AccountImpl) accRep.account("token").get();

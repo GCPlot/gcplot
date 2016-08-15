@@ -53,15 +53,6 @@ public class RoleImpl implements Role {
         this.enabled = enabled;
     }
 
-    @Version
-    private Object version;
-    public Object getVersion() {
-        return version;
-    }
-    public void setVersion(Object version) {
-        this.version = version;
-    }
-
     public Object getOId() {
         return id;
     }

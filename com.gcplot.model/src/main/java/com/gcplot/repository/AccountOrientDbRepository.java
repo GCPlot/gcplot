@@ -96,6 +96,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
 
     @Override
     public Account store(Account account) {
+        // TODO rewrite using simple update command, in order to prevent
+        // cascade overriding of roles, etc.
         metrics.meter(ACCOUNT_STORE_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             try {
