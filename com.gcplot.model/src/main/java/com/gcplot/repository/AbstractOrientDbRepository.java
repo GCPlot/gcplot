@@ -3,12 +3,14 @@ package com.gcplot.repository;
 import com.codahale.metrics.MetricRegistry;
 import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
+import com.gcplot.commons.exceptions.Exceptions;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.id.ORecordId;
 import com.orientechnologies.orient.core.metadata.schema.OSchema;
+import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.orientechnologies.orient.object.db.OObjectDatabaseTx;
 import org.slf4j.Logger;
@@ -95,6 +97,34 @@ public abstract class AbstractOrientDbRepository {
             } else {
                 return Optional.empty();
             }
+        }
+    }
+
+    protected void executeTx(String cmd) {
+        try (OObjectDatabaseTx db = db()) {
+            db.begin();
+            int i;
+            try {
+                i = db.command(new OCommandSQL(cmd)).execute();
+            } catch (Throwable t) {
+                db.rollback();
+                throw Exceptions.runtime(t);
+            }
+            if (i != 1) {
+                db.rollback();
+                throw new IllegalArgumentException(String.format("Command [%s] didn't affected any record!", cmd));
+            }
+            db.commit();
+        }
+    }
+
+    protected boolean execute(String cmd) {
+        try {
+            executeTx(cmd);
+            return true;
+        } catch (Throwable t) {
+            LOG.error(t.getMessage(), t);
+            return false;
         }
     }
 

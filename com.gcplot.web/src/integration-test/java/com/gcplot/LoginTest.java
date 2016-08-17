@@ -13,7 +13,7 @@ public class LoginTest extends IntegrationTest {
 
     @Test
     public void testNaiveErrors() throws Exception {
-        get("/user/login?username=abc&password=def", ErrorMessages.WRONG_CREDENTIALS);
+        get("/user/login?login=abc&password=def", ErrorMessages.WRONG_CREDENTIALS);
         get("/user/confirm?token=tk&salt=sl", ErrorMessages.NOT_AUTHORISED);
         post("/user/register", "{\"username\": \"123\", \"password\": \"pass\"}", ErrorMessages.INTERNAL_ERROR);
     }
@@ -33,7 +33,7 @@ public class LoginTest extends IntegrationTest {
         Assert.assertEquals(jo.getString("email"), request.email);
         Assert.assertEquals(jo.getBoolean("confirmed"), false);
 
-        get("/user/login?username=" + request.email + "&password=" + request.password, j -> j.containsKey("result"));
+        get("/user/login?login=" + request.email + "&password=" + request.password, j -> j.containsKey("result"));
 
         Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(10)));
         String confirmUrl = smtpServer.getReceivedEmails().get(0).getBody();
@@ -56,7 +56,7 @@ public class LoginTest extends IntegrationTest {
 
     protected JsonObject login(RegisterRequest request) throws Exception {
         StringBuilder sb = new StringBuilder();
-        get("/user/login?username=" + request.username + "&password=" + request.password, jo -> {
+        get("/user/login?login=" + request.username + "&password=" + request.password, jo -> {
             sb.append(jo);
             return jo.containsKey("result");
         });

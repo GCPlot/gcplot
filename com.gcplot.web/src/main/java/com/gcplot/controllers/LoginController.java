@@ -5,11 +5,13 @@ import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.mail.MailService;
+import com.gcplot.messages.ChangePasswordRequest;
 import com.gcplot.messages.LoginResult;
 import com.gcplot.messages.RegisterRequest;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
 import com.gcplot.repository.AccountRepository;
+import com.gcplot.repository.RolesRepository;
 import com.gcplot.web.RequestContext;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,28 +26,29 @@ public class LoginController extends Controller {
 
     @PostConstruct
     public void init() {
-        dispatcher.noAuth().filter(c -> c.hasParam("username") && c.hasParam("password"),
+        dispatcher.noAuth().filter(c -> c.hasParam("login") && c.hasParam("password"),
                 "Username and password are required!").get("/user/login", this::login);
         dispatcher.noAuth().blocking().post("/user/register", RegisterRequest.class, this::register);
         dispatcher.requireAuth().filter(c -> c.hasParam("salt"),
                 "Salt should be provided!").get("/user/confirm", this::confirm);
+        dispatcher.requireAuth().post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
     }
 
     /**
      * GET /user/login
      * No Auth
      * Params:
-     *   - username (String)
+     *   - login (String)
      *   - password (String)
      *
      * @param request
      */
     public void login(RequestContext request) {
-        String username = request.param("username");
+        String login = request.param("login");
         String password = request.param("password");
 
         Optional<Account> r =
-                getAccountRepository().account(username, hashPass(password), guess(username));
+                getAccountRepository().account(login, hashPass(password), guess(login));
         if (r.isPresent()) {
             request.response(LoginResult.from(r.get()));
         } else {
@@ -93,8 +96,28 @@ public class LoginController extends Controller {
         if (getAccountRepository().confirm(context.loginInfo().get().token(), context.param("salt"))) {
             context.response(SUCCESS);
         } else {
-            context.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR, String.format("Can't confirm user with token %s and salt %s", context.loginInfo().get().token(),
-                    context.loginInfo().get().getAccount().confirmationSalt())));
+            context.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
+                    String.format("Can't confirm user [username=%s]", context.loginInfo().get().getAccount().username())));
+        }
+    }
+
+    /**
+     * POST /user/change_password
+     * Require Auth (token)
+     * Body: ChangePasswordRequest (JSON)
+     *
+     * @param c
+     */
+    public void changePassword(ChangePasswordRequest req, RequestContext c) {
+        if (req.oldPassword.equals(req.newPassword)) {
+            c.write(ErrorMessages.buildJson(ErrorMessages.SAME_PASSWORD));
+        } else {
+            if (accountRepository.changePassword(c.loginInfo().get().getAccount(), hashPass(req.newPassword))) {
+                c.response(SUCCESS);
+            } else {
+                c.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
+                        String.format("Can't change password to user [username=%s]", c.loginInfo().get().getAccount().username())));
+            }
         }
     }
 
@@ -114,6 +137,15 @@ public class LoginController extends Controller {
     @Autowired
     public void setAccountRepository(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
+    }
+
+    protected RolesRepository rolesRepository;
+    public RolesRepository getRolesRepository() {
+        return rolesRepository;
+    }
+    @Autowired
+    public void setRolesRepository(RolesRepository rolesRepository) {
+        this.rolesRepository = rolesRepository;
     }
 
     protected MailService mailService;

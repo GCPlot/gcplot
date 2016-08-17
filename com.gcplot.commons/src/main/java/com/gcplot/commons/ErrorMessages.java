@@ -16,6 +16,7 @@ public class ErrorMessages {
     public static final long NOT_UNIQUE_FIELDS = 0x127;
     public static final long USER_IS_BLOCKED = 0x128;
     public static final long NOT_FOUND = 0x194;
+    public static final long SAME_PASSWORD = 0x195;
 
     public static String buildJson(long code) {
         ObjectNode node = new ObjectNode(JSON_NODE_FACTORY);
@@ -42,6 +43,7 @@ public class ErrorMessages {
         errorMessages.put(NOT_UNIQUE_FIELDS, "One of the fields are already presented.");
         errorMessages.put(USER_IS_BLOCKED, "User is blocked.");
         errorMessages.put(NOT_FOUND, "The requested path wasn't found.");
+        errorMessages.put(SAME_PASSWORD, "Old and new passwords should be different.");
     }
 
     private static final JsonNodeFactory JSON_NODE_FACTORY = JsonNodeFactory.instance;

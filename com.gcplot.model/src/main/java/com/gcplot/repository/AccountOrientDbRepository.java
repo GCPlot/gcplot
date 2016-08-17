@@ -129,42 +129,19 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     @Override
     public boolean generateNewToken(String oldToken, String newToken) {
         metrics.meter(ACCOUNT_NEW_TOKEN_METRIC).mark();
-        try (OObjectDatabaseTx db = db()) {
-            db.begin();
-            try {
-                int i = db.command(new OCommandSQL(UPDATE_TOKEN_QUERY)).execute();
-                if (i != 1) {
-                    return false;
-                }
-            } catch (Throwable t) {
-                db.rollback();
-                LOG.error(t.getMessage(), t);
-                return false;
-            }
-            db.commit();
-            return true;
-        }
+        return execute(String.format(UPDATE_TOKEN_QUERY, newToken, oldToken));
+    }
+
+    @Override
+    public boolean changePassword(Account account, String newPasshash) {
+        metrics.meter(ACCOUNT_NEW_PASSWORD_METRIC).mark();
+        return execute(String.format(UPDATE_PASSWORD_COMMAND, account.id().toString(), newPasshash));
     }
 
     @Override
     public boolean confirm(String token, String salt) {
         metrics.meter(ACCOUNT_CONFIRM_METRIC).mark();
-        try (OObjectDatabaseTx db = db()) {
-            db.begin();
-            try {
-                int i = db.command(new OCommandSQL(String.format(CONFIRM_ACCOUNT_QUERY, token, salt))).execute();
-                if (i != 1) {
-                    db.rollback();
-                    return false;
-                }
-            } catch (Throwable t) {
-                db.rollback();
-                LOG.error(t.getMessage(), t);
-                return false;
-            }
-            db.commit();
-            return true;
-        }
+        return execute(String.format(CONFIRM_ACCOUNT_QUERY, token, salt));
     }
 
     @Override
@@ -206,21 +183,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     protected void block(String username, boolean block) {
-        try (OObjectDatabaseTx db = db()) {
-            db.begin();
-            int i;
-            try {
-                i = db.command(new OCommandSQL(String.format(SET_BLOCKED_COMMAND, block, username))).execute();
-            } catch (Throwable t) {
-                db.rollback();
-                throw Exceptions.runtime(t);
-            }
-            if (i != 1) {
-                db.rollback();
-                throw new IllegalArgumentException(String.format("User with [username=%s] can't be blocked!", username));
-            }
-            db.commit();
-        }
+        executeTx(String.format(SET_BLOCKED_COMMAND, block, username));
     }
 
     protected static final Logger LOG = LoggerFactory.getLogger(AccountOrientDbRepository.class);
@@ -238,8 +201,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String UPDATE_ROLES_COMMAND = "update %s" +
             " set roles=[%s] LOCK RECORD";
     private static final String UPDATE_INFO_COMMAND = "update %s" +
-            " set username=\"%s\", email=\"%s\", firstName=\"%s\", lastName=\"%s\", " +
-            " passHash=\"%s\" LOCK RECORD";
+            " set username=\"%s\", email=\"%s\", firstName=\"%s\", lastName=\"%s\" LOCK RECORD";
+    private static final String UPDATE_PASSWORD_COMMAND = "update %s set passHash=\"%s\" LOCK RECORD";
 
     private static final String ALL_ACCOUNTS_METRIC = Metrics.name(AccountOrientDbRepository.class, "all_accounts");
     private static final String ACCOUNT_METRIC = Metrics.name(AccountOrientDbRepository.class, "account");
@@ -249,5 +212,6 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String ACCOUNT_UPDATE_INFO_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "update", "info");
     private static final String ACCOUNT_DELETE_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "delete");
     private static final String ACCOUNT_NEW_TOKEN_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "new_token");
+    private static final String ACCOUNT_NEW_PASSWORD_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "new_password");
     private static final String ACCOUNT_CONFIRM_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "confirm");
 }

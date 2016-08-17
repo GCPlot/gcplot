@@ -25,6 +25,8 @@ public interface AccountRepository {
 
     boolean generateNewToken(String oldToken, String newToken);
 
+    boolean changePassword(Account account, String newPasshash);
+
     boolean confirm(String token, String salt);
 
     void block(String username);
