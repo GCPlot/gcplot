@@ -37,7 +37,7 @@ public class BaseCassandraTest extends BaseCassandra {
     protected static void initKeySpace() throws IOException, URISyntaxException {
         connector = new CassandraConnector();
         connector.setHosts(new String[]{EmbeddedCassandraServerHelper.getHost()});
-        connector.setPort(nativePort);
+        connector.setPort(server.getNativePort());
         connector.setKeyspace(null);
         connector.init();
         String q = readFile(new File(BaseCassandraTest.class.getClassLoader().getResource("cassandra-scheme.sql").toURI()).getAbsolutePath(), Charsets.UTF_8);

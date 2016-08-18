@@ -10,9 +10,11 @@ sourceSets {
             runtimeClasspath += main.output + test.output
             srcDir file('src/integration-test/java')
         }
-        resources.srcDir file('src/integration-test/resources')
+        resources.srcDirs(file('src/integration-test/resources'), file('../com.gcplot.gc-model/src/main/resources'))
     }
 }
+
+sourceSets.main.resources.srcDir "../com.gcplot.gc-model/src/main/resources";
 
 configurations {
     integrationTestCompile.extendsFrom testCompile

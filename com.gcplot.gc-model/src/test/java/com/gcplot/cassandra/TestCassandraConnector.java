@@ -12,7 +12,7 @@ public class TestCassandraConnector extends BaseCassandra {
     public void test() throws Exception {
         CassandraConnector connector = new CassandraConnector();
         connector.setHosts(new String[] { EmbeddedCassandraServerHelper.getHost() });
-        connector.setPort(nativePort);
+        connector.setPort(server.getNativePort());
         connector.setKeyspace(null);
         connector.init();
 
@@ -27,7 +27,7 @@ public class TestCassandraConnector extends BaseCassandra {
 
         connector = new CassandraConnector();
         connector.setHosts(new String[] { EmbeddedCassandraServerHelper.getHost() });
-        connector.setPort(nativePort);
+        connector.setPort(server.getNativePort());
         connector.setKeyspace("gcplot");
         connector.init();
         connector.destroy();

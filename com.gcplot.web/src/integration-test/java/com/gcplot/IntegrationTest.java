@@ -2,20 +2,23 @@ package com.gcplot;
 
 import com.dumbster.smtp.SimpleSmtpServer;
 import com.gcplot.bootstrap.Bootstrap;
+import com.gcplot.cassandra.CassandraConnector;
+import com.gcplot.cassandra.Server;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.configuration.ConfigurationManager;
+import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -23,7 +26,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -31,6 +36,7 @@ import java.util.function.Predicate;
 public abstract class IntegrationTest {
 
     protected SimpleSmtpServer smtpServer;
+    protected static Server cassandraServer = new Server();
     private Bootstrap bootstrap;
     public Bootstrap getBoot() {
         return bootstrap;
@@ -53,8 +59,19 @@ public abstract class IntegrationTest {
     private String dbName;
     protected ODatabaseDocumentTx database;
 
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        cassandraServer.start();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        cassandraServer.stop();
+    }
+
     @Before
     public void setUp() throws Exception {
+        createCassandraScheme();
         smtpServer = SimpleSmtpServer.start(SimpleSmtpServer.AUTO_SMTP_PORT);
         dbName = Utils.getRandomIdentifier();
         database = new ODatabaseDocumentTx("memory:" + dbName).create();
@@ -101,7 +118,27 @@ public abstract class IntegrationTest {
             } catch (Throwable t) {
                 LOG.error(t.getMessage(), t);
             }
+            try {
+                cassandraServer.clean();
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+            }
         }
+    }
+
+    protected void createCassandraScheme() throws IOException, URISyntaxException {
+        CassandraConnector connector = new CassandraConnector();
+        connector.setHosts(new String[]{EmbeddedCassandraServerHelper.getHost()});
+        connector.setPort(cassandraServer.getNativePort());
+        connector.setKeyspace(null);
+        connector.init();
+        String q = readFile(new File(Server.class.getClassLoader().getResource("cassandra-scheme.sql").toURI()).getAbsolutePath(), Charsets.UTF_8);
+        for (String qq : q.split(";")) {
+            if (!Strings.isNullOrEmpty(qq.trim())) {
+                connector.session().execute(qq.trim());
+            }
+        }
+        connector.destroy();
     }
 
     protected void makeTestPropertiesFile() throws IOException {
@@ -110,7 +147,8 @@ public abstract class IntegrationTest {
         StringBuilder sb = new StringBuilder();
         sb.append("bootstrap.server.port=").append(port.value).append('\n');
         sb.append("bootstrap.server.host=").append(LOCALHOST).append('\n');
-        sb.append("orientdb.connection.string=memory:").append(dbName);
+        sb.append("orientdb.connection.string=memory:").append(dbName).append('\n');
+        sb.append("cassandra.port=").append(cassandraServer.getNativePort()).append('\n');
         Files.write(sb.toString(), new File(tempDir, "gcplot.properties"), Charset.forName("UTF-8"));
     }
 
@@ -167,6 +205,13 @@ public abstract class IntegrationTest {
         } else if (test.test(jo)) {
             l.countDown();
         }
+    }
+
+    private static String readFile(String path, Charset encoding)
+            throws IOException
+    {
+        byte[] encoded = java.nio.file.Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
     }
 
     protected HttpClient client;

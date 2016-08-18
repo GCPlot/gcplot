@@ -1,6 +1,7 @@
 dependencies {
     compile project(":com.gcplot.commons")
     compile project(":com.gcplot.api")
+    compile group: 'commons-io', name: 'commons-io', version: "$apacheCommonsIOVersion"
 
     compile("com.datastax.cassandra:cassandra-driver-core:$cassandraDriverVersion") {
         exclude group: "io.netty"
@@ -9,6 +10,5 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    testCompile "org.cassandraunit:cassandra-unit:$cassandraUnitVersion"
-    testCompile group: 'commons-io', name: 'commons-io', version: "$apacheCommonsIOVersion"
+    compile "org.cassandraunit:cassandra-unit:$cassandraUnitVersion"
 }
