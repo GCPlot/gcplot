@@ -46,6 +46,15 @@ public class RolesOrientDbRepository extends AbstractOrientDbRepository implemen
     }
 
     @Override
+    public List<Role> defaultRoles() {
+        metrics.meter(DEFAULT_ROLES_METRIC).mark();
+        try (OObjectDatabaseTx db = db()) {
+            List<Role> l = db.query(new OSQLSynchQuery<>(DEFAULT_ROLES_QUERY));
+            return l.stream().map(i -> (RoleImpl) db.detachAll(i, true)).collect(Collectors.toList());
+        }
+    }
+
+    @Override
     public Optional<Role> role(Identifier id) {
         metrics.meter(SINGLE_ROLE_METRIC).mark();
         return get(id);
@@ -74,8 +83,10 @@ public class RolesOrientDbRepository extends AbstractOrientDbRepository implemen
     protected static final Logger LOG = LoggerFactory.getLogger(RolesOrientDbRepository.class);
     private static final String ROLES_DOCUMENT_NAME = RoleImpl.class.getSimpleName();
     private static final String ALL_ROLES_QUERY = "select from " + ROLES_DOCUMENT_NAME;
+    private static final String DEFAULT_ROLES_QUERY = ALL_ROLES_QUERY + " where isDefault = true";
 
-    private static final String ALL_ROLES_METRIC = Metrics.name(RolesOrientDbRepository.class, "all_roles");
+    private static final String ALL_ROLES_METRIC = Metrics.name(RolesOrientDbRepository.class, "roles", "all");
+    private static final String DEFAULT_ROLES_METRIC = Metrics.name(RolesOrientDbRepository.class, "roles", "default");
     private static final String SINGLE_ROLE_METRIC = Metrics.name(RolesOrientDbRepository.class, "role");
     private static final String ROLE_STORE_METRIC = Metrics.name(RolesOrientDbRepository.class, "store");
     private static final String ROLE_DELETE_METRIC = Metrics.name(RolesOrientDbRepository.class, "delete");

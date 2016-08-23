@@ -57,6 +57,7 @@ dependencies {
     compile "com.beust:jcommander:$jcommanderVersion"
     compile "commons-codec:commons-codec:$apacheCodecVersion"
     compile "org.apache.commons:commons-email:$apacheMailVersion"
+    compile "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
 
     testCompile "org.springframework:spring-test:$springVersion"
     integrationTestCompile 'com.github.kirviq:dumbster:1.7'

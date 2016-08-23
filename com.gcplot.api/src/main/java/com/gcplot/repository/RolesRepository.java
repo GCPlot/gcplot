@@ -14,6 +14,8 @@ public interface RolesRepository {
 
     List<Role> roles();
 
+    List<Role> defaultRoles();
+
     Optional<Role> role(Identifier identifier);
 
     Role store(Role role);

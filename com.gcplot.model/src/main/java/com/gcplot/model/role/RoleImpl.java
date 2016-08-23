@@ -2,10 +2,10 @@ package com.gcplot.model.role;
 
 import com.gcplot.Identifier;
 import com.google.common.base.MoreObjects;
-import com.orientechnologies.orient.core.annotation.ODocumentInstance;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -42,16 +42,16 @@ public class RoleImpl implements Role {
     public List<Restriction> restrictions() {
         return (List<Restriction>) restrictions;
     }
-    public void setRestrictions(ArrayList<RestrictionImpl> restrictions) {
+    public void setRestrictions(List<RestrictionImpl> restrictions) {
         this.restrictions = restrictions;
     }
 
     @Override
-    public boolean enabled() {
-        return enabled;
+    public boolean isDefault() {
+        return isDefault;
     }
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     public Object getOId() {
@@ -61,14 +61,18 @@ public class RoleImpl implements Role {
     public RoleImpl() {
     }
 
-    public RoleImpl(String title, ArrayList<RestrictionImpl> restrictions) {
-        this(title, restrictions, true);
+    public RoleImpl(String title) {
+        this(title, Collections.emptyList(), false);
     }
 
-    public RoleImpl(String title, ArrayList<RestrictionImpl> restrictions, boolean enabled) {
+    public RoleImpl(String title, List<RestrictionImpl> restrictions) {
+        this(title, restrictions, false);
+    }
+
+    public RoleImpl(String title, List<RestrictionImpl> restrictions, boolean isDefault) {
         setTitle(title);
         setRestrictions(restrictions);
-        setEnabled(enabled);
+        setDefault(isDefault);
     }
 
     @Id
@@ -77,8 +81,8 @@ public class RoleImpl implements Role {
     protected transient Identifier identifier;
     protected String title;
     @OneToMany(orphanRemoval = true, targetEntity = RestrictionImpl.class)
-    protected ArrayList<? super RestrictionImpl> restrictions = new ArrayList<>();
-    protected boolean enabled;
+    protected List<? super RestrictionImpl> restrictions = new ArrayList<>();
+    protected boolean isDefault;
 
     @Override
     public boolean equals(Object o) {
@@ -87,7 +91,7 @@ public class RoleImpl implements Role {
 
         RoleImpl role = (RoleImpl) o;
 
-        if (enabled != role.enabled) return false;
+        if (isDefault != role.isDefault) return false;
         if (title != null ? !title.equals(role.title) : role.title != null) return false;
         if (restrictions != null ? !restrictions.equals(role.restrictions) : role.restrictions != null) return false;
 
@@ -98,7 +102,7 @@ public class RoleImpl implements Role {
     public int hashCode() {
         int result = title != null ? title.hashCode() : 0;
         result = 31 * result + (restrictions != null ? restrictions.hashCode() : 0);
-        result = 31 * result + (enabled ? 1 : 0);
+        result = 31 * result + (isDefault ? 1 : 0);
         return result;
     }
 
@@ -107,9 +111,9 @@ public class RoleImpl implements Role {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
                 .add("identifier", identifier)
-                .add("restrictions", restrictions)
-                .add("enabled", enabled)
                 .add("title", title)
+                .add("restrictions", restrictions)
+                .add("isDefault", isDefault)
                 .toString();
     }
 
@@ -132,6 +136,14 @@ public class RoleImpl implements Role {
         }
 
         @Override
+        public boolean restricted() {
+            return restricted;
+        }
+        public void setRestricted(boolean restricted) {
+            this.restricted = restricted;
+        }
+
+        @Override
         public long amount() {
             return amount;
         }
@@ -150,9 +162,10 @@ public class RoleImpl implements Role {
         public RestrictionImpl() {
         }
 
-        public RestrictionImpl(RestrictionType type, String action, long amount,
+        public RestrictionImpl(RestrictionType type, boolean restricted, String action, long amount,
                                Map<String, String> properties) {
             this.type = type;
+            this.restricted = restricted;
             this.action = action;
             this.amount = amount;
             this.properties = properties;
@@ -160,6 +173,7 @@ public class RoleImpl implements Role {
 
         protected RestrictionType type;
         protected String action;
+        protected boolean restricted;
         protected long amount;
         protected Map<String, String> properties;
 
@@ -170,6 +184,7 @@ public class RoleImpl implements Role {
 
             RestrictionImpl that = (RestrictionImpl) o;
 
+            if (restricted != that.restricted) return false;
             if (amount != that.amount) return false;
             if (type != that.type) return false;
             if (action != null ? !action.equals(that.action) : that.action != null) return false;
@@ -182,6 +197,7 @@ public class RoleImpl implements Role {
         public int hashCode() {
             int result = type != null ? type.hashCode() : 0;
             result = 31 * result + (action != null ? action.hashCode() : 0);
+            result = 31 * result + (restricted ? 1 : 0);
             result = 31 * result + (int) (amount ^ (amount >>> 32));
             result = 31 * result + (properties != null ? properties.hashCode() : 0);
             return result;
@@ -192,6 +208,7 @@ public class RoleImpl implements Role {
             return MoreObjects.toStringHelper(this)
                     .add("type", type)
                     .add("action", action)
+                    .add("restricted", restricted)
                     .add("amount", amount)
                     .add("properties", properties)
                     .toString();

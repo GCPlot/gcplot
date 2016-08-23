@@ -12,6 +12,6 @@ public interface Role {
 
     List<Restriction> restrictions();
 
-    boolean enabled();
+    boolean isDefault();
 
 }

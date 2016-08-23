@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class VertxDispatcher implements Dispatcher<String> {
 
@@ -176,7 +177,14 @@ public class VertxDispatcher implements Dispatcher<String> {
     @Override
     public Dispatcher<String> filter(Predicate<RequestContext> filter, String message) {
         this.filter = filter;
-        this.filterMessage = message;
+        this.filterMessage = () -> message;
+        return this;
+    }
+
+    @Override
+    public Dispatcher<String> filter(Predicate<RequestContext> filter, String message, Object... params) {
+        this.filter = filter;
+        this.filterMessage = () -> String.format(message, params);
         return this;
     }
 
@@ -242,7 +250,7 @@ public class VertxDispatcher implements Dispatcher<String> {
                                 handler.accept(rc, c);
                             } else if (!rc.response().ended()) {
                                 c.finish(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
-                                        Strings.nullToEmpty(filterMessage)));
+                                        Strings.nullToEmpty(filterMessage.get())));
                             }
                         }
                     }
@@ -303,7 +311,7 @@ public class VertxDispatcher implements Dispatcher<String> {
     protected Consumer<RequestContext> preHandler = r -> {};
     protected Consumer<RequestContext> postHandler = r -> {};
     protected Predicate<RequestContext> filter;
-    protected String filterMessage;
+    protected Supplier<String> filterMessage;
 
     protected static final Logger LOG = LoggerFactory.getLogger(VertxDispatcher.class);
 

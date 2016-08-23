@@ -3,6 +3,7 @@ package com.gcplot.controllers;
 import com.codahale.metrics.MetricRegistry;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Metrics;
+import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.RequestContext;
 import org.slf4j.Logger;
@@ -31,6 +32,15 @@ public abstract class Controller {
     @Autowired
     public void setMetrics(MetricRegistry metrics) {
         this.metrics = metrics;
+    }
+
+    protected ConfigurationManager config;
+    public ConfigurationManager getConfig() {
+        return config;
+    }
+    @Autowired
+    public void setConfig(ConfigurationManager config) {
+        this.config = config;
     }
 
     @PreDestroy

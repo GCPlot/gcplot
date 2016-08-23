@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-public class LoginTest extends IntegrationTest {
+public class LoginTests extends IntegrationTest {
 
     @Test
     public void testNaiveErrors() throws Exception {

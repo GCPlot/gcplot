@@ -6,6 +6,6 @@ package com.gcplot.model.role;
  */
 public enum RestrictionType {
 
-    QUANTITATIVE, PROPERTIES_BASED, SINGLE
+    TOGGLE, QUANTITATIVE, PROPERTY_BASED
 
 }

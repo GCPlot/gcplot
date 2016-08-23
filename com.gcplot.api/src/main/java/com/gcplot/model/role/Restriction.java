@@ -12,6 +12,8 @@ public interface Restriction {
 
     String action();
 
+    boolean restricted();
+
     long amount();
 
     Map<String, String> properties();

@@ -1,6 +1,8 @@
 package com.gcplot.repository.cassandra;
 
 import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
@@ -11,10 +13,7 @@ import com.gcplot.repository.GCAnalyseRepository;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
@@ -28,6 +27,19 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     public List<GCAnalyse> analyses() {
         Statement statement = QueryBuilder.select().all().from(TABLE_NAME);
         return analysesFrom(connector.session().execute(statement));
+    }
+
+    @Override
+    public OptionalLong analysesCount(Identifier accountId) {
+        Statement statement = QueryBuilder.select().countAll()
+                .from(TABLE_NAME).where(eq("account_id", accountId.toString()));
+        ResultSet rs = connector.session().execute(statement);
+        Iterator<Row> r = rs.iterator();
+        if (r.hasNext()) {
+            return OptionalLong.of(r.next().getLong(0));
+        } else {
+            return OptionalLong.empty();
+        }
     }
 
     @Override
@@ -45,8 +57,9 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
-    public void newAnalyse(GCAnalyse analyse) {
-        Statement insert = QueryBuilder.insertInto(TABLE_NAME).value("id", uuid())
+    public String newAnalyse(GCAnalyse analyse) {
+        UUID newId = UUID.randomUUID();
+        Statement insert = QueryBuilder.insertInto(TABLE_NAME).value("id", newId)
                 .value("account_id", analyse.accountId().toString())
                 .value("analyse_name", analyse.name())
                 .value("is_continuous", analyse.isContinuous())
@@ -68,6 +81,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                         .stream().collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().swapFree())))
                 .setConsistencyLevel(ConsistencyLevel.QUORUM);
         connector.session().execute(insert);
+        return newId.toString();
     }
 
     @Override

@@ -10,6 +10,8 @@ import org.joda.time.DateTimeZone;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.OptionalLong;
+
 public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
 
     @Test
@@ -66,8 +68,12 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(rawAnalyse.jvmHeaders().get("jvm3"), "header4,header10");
         Assert.assertTrue(rawAnalyse.jvmIds().contains("jvm3"));
 
+        OptionalLong count = r.analysesCount(gcAnalyse.accountId());
+        Assert.assertEquals(1, count.getAsLong());
+
         r.removeAnalyse(rawAnalyse.accountId(), rawAnalyse.id());
         Assert.assertEquals(0, r.analyses().size());
+        Assert.assertEquals(0, r.analysesCount(gcAnalyse.accountId()).getAsLong());
     }
 
     private static MemoryDetails md(long pageSize, long physicalTotal, long physicalFree,

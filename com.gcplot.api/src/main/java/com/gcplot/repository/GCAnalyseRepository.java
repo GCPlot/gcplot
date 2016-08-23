@@ -7,16 +7,25 @@ import org.joda.time.DateTime;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 
 public interface GCAnalyseRepository {
 
     List<GCAnalyse> analyses();
 
+    OptionalLong analysesCount(Identifier accountId);
+
     Optional<GCAnalyse> analyse(String id);
 
     List<GCAnalyse> analysesFor(Identifier accountId);
 
-    void newAnalyse(GCAnalyse analyse);
+    /**
+     * Adds new analyse to the system.
+     *
+     * @param analyse to add
+     * @return new analyse id
+     */
+    String newAnalyse(GCAnalyse analyse);
 
     void analyseJvm(Identifier accountId, String id, String jvmId, String headers, MemoryDetails memoryDetails);
 

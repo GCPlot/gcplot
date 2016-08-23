@@ -62,6 +62,8 @@ public interface Dispatcher<Route> extends Closeable {
 
     Dispatcher<Route> filter(Predicate<RequestContext> filter, String message);
 
+    Dispatcher<Route> filter(Predicate<RequestContext> filter, String message, Object... params);
+
     Dispatcher<Route> mimeTypes(String... mimeTypes);
 
     /**
