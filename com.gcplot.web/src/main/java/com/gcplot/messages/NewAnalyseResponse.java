@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *         8/22/16
  */
 public class NewAnalyseResponse {
+    @JsonProperty("id")
     public String id;
 
     public NewAnalyseResponse(@JsonProperty("id") String id) {

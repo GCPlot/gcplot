@@ -9,11 +9,17 @@ import java.util.Set;
  *         8/21/16
  */
 public class NewAnalyseRequest {
+    @JsonProperty(value = "name")
     public String name;
+    @JsonProperty(value = "continuous")
     public boolean isContinuous;
+    @JsonProperty(value = "vm_version")
     public int vmVersion;
+    @JsonProperty(value = "gc_collector_type")
     public int gcCollectorType;
+    @JsonProperty(value = "jvm_ids")
     public Set<String> jvmIds;
+    @JsonProperty(value = "ext")
     public String ext;
 
     public NewAnalyseRequest(@JsonProperty(value = "name", required = true) String name,
@@ -21,7 +27,7 @@ public class NewAnalyseRequest {
                              @JsonProperty(value = "vm_version", required = true) int vmVersion,
                              @JsonProperty(value = "gc_collector_type", required = true) int gcCollectorType,
                              @JsonProperty(value = "jvm_ids", required = true) Set<String> jvmIds,
-                             @JsonProperty(value = "jvm_ids", required = true) String ext) {
+                             @JsonProperty(value = "ext", required = true) String ext) {
         this.name = name;
         this.isContinuous = isContinuous;
         this.vmVersion = vmVersion;

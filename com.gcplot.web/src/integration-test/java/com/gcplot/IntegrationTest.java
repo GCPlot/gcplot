@@ -9,6 +9,7 @@ import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.configuration.ConfigurationManager;
+import com.gcplot.messages.RegisterRequest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
@@ -155,8 +156,16 @@ public abstract class IntegrationTest {
     public void intercept() {
     }
 
+    protected void get(String path, String token, long expectedError) throws Exception {
+        get(withToken(path, token), expectedError);
+    }
+
     protected void get(String path, long expectedError) throws Exception {
         get(path, a -> true, expectedError);
+    }
+
+    protected void get(String path, String token, Predicate<JsonObject> test) throws Exception {
+        get(withToken(path, token), test);
     }
 
     protected void get(String path, Predicate<JsonObject> test) throws Exception {
@@ -171,6 +180,18 @@ public abstract class IntegrationTest {
             client.get(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
         }
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+    }
+
+    protected void post(String path, String message, String token, long expectedError) throws Exception {
+        post(withToken(path, token), message, expectedError);
+    }
+
+    protected void post(String path, Object message, String token, long expectedError) throws Exception {
+        post(withToken(path, token), message, expectedError);
+    }
+
+    protected void post(String path, Object message, String token, Predicate<JsonObject> test) throws Exception {
+        post(withToken(path, token), message, test);
     }
 
     protected void post(String path, String message, long expectedError) throws Exception {
@@ -191,7 +212,16 @@ public abstract class IntegrationTest {
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
     }
 
-    private void handleResponse(Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
+    protected JsonObject login(RegisterRequest request) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        get("/user/login?login=" + request.username + "&password=" + request.password, jo -> {
+            sb.append(jo);
+            return jo.containsKey("result");
+        });
+        return new JsonObject(sb.toString()).getJsonObject("result");
+    }
+
+    protected void handleResponse(Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
         JsonObject jo = new JsonObject(new String(b.getBytes()));
         LOG.info("Response: {}", jo);
         if (jo.containsKey("error") && expectedError == -1) {
@@ -207,11 +237,19 @@ public abstract class IntegrationTest {
         }
     }
 
-    private static String readFile(String path, Charset encoding)
+    protected static String readFile(String path, Charset encoding)
             throws IOException
     {
         byte[] encoded = java.nio.file.Files.readAllBytes(Paths.get(path));
         return new String(encoded, encoding);
+    }
+
+    protected JsonObject r(JsonObject j) {
+        return j.getJsonObject("result");
+    }
+
+    private String withToken(String path, String token) {
+        return path.contains("?") ? path + "&token" + token : path + "?token=" + token;
     }
 
     protected HttpClient client;

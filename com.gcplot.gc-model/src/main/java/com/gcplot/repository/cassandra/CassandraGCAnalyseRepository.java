@@ -14,6 +14,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
@@ -64,24 +65,26 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("analyse_name", analyse.name())
                 .value("is_continuous", analyse.isContinuous())
                 .value("start", analyse.start().toDateTime(DateTimeZone.UTC).toDate())
-                .value("last_event", analyse.lastEvent().toDateTime(DateTimeZone.UTC).toDate())
+                .value("last_event", analyse.lastEvent() != null ? analyse.lastEvent().toDateTime(DateTimeZone.UTC).toDate() :
+                        analyse.start().toDateTime(DateTimeZone.UTC).toDate())
                 .value("gc_type", analyse.collectorType().type())
                 .value("vm_version", analyse.vmVersion().type())
-                .value("jvm_ids", analyse.jvmIds())
-                .value("jvm_headers", analyse.jvmHeaders())
-                .value("jvm_md_page_size", analyse.jvmMemoryDetails().entrySet()
-                        .stream().collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().pageSize())))
-                .value("jvm_md_phys_total", analyse.jvmMemoryDetails().entrySet()
-                        .stream().collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().physicalTotal())))
-                .value("jvm_md_phys_free", analyse.jvmMemoryDetails().entrySet()
-                        .stream().collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().physicalFree())))
-                .value("jvm_md_swap_total", analyse.jvmMemoryDetails().entrySet()
-                        .stream().collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().swapTotal())))
-                .value("jvm_md_swap_free", analyse.jvmMemoryDetails().entrySet()
-                        .stream().collect(Collectors.toMap(Map.Entry::getKey, v -> v.getValue().swapFree())))
+                .value("jvm_ids", analyse.jvmIds() != null ? analyse.jvmIds() : Collections.emptySet())
+                .value("jvm_headers", analyse.jvmHeaders() != null ? analyse.jvmHeaders() : Collections.emptyMap())
+                .value("jvm_md_page_size", memoryMap(analyse, v -> v.getValue().pageSize()))
+                .value("jvm_md_phys_total", memoryMap(analyse, v -> v.getValue().physicalTotal()))
+                .value("jvm_md_phys_free", memoryMap(analyse, v -> v.getValue().physicalFree()))
+                .value("jvm_md_swap_total", memoryMap(analyse, v -> v.getValue().swapTotal()))
+                .value("jvm_md_swap_free", memoryMap(analyse, v -> v.getValue().swapFree()))
                 .setConsistencyLevel(ConsistencyLevel.QUORUM);
         connector.session().execute(insert);
         return newId.toString();
+    }
+
+    private Object memoryMap(GCAnalyse analyse, Function<? super Map.Entry<String, MemoryDetails>, ? extends Long> valueMapper) {
+        return analyse.jvmMemoryDetails() != null ? analyse.jvmMemoryDetails().entrySet()
+                .stream().collect(Collectors.toMap(Map.Entry::getKey, valueMapper)) :
+                Collections.emptyMap();
     }
 
     @Override

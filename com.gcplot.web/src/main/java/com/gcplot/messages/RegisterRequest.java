@@ -4,10 +4,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RegisterRequest {
+    @JsonProperty(value = "username")
     public String username;
+    @JsonProperty(value = "first_name")
     public String firstName;
+    @JsonProperty(value = "last_name")
     public String lastName;
+    @JsonProperty(value = "password")
     public String password;
+    @JsonProperty(value = "email")
     public String email;
 
     @JsonCreator

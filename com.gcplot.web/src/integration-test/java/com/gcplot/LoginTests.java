@@ -54,12 +54,4 @@ public class LoginTests extends IntegrationTest {
         post("/user/register", request, ErrorMessages.NOT_UNIQUE_FIELDS);
     }
 
-    protected JsonObject login(RegisterRequest request) throws Exception {
-        StringBuilder sb = new StringBuilder();
-        get("/user/login?login=" + request.username + "&password=" + request.password, jo -> {
-            sb.append(jo);
-            return jo.containsKey("result");
-        });
-        return new JsonObject(sb.toString()).getJsonObject("result");
-    }
 }

@@ -36,7 +36,7 @@ public class AnalyseController extends Controller {
                 .expireAfterWrite(config.readLong(ConfigProperty.USER_ANALYSE_COUNT_CACHE_SECONDS), TimeUnit.SECONDS)
                 .build(k -> analyseRepository.analysesCount(k).orElse(0));
 
-        dispatcher.requireAuth().get("/analyses/all", this::analyses);
+        dispatcher.requireAuth().get("/analyse/all", this::analyses);
         dispatcher.requireAuth()
                 .filter(Restrictions.apply("/analyse/new", a ->
                         newAnalyses.get(a.id(), k -> analyseRepository.analysesCount(k).orElse(0))),
@@ -45,7 +45,7 @@ public class AnalyseController extends Controller {
     }
 
     /**
-     * GET /analyses/all
+     * GET /analyse/all
      * Require Auth (token)
      * Params: No
      */
