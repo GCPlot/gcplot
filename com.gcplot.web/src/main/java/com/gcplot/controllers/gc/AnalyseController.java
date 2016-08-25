@@ -2,11 +2,15 @@ package com.gcplot.controllers.gc;
 
 import com.gcplot.Identifier;
 import com.gcplot.commons.ConfigProperty;
+import com.gcplot.commons.ErrorMessages;
 import com.gcplot.controllers.Controller;
+import com.gcplot.messages.AnalyseResponse;
 import com.gcplot.messages.AnalysesResponse;
 import com.gcplot.messages.NewAnalyseRequest;
 import com.gcplot.messages.NewAnalyseResponse;
 import com.gcplot.model.VMVersion;
+import com.gcplot.model.account.Account;
+import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GCAnalyseImpl;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.repository.GCAnalyseRepository;
@@ -20,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,6 +41,8 @@ public class AnalyseController extends Controller {
                 .expireAfterWrite(config.readLong(ConfigProperty.USER_ANALYSE_COUNT_CACHE_SECONDS), TimeUnit.SECONDS)
                 .build(k -> analyseRepository.analysesCount(k).orElse(0));
 
+        dispatcher.requireAuth().filter(c -> c.hasParam("id"), "Param 'id' of analyse is missing.")
+                .get("/analyse/get", this::analyse);
         dispatcher.requireAuth().get("/analyse/all", this::analyses);
         dispatcher.requireAuth()
                 .filter(Restrictions.apply("/analyse/new", a ->
@@ -48,20 +55,39 @@ public class AnalyseController extends Controller {
      * GET /analyse/all
      * Require Auth (token)
      * Params: No
+     * Responds: AnalysesResponse (JSON)
      */
     public void analyses(RequestContext ctx) {
-        Identifier userId = ctx.loginInfo().get().getAccount().id();
+        Identifier userId = account(ctx).id();
         ctx.response(new AnalysesResponse(
                 analyseRepository.analysesFor(userId)));
+    }
+
+    /**
+     * GET /analyse/get
+     * Require Auth (token)
+     * Params:
+     *   - id (Identity of the analyse)
+     * Responds: AnalyseResponse (JSON)
+     */
+    public void analyse(RequestContext ctx) {
+        String id = ctx.param("id");
+        Optional<GCAnalyse> oa = analyseRepository.analyse(id);
+        if (oa.isPresent()) {
+            ctx.response(new AnalyseResponse(oa.get()));
+        } else {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE));
+        }
     }
 
     /**
      * POST /analyse/new
      * Require Auth (token)
      * Body: NewAnalyseRequest (JSON)
+     * Responds: NewAnalyseResponse (JSON)
      */
     public void newAnalyse(NewAnalyseRequest req, RequestContext ctx) {
-        Identifier userId = ctx.loginInfo().get().getAccount().id();
+        Identifier userId = account(ctx).id();
         GCAnalyseImpl analyse = new GCAnalyseImpl();
         analyse.name(req.name);
         analyse.isContinuous(req.isContinuous);

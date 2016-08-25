@@ -76,6 +76,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("jvm_md_phys_free", memoryMap(analyse, v -> v.getValue().physicalFree()))
                 .value("jvm_md_swap_total", memoryMap(analyse, v -> v.getValue().swapTotal()))
                 .value("jvm_md_swap_free", memoryMap(analyse, v -> v.getValue().swapFree()))
+                .value("ext", analyse.ext())
                 .setConsistencyLevel(ConsistencyLevel.QUORUM);
         connector.session().execute(insert);
         return newId.toString();

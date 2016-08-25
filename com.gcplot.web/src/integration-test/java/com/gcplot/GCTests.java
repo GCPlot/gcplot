@@ -34,6 +34,9 @@ public class GCTests extends IntegrationTest {
         Assert.assertNotNull(analyseId[0]);
 
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
+        JsonObject analyseJson = get("/analyse/get?id=" + analyseId[0], token, a -> true);
+        Assert.assertNotNull(analyseJson);
+        
     }
 
 }

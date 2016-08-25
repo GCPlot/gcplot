@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -62,10 +61,10 @@ public class LoginController extends Controller {
      * Require Auth (token)
      * No params
      *
-     * @param request
+     * @param ctx
      */
-    public void userInfo(RequestContext request) {
-        request.response(LoginResult.from(request.loginInfo().get().getAccount()));
+    public void userInfo(RequestContext ctx) {
+        ctx.response(LoginResult.from(account(ctx)));
     }
 
     /**
@@ -102,14 +101,14 @@ public class LoginController extends Controller {
      * Params:
      *   - salt (String)
      *
-     * @param context
+     * @param ctx
      */
-    public void confirm(RequestContext context) {
-        if (getAccountRepository().confirm(context.loginInfo().get().token(), context.param("salt"))) {
-            context.response(SUCCESS);
+    public void confirm(RequestContext ctx) {
+        if (getAccountRepository().confirm(token(ctx), ctx.param("salt"))) {
+            ctx.response(SUCCESS);
         } else {
-            context.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
-                    String.format("Can't confirm user [username=%s]", context.loginInfo().get().getAccount().username())));
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
+                    String.format("Can't confirm user [username=%s]", account(ctx).username())));
         }
     }
 
@@ -124,11 +123,11 @@ public class LoginController extends Controller {
         if (req.oldPassword.equals(req.newPassword)) {
             c.write(ErrorMessages.buildJson(ErrorMessages.SAME_PASSWORD));
         } else {
-            if (accountRepository.changePassword(c.loginInfo().get().getAccount(), hashPass(req.newPassword))) {
+            if (accountRepository.changePassword(account(c), hashPass(req.newPassword))) {
                 c.response(SUCCESS);
             } else {
                 c.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
-                        String.format("Can't change password to user [username=%s]", c.loginInfo().get().getAccount().username())));
+                        String.format("Can't change password to user [username=%s]", account(c).username())));
             }
         }
     }

@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Metrics;
 import com.gcplot.configuration.ConfigurationManager;
+import com.gcplot.model.account.Account;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.RequestContext;
 import org.slf4j.Logger;
@@ -52,5 +53,13 @@ public abstract class Controller {
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
         }
+    }
+
+    protected String token(RequestContext context) {
+        return context.loginInfo().get().token();
+    }
+
+    protected Account account(RequestContext ctx) {
+        return ctx.loginInfo().get().getAccount();
     }
 }

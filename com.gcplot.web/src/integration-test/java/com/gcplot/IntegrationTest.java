@@ -156,60 +156,65 @@ public abstract class IntegrationTest {
     public void intercept() {
     }
 
-    protected void get(String path, String token, long expectedError) throws Exception {
-        get(withToken(path, token), expectedError);
+    protected JsonObject get(String path, String token, long expectedError) throws Exception {
+        return get(withToken(path, token), expectedError);
     }
 
-    protected void get(String path, long expectedError) throws Exception {
-        get(path, a -> true, expectedError);
+    protected JsonObject get(String path, long expectedError) throws Exception {
+        return get(path, a -> true, expectedError);
     }
 
-    protected void get(String path, String token, Predicate<JsonObject> test) throws Exception {
-        get(withToken(path, token), test);
+    protected JsonObject get(String path, String token, Predicate<JsonObject> test) throws Exception {
+        return get(withToken(path, token), test);
     }
 
-    protected void get(String path, Predicate<JsonObject> test) throws Exception {
-        get(path, test, -1);
+    protected JsonObject get(String path, Predicate<JsonObject> test) throws Exception {
+        return get(path, test, -1);
     }
 
-    protected void get(String path, Predicate<JsonObject> test, long expectedError) throws Exception {
+    protected JsonObject get(String path, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
+        final JsonObject[] jo = new JsonObject[1];
+        LOG.info("GET {}", path);
         if (path.startsWith("http")) {
-            client.getAbs(path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
+            client.getAbs(path, r -> r.bodyHandler(b -> handleResponse(jo, test, expectedError, l, b))).end();
         } else {
-            client.get(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end();
+            client.get(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(jo, test, expectedError, l, b))).end();
         }
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        return jo[0];
     }
 
-    protected void post(String path, String message, String token, long expectedError) throws Exception {
-        post(withToken(path, token), message, expectedError);
+    protected JsonObject post(String path, String message, String token, long expectedError) throws Exception {
+        return post(withToken(path, token), message, expectedError);
     }
 
-    protected void post(String path, Object message, String token, long expectedError) throws Exception {
-        post(withToken(path, token), message, expectedError);
+    protected JsonObject post(String path, Object message, String token, long expectedError) throws Exception {
+        return post(withToken(path, token), message, expectedError);
     }
 
-    protected void post(String path, Object message, String token, Predicate<JsonObject> test) throws Exception {
-        post(withToken(path, token), message, test);
+    protected JsonObject post(String path, Object message, String token, Predicate<JsonObject> test) throws Exception {
+        return post(withToken(path, token), message, test);
     }
 
-    protected void post(String path, String message, long expectedError) throws Exception {
-        post(path, message, a -> true, expectedError);
+    protected JsonObject post(String path, String message, long expectedError) throws Exception {
+        return post(path, message, a -> true, expectedError);
     }
 
-    protected void post(String path, Object message, long expectedError) throws Exception {
-        post(path, JsonSerializer.serialize(message), a -> true, expectedError);
+    protected JsonObject post(String path, Object message, long expectedError) throws Exception {
+        return post(path, JsonSerializer.serialize(message), a -> true, expectedError);
     }
 
-    protected void post(String path, Object message, Predicate<JsonObject> test) throws Exception {
-        post(path, JsonSerializer.serialize(message), test, -1);
+    protected JsonObject post(String path, Object message, Predicate<JsonObject> test) throws Exception {
+        return post(path, JsonSerializer.serialize(message), test, -1);
     }
 
-    protected void post(String path, String message, Predicate<JsonObject> test, long expectedError) throws Exception {
+    protected JsonObject post(String path, String message, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
-        client.post(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(test, expectedError, l, b))).end(message);
+        final JsonObject[] jo = new JsonObject[1];
+        client.post(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(jo, test, expectedError, l, b))).end(message);
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        return jo[0];
     }
 
     protected JsonObject login(RegisterRequest request) throws Exception {
@@ -221,8 +226,9 @@ public abstract class IntegrationTest {
         return new JsonObject(sb.toString()).getJsonObject("result");
     }
 
-    protected void handleResponse(Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
+    protected void handleResponse(JsonObject[] jr, Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
         JsonObject jo = new JsonObject(new String(b.getBytes()));
+        jr[0] = jo;
         LOG.info("Response: {}", jo);
         if (jo.containsKey("error") && expectedError == -1) {
             LOG.error("ERROR: [code={}, message={}];", jo.getLong("error"), jo.getString("message"));
@@ -249,7 +255,7 @@ public abstract class IntegrationTest {
     }
 
     private String withToken(String path, String token) {
-        return path.contains("?") ? path + "&token" + token : path + "?token=" + token;
+        return path.contains("?") ? path + "&token=" + token : path + "?token=" + token;
     }
 
     protected HttpClient client;

@@ -17,6 +17,7 @@ public class ErrorMessages {
     public static final long USER_IS_BLOCKED = 0x128;
     public static final long NOT_FOUND = 0x194;
     public static final long SAME_PASSWORD = 0x195;
+    public static final long RESOURCE_NOT_FOUND_RESPONSE = 0x197;
 
     public static String buildJson(long code) {
         ObjectNode node = new ObjectNode(JSON_NODE_FACTORY);
@@ -44,6 +45,7 @@ public class ErrorMessages {
         errorMessages.put(USER_IS_BLOCKED, "User is blocked.");
         errorMessages.put(NOT_FOUND, "The requested path wasn't found.");
         errorMessages.put(SAME_PASSWORD, "Old and new passwords should be different.");
+        errorMessages.put(RESOURCE_NOT_FOUND_RESPONSE, "Requested resource was not found in the system.");
     }
 
     private static final JsonNodeFactory JSON_NODE_FACTORY = JsonNodeFactory.instance;
