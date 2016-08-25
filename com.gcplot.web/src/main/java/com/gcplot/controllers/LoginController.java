@@ -1,6 +1,5 @@
 package com.gcplot.controllers;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
