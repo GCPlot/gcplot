@@ -1,5 +1,6 @@
 package com.gcplot;
 
+import com.gcplot.commons.ErrorMessages;
 import com.gcplot.messages.NewAnalyseRequest;
 import com.gcplot.messages.RegisterRequest;
 import com.gcplot.model.VMVersion;
@@ -9,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.UUID;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -36,7 +38,12 @@ public class GCTests extends IntegrationTest {
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
         JsonObject analyseJson = get("/analyse/get?id=" + analyseId[0], token, a -> true);
         Assert.assertNotNull(analyseJson);
-        
+        Assert.assertEquals(analyseId[0], r(analyseJson).getString("id"));
+        Assert.assertEquals("analyse1", r(analyseJson).getString("name"));
+        Assert.assertEquals(false, r(analyseJson).getBoolean("cnts"));
+
+        get("/analyse/get?id=123", token, ErrorMessages.INTERNAL_ERROR);
+        get("/analyse/get?id=" + UUID.randomUUID().toString(), token, ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE);
     }
 
 }

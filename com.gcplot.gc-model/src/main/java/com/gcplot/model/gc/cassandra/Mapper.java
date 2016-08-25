@@ -29,7 +29,9 @@ public abstract class Mapper {
     }
 
     public static GCAnalyse analyseFrom(Row row) {
-        Preconditions.checkNotNull(row);
+        if (row == null) {
+            return null;
+        }
         GCAnalyseImpl gcAnalyse = new GCAnalyseImpl();
         gcAnalyse.id(row.getUUID("id").toString())
                 .accountId(Identifier.fromStr(row.getString("account_id")))
@@ -69,7 +71,9 @@ public abstract class Mapper {
     }
 
     public static GCEvent eventFrom(Row row) {
-        Preconditions.checkNotNull(row);
+        if (row == null) {
+            return null;
+        }
         GCEventImpl gcEvent = new GCEventImpl();
         gcEvent.id(op(row, "id", r -> r.getUUID("id").toString()))
                 .parentEvent(sop(row, "parent_id", r -> r.getUUID("parent_id")))
@@ -98,7 +102,9 @@ public abstract class Mapper {
     }
 
     public static ObjectsAges objectsAgeFrom(Row r) {
-        Preconditions.checkNotNull(r);
+        if (r == null) {
+            return null;
+        }
         ObjectsAgesImpl objectsAge = new ObjectsAgesImpl();
         objectsAge.analyseId(sop(r, "analyse_id", d -> d.getUUID("analyse_id")))
                 .ext(op(r, "ext", d -> d.getString("ext")))
