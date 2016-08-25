@@ -156,6 +156,27 @@ public abstract class IntegrationTest {
     public void intercept() {
     }
 
+    protected JsonObject delete(String path, String token) throws Exception {
+        return delete(withToken(path, token), -1);
+    }
+
+    protected JsonObject delete(String path, String token, long expectedError) throws Exception {
+        return delete(withToken(path, token), expectedError);
+    }
+
+    protected JsonObject delete(String path, long expectedError) throws Exception {
+        final CountDownLatch l = new CountDownLatch(1);
+        final JsonObject[] jo = new JsonObject[1];
+        LOG.info("DELETE {}", path);
+        if (path.startsWith("http")) {
+            client.deleteAbs(path, r -> r.bodyHandler(b -> handleResponse(jo, a -> true, expectedError, l, b))).end();
+        } else {
+            client.delete(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(jo, a -> true, expectedError, l, b))).end();
+        }
+        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        return jo[0];
+    }
+
     protected JsonObject get(String path, String token, long expectedError) throws Exception {
         return get(withToken(path, token), expectedError);
     }

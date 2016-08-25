@@ -44,6 +44,11 @@ public class GCTests extends IntegrationTest {
 
         get("/analyse/get?id=123", token, ErrorMessages.INTERNAL_ERROR);
         get("/analyse/get?id=" + UUID.randomUUID().toString(), token, ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE);
+
+        delete("/analyse/delete?id=" + UUID.randomUUID().toString(), token);
+        get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
+        Assert.assertEquals(1, (int) r(delete("/analyse/delete?id=" + analyseId[0], token)).getInteger("success"));
+        get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 0);
     }
 
 }

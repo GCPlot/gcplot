@@ -43,6 +43,8 @@ public class AnalyseController extends Controller {
 
         dispatcher.requireAuth().filter(c -> c.hasParam("id"), "Param 'id' of analyse is missing.")
                 .get("/analyse/get", this::analyse);
+        dispatcher.requireAuth().filter(c -> c.hasParam("id"), "Param 'id' of analyse is missing.")
+                .delete("/analyse/delete", this::deleteAnalyse);
         dispatcher.requireAuth().get("/analyse/all", this::analyses);
         dispatcher.requireAuth()
                 .filter(Restrictions.apply("/analyse/new", a ->
@@ -74,10 +76,30 @@ public class AnalyseController extends Controller {
         String id = ctx.param("id");
         Optional<GCAnalyse> oa = analyseRepository.analyse(id);
         if (oa.isPresent()) {
-            ctx.response(new AnalyseResponse(oa.get()));
+            GCAnalyse analyse = oa.get();
+            if (analyse.accountId().equals(account(ctx).id())) {
+                ctx.response(new AnalyseResponse(analyse));
+            } else {
+                ctx.write(ErrorMessages.buildJson(ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE));
+            }
         } else {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE));
         }
+    }
+
+    /**
+     * DELETE /analyse/delete
+     * Require Auth (token)
+     * Params:
+     *   - id (Identity of the analyse)
+     * Responds: SUCCESS or ERROR
+     *
+     * @param ctx
+     */
+    public void deleteAnalyse(RequestContext ctx) {
+        String id = ctx.param("id");
+        analyseRepository.removeAnalyse(account(ctx).id(), id);
+        ctx.response(SUCCESS);
     }
 
     /**

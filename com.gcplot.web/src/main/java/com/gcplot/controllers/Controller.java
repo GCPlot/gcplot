@@ -1,6 +1,7 @@
 package com.gcplot.controllers;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Metrics;
 import com.gcplot.configuration.ConfigurationManager;
@@ -16,6 +17,10 @@ import java.io.IOException;
 
 public abstract class Controller {
     protected static final Logger LOG = LoggerFactory.getLogger(Controller.class);
+    public static final Object SUCCESS = new Object() {
+        @JsonProperty("success")
+        public int success = 1;
+    };
 
     protected Dispatcher<String> dispatcher;
     public Dispatcher<String> getDispatcher() {
