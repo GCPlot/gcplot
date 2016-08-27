@@ -63,7 +63,7 @@ public class GCTests extends IntegrationTest {
         HttpPost post = new HttpPost("http://" + LOCALHOST + ":" + getPort() + "/gc/upload_log?token=" + login());
         post.setEntity(file);
         HttpResponse response = hc.execute(post);
-        System.out.println(response);
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
     private String login() throws Exception {
