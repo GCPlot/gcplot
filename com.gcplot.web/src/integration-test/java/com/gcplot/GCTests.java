@@ -58,8 +58,8 @@ public class GCTests extends IntegrationTest {
     public void simpleLogsUploadTest() throws Exception {
         HttpClient hc = HttpClientBuilder.create().build();
         HttpEntity file = MultipartEntityBuilder.create()
-                .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream("hs18_cms.log"),
-                        ContentType.TEXT_PLAIN, "hs18_cms.log").build();
+                .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream("hs18_log_cms.log"),
+                        ContentType.TEXT_PLAIN, "hs18_log_cms.log").build();
         HttpPost post = new HttpPost("http://" + LOCALHOST + ":" + getPort() + "/gc/upload_log?token=" + login());
         post.setEntity(file);
         HttpResponse response = hc.execute(post);
