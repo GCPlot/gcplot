@@ -60,6 +60,8 @@ dependencies {
     compile "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
 
     testCompile "org.springframework:spring-test:$springVersion"
+    integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
+    integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.2'
     integrationTestCompile 'com.github.kirviq:dumbster:1.7'
 }
 

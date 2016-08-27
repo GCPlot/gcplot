@@ -8,7 +8,7 @@
 
     <bean id="metrics" class="com.codahale.metrics.MetricRegistry"/>
 
-    <bean class="com.gcplot.metrics.GraphiteSender" init-method="init" destroy-method="destroy">
+    <bean id="graphiteSender" class="com.gcplot.metrics.GraphiteSender" init-method="init" destroy-method="destroy">
         <property name="host" value="${graphite.host}"/>
         <property name="port" value="${graphite.port}"/>
         <property name="registry" ref="metrics"/>

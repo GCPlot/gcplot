@@ -6,6 +6,13 @@ import com.gcplot.messages.RegisterRequest;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;
 import io.vertx.core.json.JsonObject;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,11 +27,7 @@ public class GCTests extends IntegrationTest {
 
     @Test
     public void test() throws Exception {
-        RegisterRequest request = new RegisterRequest("admin", null, null, "root", "a@b.c");
-        post("/user/register", request, jo -> jo.containsKey("result"));
-
-        JsonObject jo = login(request);
-        String token = jo.getString("token");
+        String token = login();
         NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, VMVersion.HOTSPOT_1_8.type(),
                 GarbageCollectorType.ORACLE_G1.type(), Collections.emptySet(), "");
         final String[] analyseId = { "" };
@@ -49,6 +52,26 @@ public class GCTests extends IntegrationTest {
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
         Assert.assertEquals(1, (int) r(delete("/analyse/delete?id=" + analyseId[0], token)).getInteger("success"));
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 0);
+    }
+
+    @Test
+    public void simpleLogsUploadTest() throws Exception {
+        HttpClient hc = HttpClientBuilder.create().build();
+        HttpEntity file = MultipartEntityBuilder.create()
+                .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream("hs18_cms.log"),
+                        ContentType.TEXT_PLAIN, "hs18_cms.log").build();
+        HttpPost post = new HttpPost("http://" + LOCALHOST + ":" + getPort() + "/gc/upload_log?token=" + login());
+        post.setEntity(file);
+        HttpResponse response = hc.execute(post);
+        System.out.println(response);
+    }
+
+    private String login() throws Exception {
+        RegisterRequest request = new RegisterRequest("admin", null, null, "root", "a@b.c");
+        post("/user/register", request, jo -> jo.containsKey("result"));
+
+        JsonObject jo = login(request);
+        return jo.getString("token");
     }
 
 }

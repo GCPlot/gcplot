@@ -5,6 +5,9 @@
 classes/
 classes/*
 
+file-uploads
+file-uploads/*
+
 !*log*.log
 
 # Build directory#
