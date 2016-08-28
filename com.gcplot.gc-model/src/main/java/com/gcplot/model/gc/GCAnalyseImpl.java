@@ -66,24 +66,6 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
-    public VMVersion vmVersion() {
-        return vmVersion;
-    }
-    public GCAnalyseImpl vmVersion(VMVersion vmVersion) {
-        this.vmVersion = vmVersion;
-        return this;
-    }
-
-    @Override
-    public GarbageCollectorType collectorType() {
-        return collectorType;
-    }
-    public GCAnalyseImpl collectorType(GarbageCollectorType collectorType) {
-        this.collectorType = collectorType;
-        return this;
-    }
-
-    @Override
     public Map<String, String> jvmHeaders() {
         return jvmHeaders;
     }
@@ -98,6 +80,24 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
     public GCAnalyseImpl jvmIds(Set<String> jvmIds) {
         this.jvmIds = jvmIds;
+        return this;
+    }
+
+    @Override
+    public Map<String, VMVersion> jvmVersions() {
+        return Collections.unmodifiableMap(jvmVersions);
+    }
+    public GCAnalyseImpl jvmVersions(Map<String, VMVersion> jvmVersions) {
+        this.jvmVersions = jvmVersions;
+        return this;
+    }
+
+    @Override
+    public Map<String, GarbageCollectorType> jvmGCTypes() {
+        return Collections.unmodifiableMap(jvmGCTypes);
+    }
+    public GCAnalyseImpl jvmGCTypes(Map<String, GarbageCollectorType> jvmGCTypes) {
+        this.jvmGCTypes = jvmGCTypes;
         return this;
     }
 
@@ -125,10 +125,10 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected boolean isContinuous;
     protected DateTime start;
     protected DateTime lastEvent;
-    protected VMVersion vmVersion;
-    protected GarbageCollectorType collectorType;
     protected Map<String, String> jvmHeaders = Collections.emptyMap();
     protected Set<String> jvmIds = Collections.emptySet();
+    protected Map<String, VMVersion> jvmVersions = Collections.emptyMap();
+    protected Map<String, GarbageCollectorType> jvmGCTypes = Collections.emptyMap();
     protected Map<String, MemoryDetails> jvmMemoryDetails = Collections.emptyMap();
     protected String ext;
 
@@ -144,14 +144,7 @@ public class GCAnalyseImpl implements GCAnalyse {
         if (accountId != null ? !accountId.equals(gcAnalyse.accountId) : gcAnalyse.accountId != null) return false;
         if (name != null ? !name.equals(gcAnalyse.name) : gcAnalyse.name != null) return false;
         if (start != null ? !start.equals(gcAnalyse.start) : gcAnalyse.start != null) return false;
-        if (lastEvent != null ? !lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent != null) return false;
-        if (vmVersion != gcAnalyse.vmVersion) return false;
-        if (collectorType != gcAnalyse.collectorType) return false;
-        if (jvmHeaders != null ? !jvmHeaders.equals(gcAnalyse.jvmHeaders) : gcAnalyse.jvmHeaders != null) return false;
-        if (jvmIds != null ? !jvmIds.equals(gcAnalyse.jvmIds) : gcAnalyse.jvmIds != null) return false;
-        if (jvmMemoryDetails != null ? !jvmMemoryDetails.equals(gcAnalyse.jvmMemoryDetails) : gcAnalyse.jvmMemoryDetails != null)
-            return false;
-        return ext != null ? ext.equals(gcAnalyse.ext) : gcAnalyse.ext == null;
+        return lastEvent != null ? lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent == null;
 
     }
 
@@ -163,12 +156,6 @@ public class GCAnalyseImpl implements GCAnalyse {
         result = 31 * result + (isContinuous ? 1 : 0);
         result = 31 * result + (start != null ? start.hashCode() : 0);
         result = 31 * result + (lastEvent != null ? lastEvent.hashCode() : 0);
-        result = 31 * result + (vmVersion != null ? vmVersion.hashCode() : 0);
-        result = 31 * result + (collectorType != null ? collectorType.hashCode() : 0);
-        result = 31 * result + (jvmHeaders != null ? jvmHeaders.hashCode() : 0);
-        result = 31 * result + (jvmIds != null ? jvmIds.hashCode() : 0);
-        result = 31 * result + (jvmMemoryDetails != null ? jvmMemoryDetails.hashCode() : 0);
-        result = 31 * result + (ext != null ? ext.hashCode() : 0);
         return result;
     }
 
@@ -181,10 +168,10 @@ public class GCAnalyseImpl implements GCAnalyse {
                 .add("isContinuous", isContinuous)
                 .add("start", start)
                 .add("lastEvent", lastEvent)
-                .add("vmVersion", vmVersion)
-                .add("collectorType", collectorType)
                 .add("jvmHeaders", jvmHeaders)
                 .add("jvmIds", jvmIds)
+                .add("jvmVersions", jvmVersions)
+                .add("jvmGCTypes", jvmGCTypes)
                 .add("jvmMemoryDetails", jvmMemoryDetails)
                 .add("ext", ext)
                 .toString();

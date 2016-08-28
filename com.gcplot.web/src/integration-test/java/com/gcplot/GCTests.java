@@ -3,8 +3,6 @@ package com.gcplot;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.messages.NewAnalyseRequest;
 import com.gcplot.messages.RegisterRequest;
-import com.gcplot.model.VMVersion;
-import com.gcplot.model.gc.GarbageCollectorType;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -16,7 +14,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -28,8 +25,7 @@ public class GCTests extends IntegrationTest {
     @Test
     public void test() throws Exception {
         String token = login();
-        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, VMVersion.HOTSPOT_1_8.type(),
-                GarbageCollectorType.ORACLE_G1.type(), Collections.emptySet(), "");
+        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "");
         final String[] analyseId = { "" };
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 0);
         post("/analyse/new", nar, token, j -> {

@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import gnu.trove.impl.unmodifiable.TUnmodifiableLongList;
 import gnu.trove.list.TLongList;
 
-import static com.gcplot.commons.TroveUtils.emptyLongList;
+import static com.gcplot.commons.CollectionUtils.emptyLongList;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

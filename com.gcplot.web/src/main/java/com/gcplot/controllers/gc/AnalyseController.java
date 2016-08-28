@@ -23,6 +23,7 @@ import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -113,14 +114,13 @@ public class AnalyseController extends Controller {
         GCAnalyseImpl analyse = new GCAnalyseImpl();
         analyse.name(req.name);
         analyse.isContinuous(req.isContinuous);
-        analyse.vmVersion(VMVersion.get(req.vmVersion));
-        analyse.collectorType(GarbageCollectorType.get(req.gcCollectorType));
         analyse.accountId(userId);
+        analyse.jvmGCTypes(Collections.emptyMap());
+        analyse.jvmVersions(Collections.emptyMap());
         analyse.start(DateTime.now(DateTimeZone.UTC));
-        analyse.jvmIds(req.jvmIds);
         analyse.ext(req.ext);
-        analyse.jvmHeaders(new HashMap<>());
-        analyse.jvmMemoryDetails(new HashMap<>());
+        analyse.jvmHeaders(Collections.emptyMap());
+        analyse.jvmMemoryDetails(Collections.emptyMap());
 
         ctx.response(new NewAnalyseResponse(analyseRepository.newAnalyse(analyse)));
         newAnalyses.invalidate(userId);

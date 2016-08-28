@@ -13,11 +13,15 @@ import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TIntHashSet;
 import gnu.trove.set.hash.TLongHashSet;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         7/31/16
  */
-public abstract class TroveUtils {
+public abstract class CollectionUtils {
     private static final TIntList EMPTY_INT_LIST = new TUnmodifiableIntList(new TIntArrayList());
     private static final TIntSet EMPTY_INT_SET = new TUnmodifiableIntSet(new TIntHashSet());
     private static final TLongList EMPTY_LONG_LIST = new TUnmodifiableLongList(new TLongArrayList());
@@ -53,6 +57,11 @@ public abstract class TroveUtils {
 
     public static TLongSet copy(TLongSet set) {
         return new TLongHashSet(set);
+    }
+
+    public static <K, V1, V2> Map<K, V2> transformValue(Map<K, V1> map, Function<V1, V2> valueMapper) {
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                e -> valueMapper.apply(e.getValue())));
     }
 
 }

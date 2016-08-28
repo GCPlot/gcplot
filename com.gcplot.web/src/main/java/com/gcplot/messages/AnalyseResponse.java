@@ -1,7 +1,9 @@
 package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
 import org.joda.time.DateTimeZone;
 
@@ -9,6 +11,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.gcplot.commons.CollectionUtils.*;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -25,10 +29,12 @@ public class AnalyseResponse {
     public long startUTC;
     @JsonProperty(value = "last_utc")
     public long lastEventUTC;
-    @JsonProperty(value = "gcct")
-    public int gcCollectorType;
     @JsonProperty(value = "jvm_hdrs")
     public Map<String, String> jvmHeaders;
+    @JsonProperty(value = "jvm_vers")
+    public Map<String, Integer> jvmVersions;
+    @JsonProperty(value = "jvm_gcts")
+    public Map<String, Integer> jvmGCTypes;
     @JsonProperty(value = "jvm_ids")
     public Set<String> jvmIds;
     @JsonProperty(value = "jvm_mem")
@@ -42,12 +48,13 @@ public class AnalyseResponse {
         this.continuous = analyse.isContinuous();
         this.startUTC = analyse.start().toDateTime(DateTimeZone.UTC).getMillis();
         this.lastEventUTC = analyse.lastEvent() != null ? analyse.lastEvent().toDateTime(DateTimeZone.UTC).getMillis() : 0;
-        this.gcCollectorType = analyse.collectorType() == null ? -1 : analyse.collectorType().type();
+        this.jvmVersions = analyse.jvmVersions() != null ?
+                transformValue(analyse.jvmVersions(), VMVersion::type) : Collections.emptyMap();
+        this.jvmGCTypes = analyse.jvmVersions() != null ?
+                transformValue(analyse.jvmGCTypes(), GarbageCollectorType::type) : Collections.emptyMap();
         this.jvmHeaders = analyse.jvmHeaders();
         this.jvmIds = analyse.jvmIds();
-        this.memory = analyse.jvmMemoryDetails() == null ? Collections.emptyMap() :
-                analyse.jvmMemoryDetails().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> new Memory(e.getValue())));
+        this.memory = analyse.jvmMemoryDetails() == null ? Collections.emptyMap() : transformValue(analyse.jvmMemoryDetails(), Memory::new);
         this.ext = analyse.ext();
     }
 

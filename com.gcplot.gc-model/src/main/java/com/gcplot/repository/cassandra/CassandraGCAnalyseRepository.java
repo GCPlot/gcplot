@@ -7,7 +7,9 @@ import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.gcplot.Identifier;
+import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
 import com.gcplot.repository.GCAnalyseRepository;
 import org.joda.time.DateTime;
@@ -15,9 +17,9 @@ import org.joda.time.DateTimeZone;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
+import static com.gcplot.commons.CollectionUtils.*;
 import static com.gcplot.model.gc.cassandra.Mapper.analyseFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.analysesFrom;
 
@@ -67,38 +69,38 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("start", analyse.start().toDateTime(DateTimeZone.UTC).toDate())
                 .value("last_event", analyse.lastEvent() != null ? analyse.lastEvent().toDateTime(DateTimeZone.UTC).toDate() :
                         analyse.start().toDateTime(DateTimeZone.UTC).toDate())
-                .value("gc_type", analyse.collectorType().type())
-                .value("vm_version", analyse.vmVersion().type())
+                .value("jvm_versions", analyse.jvmVersions() != null ?
+                        transformValue(analyse.jvmVersions(), VMVersion::type) : Collections.emptyMap())
+                .value("jvm_gc_types", analyse.jvmGCTypes() != null ?
+                        transformValue(analyse.jvmGCTypes(), GarbageCollectorType::type) : Collections.emptyMap())
                 .value("jvm_ids", analyse.jvmIds() != null ? analyse.jvmIds() : Collections.emptySet())
                 .value("jvm_headers", analyse.jvmHeaders() != null ? analyse.jvmHeaders() : Collections.emptyMap())
-                .value("jvm_md_page_size", memoryMap(analyse, v -> v.getValue().pageSize()))
-                .value("jvm_md_phys_total", memoryMap(analyse, v -> v.getValue().physicalTotal()))
-                .value("jvm_md_phys_free", memoryMap(analyse, v -> v.getValue().physicalFree()))
-                .value("jvm_md_swap_total", memoryMap(analyse, v -> v.getValue().swapTotal()))
-                .value("jvm_md_swap_free", memoryMap(analyse, v -> v.getValue().swapFree()))
+                .value("jvm_md_page_size", memoryMap(analyse, MemoryDetails::pageSize))
+                .value("jvm_md_phys_total", memoryMap(analyse, MemoryDetails::physicalTotal))
+                .value("jvm_md_phys_free", memoryMap(analyse, MemoryDetails::physicalFree))
+                .value("jvm_md_swap_total", memoryMap(analyse, MemoryDetails::swapTotal))
+                .value("jvm_md_swap_free", memoryMap(analyse, MemoryDetails::swapFree))
                 .value("ext", analyse.ext())
-                .setConsistencyLevel(ConsistencyLevel.QUORUM);
+                .setConsistencyLevel(ConsistencyLevel.ALL);
         connector.session().execute(insert);
         return newId.toString();
     }
 
-    private Object memoryMap(GCAnalyse analyse, Function<? super Map.Entry<String, MemoryDetails>, ? extends Long> valueMapper) {
-        return analyse.jvmMemoryDetails() != null ? analyse.jvmMemoryDetails().entrySet()
-                .stream().collect(Collectors.toMap(Map.Entry::getKey, valueMapper)) :
-                Collections.emptyMap();
-    }
-
     @Override
-    public void analyseJvm(Identifier accId, String id, String jvmId, String headers, MemoryDetails memoryDetails) {
+    public void analyseJvm(Identifier accId, String id, String jvmId,
+                           VMVersion version, GarbageCollectorType type,
+                           String headers, MemoryDetails memoryDetails) {
         UUID uuid = UUID.fromString(id);
         connector.session().execute(QueryBuilder.batch(updateTable(accId, uuid).with(add("jvm_ids", jvmId)),
                 updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)),
+                updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())),
+                updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())),
                 updateTable(accId, uuid).with(put("jvm_md_page_size", jvmId, memoryDetails.pageSize())),
                 updateTable(accId, uuid).with(put("jvm_md_phys_total", jvmId, memoryDetails.physicalTotal())),
                 updateTable(accId, uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())),
                 updateTable(accId, uuid).with(put("jvm_md_swap_total", jvmId, memoryDetails.swapTotal())),
                 updateTable(accId, uuid).with(put("jvm_md_swap_free", jvmId, memoryDetails.swapFree())))
-                .setConsistencyLevel(ConsistencyLevel.QUORUM));
+                .setConsistencyLevel(ConsistencyLevel.ALL));
     }
 
     @Override
@@ -117,5 +119,9 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
 
     protected Update.Where updateTable(Identifier accId, UUID uuid) {
         return QueryBuilder.update(TABLE_NAME).where(eq("id", uuid)).and(eq("account_id", accId.toString()));
+    }
+
+    private Object memoryMap(GCAnalyse analyse, Function<? super MemoryDetails, ? extends Long> valueMapper) {
+        return analyse.jvmMemoryDetails() != null ? transformValue(analyse.jvmMemoryDetails(), valueMapper::apply) : Collections.emptyMap();
     }
 }

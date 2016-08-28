@@ -6,7 +6,6 @@ import com.gcplot.Identifier;
 import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
-import com.google.common.base.Preconditions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -17,6 +16,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
+import java.util.stream.Collectors;
+
+import static com.gcplot.commons.CollectionUtils.*;
 
 public abstract class Mapper {
 
@@ -39,8 +41,8 @@ public abstract class Mapper {
                 .isContinuous(row.getBool("is_continuous"))
                 .start(new DateTime(row.getTimestamp("start"), DateTimeZone.UTC))
                 .lastEvent(new DateTime(row.getTimestamp("last_event"), DateTimeZone.UTC))
-                .vmVersion(VMVersion.get(row.getInt("vm_version")))
-                .collectorType(GarbageCollectorType.get(row.getInt("gc_type")))
+                .jvmVersions(transformValue(row.getMap("jvm_versions", String.class, Integer.class), VMVersion::get))
+                .jvmGCTypes(transformValue(row.getMap("jvm_gc_types", String.class, Integer.class), GarbageCollectorType::get))
                 .jvmIds(row.getSet("jvm_ids", String.class))
                 .jvmHeaders(row.getMap("jvm_headers", String.class, String.class))
                 .ext(op(row, "ext", r -> r.getString("ext")));

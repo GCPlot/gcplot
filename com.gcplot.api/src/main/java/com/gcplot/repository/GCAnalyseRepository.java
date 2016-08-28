@@ -1,7 +1,9 @@
 package com.gcplot.repository;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
 import org.joda.time.DateTime;
 
@@ -27,7 +29,9 @@ public interface GCAnalyseRepository {
      */
     String newAnalyse(GCAnalyse analyse);
 
-    void analyseJvm(Identifier accountId, String id, String jvmId, String headers, MemoryDetails memoryDetails);
+    void analyseJvm(Identifier accountId, String id,
+                    String jvmId, VMVersion version, GarbageCollectorType type,
+                    String headers, MemoryDetails memoryDetails);
 
     void removeAnalyse(Identifier accountId, String id);
 

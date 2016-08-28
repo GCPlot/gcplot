@@ -21,13 +21,13 @@ public interface GCAnalyse {
 
     DateTime lastEvent();
 
-    VMVersion vmVersion();
-
-    GarbageCollectorType collectorType();
-
     Map<String, String> jvmHeaders();
 
     Set<String> jvmIds();
+
+    Map<String, VMVersion> jvmVersions();
+
+    Map<String, GarbageCollectorType> jvmGCTypes();
 
     Map<String, MemoryDetails> jvmMemoryDetails();
 
