@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
-import java.util.stream.Collectors;
 
 import static com.gcplot.commons.CollectionUtils.*;
 

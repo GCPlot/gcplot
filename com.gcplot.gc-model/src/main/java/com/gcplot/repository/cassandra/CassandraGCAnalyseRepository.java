@@ -4,6 +4,7 @@ import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.gcplot.Identifier;
@@ -87,10 +88,10 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
-    public void analyseJvm(Identifier accId, String id, String jvmId,
-                           VMVersion version, GarbageCollectorType type,
-                           String headers, MemoryDetails memoryDetails) {
-        UUID uuid = UUID.fromString(id);
+    public void addJvm(Identifier accId, String analyseId, String jvmId,
+                       VMVersion version, GarbageCollectorType type,
+                       String headers, MemoryDetails memoryDetails) {
+        UUID uuid = UUID.fromString(analyseId);
         connector.session().execute(QueryBuilder.batch(updateTable(accId, uuid).with(add("jvm_ids", jvmId)),
                 updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)),
                 updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())),
@@ -104,14 +105,29 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
-    public void removeAnalyse(Identifier accId, String id) {
-        connector.session().execute(QueryBuilder.delete().all().from(TABLE_NAME)
-                .where(eq("id", UUID.fromString(id))).and(eq("account_id", accId.toString())));
+    public void removeJvm(Identifier accId, String analyseId, String jvmId) {
+        UUID uuid = UUID.fromString(analyseId);
+        connector.session().execute(QueryBuilder.batch(delete(accId, uuid, "jvm_ids", jvmId),
+                delete(accId, uuid, "jvm_headers", jvmId),
+                delete(accId, uuid, "jvm_versions", jvmId),
+                delete(accId, uuid, "jvm_gc_types", jvmId),
+                delete(accId, uuid, "jvm_md_page_size", jvmId),
+                delete(accId, uuid, "jvm_md_phys_total", jvmId),
+                delete(accId, uuid, "jvm_md_phys_free", jvmId),
+                delete(accId, uuid, "jvm_md_swap_total", jvmId),
+                delete(accId, uuid, "jvm_md_swap_free", jvmId))
+                .setConsistencyLevel(ConsistencyLevel.ALL));
     }
 
     @Override
-    public void updateLastEvent(Identifier accId, String id, DateTime lastEvent) {
-        Statement s = QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(id)))
+    public void removeAnalyse(Identifier accId, String analyseId) {
+        connector.session().execute(QueryBuilder.delete().all().from(TABLE_NAME)
+                .where(eq("id", UUID.fromString(analyseId))).and(eq("account_id", accId.toString())));
+    }
+
+    @Override
+    public void updateLastEvent(Identifier accId, String analyseId, DateTime lastEvent) {
+        Statement s = QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(analyseId)))
                 .and(eq("account_id", accId.toString()))
                 .with(set("last_event", lastEvent.toDateTime(DateTimeZone.UTC).toDate()));
         connector.session().execute(s);
@@ -119,6 +135,10 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
 
     protected Update.Where updateTable(Identifier accId, UUID uuid) {
         return QueryBuilder.update(TABLE_NAME).where(eq("id", uuid)).and(eq("account_id", accId.toString()));
+    }
+
+    protected Delete.Where delete(Identifier accId, UUID uuid, String column, Object key) {
+        return QueryBuilder.delete().mapElt(column, key).from(TABLE_NAME).where(eq("id", uuid)).and(eq("account_id", accId.toString()));
     }
 
     private Object memoryMap(GCAnalyse analyse, Function<? super MemoryDetails, ? extends Long> valueMapper) {

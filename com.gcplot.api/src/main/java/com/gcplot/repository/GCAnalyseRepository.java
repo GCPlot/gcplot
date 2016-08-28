@@ -29,12 +29,14 @@ public interface GCAnalyseRepository {
      */
     String newAnalyse(GCAnalyse analyse);
 
-    void analyseJvm(Identifier accountId, String id,
-                    String jvmId, VMVersion version, GarbageCollectorType type,
-                    String headers, MemoryDetails memoryDetails);
+    void addJvm(Identifier accountId, String analyseId,
+                String jvmId, VMVersion version, GarbageCollectorType type,
+                String headers, MemoryDetails memoryDetails);
 
-    void removeAnalyse(Identifier accountId, String id);
+    void removeJvm(Identifier accountId, String analyseId, String jvmId);
 
-    void updateLastEvent(Identifier accountId, String id, DateTime lastEvent);
+    void removeAnalyse(Identifier accountId, String analyseId);
+
+    void updateLastEvent(Identifier accountId, String analyseId, DateTime lastEvent);
 
 }

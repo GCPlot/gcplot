@@ -60,7 +60,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(rawAnalyse.lastEvent(), newLastTime);
 
         MemoryDetails newMd = md(918, 3 * 1024, 2 * 1024, 17 * 1024, 9 * 1024);
-        r.analyseJvm(rawAnalyse.accountId(), rawAnalyse.id(), "jvm3", VMVersion.HOTSPOT_1_8,
+        r.addJvm(rawAnalyse.accountId(), rawAnalyse.id(), "jvm3", VMVersion.HOTSPOT_1_8,
                 GarbageCollectorType.ORACLE_G1, "header4,header10", newMd);
 
         rawAnalyse = r.analyse(rawAnalyse.id()).get();
@@ -70,6 +70,15 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(rawAnalyse.jvmVersions().get("jvm3"), VMVersion.HOTSPOT_1_8);
         Assert.assertEquals(rawAnalyse.jvmGCTypes().get("jvm3"), GarbageCollectorType.ORACLE_G1);
         Assert.assertTrue(rawAnalyse.jvmIds().contains("jvm3"));
+
+        r.removeJvm(rawAnalyse.accountId(), rawAnalyse.id(), "jvm2");
+
+        rawAnalyse = r.analyse(rawAnalyse.id()).get();
+        Assert.assertEquals(2, rawAnalyse.jvmMemoryDetails().size());
+        Assert.assertNull(rawAnalyse.jvmMemoryDetails().get("jvm2"));
+        Assert.assertNull(rawAnalyse.jvmVersions().get("jvm2"));
+        Assert.assertNull(rawAnalyse.jvmGCTypes().get("jvm2"));
+        Assert.assertFalse(rawAnalyse.jvmIds().contains("jvm2"));
 
         OptionalLong count = r.analysesCount(gcAnalyse.accountId());
         Assert.assertEquals(1, count.getAsLong());
