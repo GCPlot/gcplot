@@ -26,11 +26,9 @@ task integrationTest(type: Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
-def forks = Math.max(1, (int) (Runtime.runtime.availableProcessors() / 2))
-
 integrationTest {
     minHeapSize = "512m"
-    maxParallelForks = forks
+    maxParallelForks = 1
     forkEvery = 1
 
     testLogging {
