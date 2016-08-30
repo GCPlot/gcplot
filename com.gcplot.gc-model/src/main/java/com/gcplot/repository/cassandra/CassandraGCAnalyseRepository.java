@@ -4,6 +4,7 @@ import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.querybuilder.Batch;
 import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
@@ -92,15 +93,35 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                        VMVersion version, GarbageCollectorType type,
                        String headers, MemoryDetails memoryDetails) {
         UUID uuid = UUID.fromString(analyseId);
-        connector.session().execute(QueryBuilder.batch(updateTable(accId, uuid).with(add("jvm_ids", jvmId)),
+        Batch batch = QueryBuilder.batch(updateTable(accId, uuid).with(add("jvm_ids", jvmId)),
                 updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)),
                 updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())),
-                updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())),
-                updateTable(accId, uuid).with(put("jvm_md_page_size", jvmId, memoryDetails.pageSize())),
-                updateTable(accId, uuid).with(put("jvm_md_phys_total", jvmId, memoryDetails.physicalTotal())),
-                updateTable(accId, uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())),
-                updateTable(accId, uuid).with(put("jvm_md_swap_total", jvmId, memoryDetails.swapTotal())),
-                updateTable(accId, uuid).with(put("jvm_md_swap_free", jvmId, memoryDetails.swapFree())))
+                updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())));
+        if (memoryDetails != null) {
+            insertMemoryDetails(accId, jvmId, memoryDetails, uuid, batch);
+        }
+        connector.session().execute(batch.setConsistencyLevel(ConsistencyLevel.ALL));
+    }
+
+    @Override
+    public void updateJvmInfo(Identifier accId, String analyseId,
+                              String jvmId, String headers, MemoryDetails memoryDetails) {
+        UUID uuid = UUID.fromString(analyseId);
+        Batch batch = QueryBuilder.batch(
+                updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)));
+        if (memoryDetails != null) {
+            insertMemoryDetails(accId, jvmId, memoryDetails, uuid, batch);
+        }
+        connector.session().execute(batch.setConsistencyLevel(ConsistencyLevel.ALL));
+    }
+
+    @Override
+    public void updateJvmVersion(Identifier accId, String analyseId, String jvmId,
+                                 VMVersion version, GarbageCollectorType type) {
+        UUID uuid = UUID.fromString(analyseId);
+        connector.session().execute(QueryBuilder.batch(
+                updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())),
+                updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())))
                 .setConsistencyLevel(ConsistencyLevel.ALL));
     }
 
@@ -131,6 +152,14 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .and(eq("account_id", accId.toString()))
                 .with(set("last_event", lastEvent.toDateTime(DateTimeZone.UTC).toDate()));
         connector.session().execute(s);
+    }
+
+    protected void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, Batch batch) {
+        batch.add(updateTable(accId, uuid).with(put("jvm_md_page_size", jvmId, memoryDetails.pageSize())));
+        batch.add(updateTable(accId, uuid).with(put("jvm_md_phys_total", jvmId, memoryDetails.physicalTotal())));
+        batch.add(updateTable(accId, uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())));
+        batch.add(updateTable(accId, uuid).with(put("jvm_md_swap_total", jvmId, memoryDetails.swapTotal())));
+        batch.add(updateTable(accId, uuid).with(put("jvm_md_swap_free", jvmId, memoryDetails.swapFree())));
     }
 
     protected Update.Where updateTable(Identifier accId, UUID uuid) {

@@ -4,15 +4,9 @@ import com.gcplot.Identifier;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.controllers.Controller;
-import com.gcplot.messages.AnalyseResponse;
-import com.gcplot.messages.AnalysesResponse;
-import com.gcplot.messages.NewAnalyseRequest;
-import com.gcplot.messages.NewAnalyseResponse;
+import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
-import com.gcplot.model.account.Account;
-import com.gcplot.model.gc.GCAnalyse;
-import com.gcplot.model.gc.GCAnalyseImpl;
-import com.gcplot.model.gc.GarbageCollectorType;
+import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.roles.Restrictions;
 import com.gcplot.web.RequestContext;
@@ -24,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -47,6 +40,11 @@ public class AnalyseController extends Controller {
         dispatcher.requireAuth().filter(c -> c.hasParam("id"), "Param 'id' of analyse is missing.")
                 .delete("/analyse/delete", this::deleteAnalyse);
         dispatcher.requireAuth().get("/analyse/all", this::analyses);
+        dispatcher.requireAuth().post("/analyse/jvm/add", AddJvmRequest.class, this::addJvm);
+        dispatcher.requireAuth()
+                .filter(c -> c.hasParam("analyse_id"), "Param 'analyse_id' is missing.")
+                .filter(c -> c.hasParam("jvm_id"), "Param 'jvm_id' is missing.")
+                .delete("/analyse/jvm/delete", this::deleteJvm);
         dispatcher.requireAuth()
                 .filter(Restrictions.apply("/analyse/new", a ->
                         newAnalyses.get(a.id(), k -> analyseRepository.analysesCount(k).orElse(0))),
@@ -89,13 +87,46 @@ public class AnalyseController extends Controller {
     }
 
     /**
+     * POST /analyse/jvm/add
+     * Require Auth (token)
+     * Body: AddJvmRequest (JSON)
+     * Responds: SUCCESS or ERROR
+     */
+    public void addJvm(AddJvmRequest req, RequestContext ctx) {
+        Identifier userId = account(ctx).id();
+        MemoryDetails md = null;
+        if (req.memoryStatus != null) {
+            md = new MemoryDetailsImpl(req.memoryStatus.pageSize,
+                    req.memoryStatus.physicalTotal, req.memoryStatus.physicalFree,
+                    req.memoryStatus.swapTotal, req.memoryStatus.swapFree);
+        }
+        analyseRepository.addJvm(userId, req.analyseId, req.jvmId, VMVersion.get(req.vmVersion),
+                GarbageCollectorType.get(req.gcType), req.headers, md);
+        ctx.response(SUCCESS);
+    }
+
+    /**
+     * DELETE /analyse/jvm/delete
+     * Require Auth (token)
+     * Params:
+     *   - analyse_id (an ID of the GCAnalyse)
+     *   - jvm_id (an ID of particular JVM inside GCAnalyse)
+     * Responds: SUCCESS or ERROR
+     */
+    public void deleteJvm(RequestContext ctx) {
+        String analyseId = ctx.param("analyse_id");
+        String jvmId = ctx.param("jvm_id");
+
+        analyseRepository.removeJvm(account(ctx).id(), analyseId, jvmId);
+        ctx.response(SUCCESS);
+    }
+
+    /**
      * DELETE /analyse/delete
      * Require Auth (token)
      * Params:
      *   - id (Identity of the analyse)
      * Responds: SUCCESS or ERROR
-     *
-     * @param ctx
      */
     public void deleteAnalyse(RequestContext ctx) {
         String id = ctx.param("id");

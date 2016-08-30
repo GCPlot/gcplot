@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
-import com.gcplot.model.gc.MemoryDetails;
 import org.joda.time.DateTimeZone;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.gcplot.commons.CollectionUtils.*;
 
@@ -19,28 +17,52 @@ import static com.gcplot.commons.CollectionUtils.*;
  *         8/22/16
  */
 public class AnalyseResponse {
-    @JsonProperty(value = "id")
+    @JsonProperty("id")
     public String id;
-    @JsonProperty(value = "name")
+    @JsonProperty("name")
     public String name;
-    @JsonProperty(value = "cnts")
+    @JsonProperty("cnts")
     public boolean continuous;
-    @JsonProperty(value = "start_utc")
+    @JsonProperty("start_utc")
     public long startUTC;
-    @JsonProperty(value = "last_utc")
+    @JsonProperty("last_utc")
     public long lastEventUTC;
-    @JsonProperty(value = "jvm_hdrs")
+    @JsonProperty("jvm_hdrs")
     public Map<String, String> jvmHeaders;
-    @JsonProperty(value = "jvm_vers")
+    @JsonProperty("jvm_vers")
     public Map<String, Integer> jvmVersions;
-    @JsonProperty(value = "jvm_gcts")
+    @JsonProperty("jvm_gcts")
     public Map<String, Integer> jvmGCTypes;
-    @JsonProperty(value = "jvm_ids")
+    @JsonProperty("jvm_ids")
     public Set<String> jvmIds;
-    @JsonProperty(value = "jvm_mem")
-    public Map<String, Memory> memory;
-    @JsonProperty(value = "ext")
+    @JsonProperty("jvm_mem")
+    public Map<String, MemoryStatus> memory;
+    @JsonProperty("ext")
     public String ext;
+
+    public AnalyseResponse(@JsonProperty("id") String id,
+                           @JsonProperty("name") String name,
+                           @JsonProperty("cnts") boolean continuous,
+                           @JsonProperty("start_utc") long startUTC,
+                           @JsonProperty("last_utc") long lastEventUTC,
+                           @JsonProperty("jvm_hdrs") Map<String, String> jvmHeaders,
+                           @JsonProperty("jvm_vers") Map<String, Integer> jvmVersions,
+                           @JsonProperty("jvm_gcts") Map<String, Integer> jvmGCTypes,
+                           @JsonProperty("jvm_ids") Set<String> jvmIds,
+                           @JsonProperty("jvm_mem") Map<String, MemoryStatus> memory,
+                           @JsonProperty("ext") String ext) {
+        this.id = id;
+        this.name = name;
+        this.continuous = continuous;
+        this.startUTC = startUTC;
+        this.lastEventUTC = lastEventUTC;
+        this.jvmHeaders = jvmHeaders;
+        this.jvmVersions = jvmVersions;
+        this.jvmGCTypes = jvmGCTypes;
+        this.jvmIds = jvmIds;
+        this.memory = memory;
+        this.ext = ext;
+    }
 
     public AnalyseResponse(GCAnalyse analyse) {
         this.id = analyse.id();
@@ -54,29 +76,8 @@ public class AnalyseResponse {
                 transformValue(analyse.jvmGCTypes(), GarbageCollectorType::type) : Collections.emptyMap();
         this.jvmHeaders = analyse.jvmHeaders();
         this.jvmIds = analyse.jvmIds();
-        this.memory = analyse.jvmMemoryDetails() == null ? Collections.emptyMap() : transformValue(analyse.jvmMemoryDetails(), Memory::new);
+        this.memory = analyse.jvmMemoryDetails() == null ? Collections.emptyMap() : transformValue(analyse.jvmMemoryDetails(), MemoryStatus::new);
         this.ext = analyse.ext();
-    }
-
-    protected static class Memory {
-        @JsonProperty(value = "ps")
-        public long pageSize;
-        @JsonProperty(value = "pt")
-        public long physicalTotal;
-        @JsonProperty(value = "pf")
-        public long physicalFree;
-        @JsonProperty(value = "st")
-        public long swapTotal;
-        @JsonProperty(value = "sf")
-        public long swapFree;
-
-        public Memory(MemoryDetails details) {
-            this.pageSize = details.pageSize();
-            this.physicalTotal = details.physicalTotal();
-            this.physicalFree = details.physicalFree();
-            this.swapTotal = details.swapTotal();
-            this.swapFree = details.swapFree();
-        }
     }
 
 }

@@ -47,6 +47,11 @@ public class MemoryDetailsImpl implements MemoryDetails {
         return this;
     }
 
+    public boolean isEmpty() {
+        return pageSize == 0 && physicalTotal == 0 && physicalFree == 0
+                && swapTotal == 0 && swapFree == 0;
+    }
+
     protected long pageSize;
     protected long physicalTotal;
     protected long physicalFree;

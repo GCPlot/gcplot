@@ -176,15 +176,17 @@ public class VertxDispatcher implements Dispatcher<String> {
 
     @Override
     public Dispatcher<String> filter(Predicate<RequestContext> filter, String message) {
-        this.filter = filter;
-        this.filterMessage = () -> message;
+        this.filter = this.filter == null ? filter : this.filter.and(filter);
+        final Supplier<String> fm = this.filterMessage;
+        this.filterMessage = () -> message + (fm != null ? " OR " + fm.get() : "");
         return this;
     }
 
     @Override
     public Dispatcher<String> filter(Predicate<RequestContext> filter, String message, Object... params) {
-        this.filter = filter;
-        this.filterMessage = () -> String.format(message, params);
+        this.filter = this.filter == null ? filter : this.filter.and(filter);
+        final Supplier<String> fm = this.filterMessage;
+        this.filterMessage = () -> String.format(message, params) + (fm != null ? " OR " + fm.get() : "");
         return this;
     }
 
@@ -234,6 +236,7 @@ public class VertxDispatcher implements Dispatcher<String> {
             final boolean auth = requireAuth;
             final boolean confirmation = requireConfirmed;
             final Predicate<RequestContext> filter = this.filter;
+            final Supplier<String> fm = this.filterMessage;
             final Handler<RoutingContext> r = rc -> {
                 VertxRequestContext c = contexts.get().reset(rc);
                 try {
@@ -250,7 +253,7 @@ public class VertxDispatcher implements Dispatcher<String> {
                                 handler.accept(rc, c);
                             } else if (!rc.response().ended()) {
                                 c.finish(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
-                                        Strings.nullToEmpty(filterMessage.get())));
+                                        Strings.nullToEmpty(fm != null ? fm.get() : "")));
                             }
                         }
                     }

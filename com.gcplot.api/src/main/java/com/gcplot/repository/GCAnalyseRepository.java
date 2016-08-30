@@ -33,6 +33,12 @@ public interface GCAnalyseRepository {
                 String jvmId, VMVersion version, GarbageCollectorType type,
                 String headers, MemoryDetails memoryDetails);
 
+    void updateJvmInfo(Identifier accountId, String analyseId,
+                       String jvmId, String headers, MemoryDetails memoryDetails);
+
+    void updateJvmVersion(Identifier accountId, String analyseId,
+                          String jvmId, VMVersion version, GarbageCollectorType type);
+
     void removeJvm(Identifier accountId, String analyseId, String jvmId);
 
     void removeAnalyse(Identifier accountId, String analyseId);

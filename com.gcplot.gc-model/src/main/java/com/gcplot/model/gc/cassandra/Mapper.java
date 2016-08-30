@@ -58,7 +58,9 @@ public abstract class Mapper {
             details.physicalFree(jvmPhysFree.getOrDefault(jvm, 0L));
             details.swapTotal(jvmSwapTotal.getOrDefault(jvm, 0L));
             details.swapFree(jvmSwapFree.getOrDefault(jvm, 0L));
-            memoryDetails.put(jvm, details);
+            if (!details.isEmpty()) {
+                memoryDetails.put(jvm, details);
+            }
         }
         return gcAnalyse.jvmMemoryDetails(memoryDetails);
     }
