@@ -31,18 +31,14 @@ public class GCTests extends IntegrationTest {
     public void testAnalyseController() throws Exception {
         String token = login();
         NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "");
-        final String[] analyseId = { "" };
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 0);
-        post("/analyse/new", nar, token, j -> {
-            analyseId[0] = r(j).getString("id");
-            return r(j).getString("id") != null;
-        });
-        Assert.assertNotNull(analyseId[0]);
+        String analyseId = r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");
+        Assert.assertNotNull(analyseId);
 
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
-        JsonObject analyseJson = get("/analyse/get?id=" + analyseId[0], token, a -> true);
+        JsonObject analyseJson = get("/analyse/get?id=" + analyseId, token, a -> true);
         Assert.assertNotNull(analyseJson);
-        Assert.assertEquals(analyseId[0], r(analyseJson).getString("id"));
+        Assert.assertEquals(analyseId, r(analyseJson).getString("id"));
         Assert.assertEquals("analyse1", r(analyseJson).getString("name"));
         Assert.assertEquals(false, r(analyseJson).getBoolean("cnts"));
         Assert.assertTrue(r(analyseJson).getJsonArray("jvm_ids").isEmpty());
@@ -54,15 +50,15 @@ public class GCTests extends IntegrationTest {
         get("/analyse/get?id=123", token, ErrorMessages.INTERNAL_ERROR);
         get("/analyse/get?id=" + UUID.randomUUID().toString(), token, ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE);
 
-        post("/analyse/jvm/add", new AddJvmRequest("jvm1", analyseId[0], VMVersion.HOTSPOT_1_9.type(),
+        post("/analyse/jvm/add", new AddJvmRequest("jvm1", analyseId, VMVersion.HOTSPOT_1_9.type(),
                 GarbageCollectorType.ORACLE_SERIAL.type(), "h1,h2", null), token, success());
-        post("/analyse/jvm/add", new AddJvmRequest("jvm2", analyseId[0], VMVersion.HOTSPOT_1_3_1.type(),
+        post("/analyse/jvm/add", new AddJvmRequest("jvm2", analyseId, VMVersion.HOTSPOT_1_3_1.type(),
                 GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), null, new MemoryStatus(new MemoryDetailsImpl(1,2,3,4,5))),
                 token, success());
 
-        analyseJson = get("/analyse/get?id=" + analyseId[0], token, a -> true);
+        analyseJson = get("/analyse/get?id=" + analyseId, token, a -> true);
         AnalyseResponse ar = JsonSerializer.deserialize(r(analyseJson).toString(), AnalyseResponse.class);
-        Assert.assertEquals(analyseId[0], ar.id);
+        Assert.assertEquals(analyseId, ar.id);
         Assert.assertEquals(Sets.newHashSet("jvm1", "jvm2"), ar.jvmIds);
         Assert.assertEquals(VMVersion.HOTSPOT_1_9.type(), (int) ar.jvmVersions.get("jvm1"));
         Assert.assertEquals(VMVersion.HOTSPOT_1_3_1.type(), (int) ar.jvmVersions.get("jvm2"));
@@ -75,7 +71,7 @@ public class GCTests extends IntegrationTest {
 
         delete("/analyse/delete?id=" + UUID.randomUUID().toString(), token);
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
-        Assert.assertEquals(1, (int) r(delete("/analyse/delete?id=" + analyseId[0], token)).getInteger("success"));
+        Assert.assertEquals(1, (int) r(delete("/analyse/delete?id=" + analyseId, token)).getInteger("success"));
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 0);
     }
 
