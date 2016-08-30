@@ -1,7 +1,6 @@
 package com.gcplot.log_processor.parser.adapter;
 
 import com.tagtraum.perf.gcviewer.imp.DataReaderSun1_6_0;
-import com.tagtraum.perf.gcviewer.imp.DataReaderSun1_6_0G1;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
 import com.tagtraum.perf.gcviewer.model.GCModel;
 import com.tagtraum.perf.gcviewer.model.GCResource;

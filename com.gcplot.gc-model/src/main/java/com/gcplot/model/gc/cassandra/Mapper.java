@@ -17,7 +17,7 @@ import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 
-import static com.gcplot.commons.CollectionUtils.*;
+import static com.gcplot.commons.CollectionUtils.transformValue;
 
 public abstract class Mapper {
 

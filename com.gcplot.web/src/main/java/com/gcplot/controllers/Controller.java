@@ -2,8 +2,6 @@ package com.gcplot.controllers;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gcplot.commons.ErrorMessages;
-import com.gcplot.commons.Metrics;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.model.account.Account;
 import com.gcplot.web.Dispatcher;

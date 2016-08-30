@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
-import static com.gcplot.commons.CollectionUtils.*;
+import static com.gcplot.commons.CollectionUtils.transformValue;
 import static com.gcplot.model.gc.cassandra.Mapper.analyseFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.analysesFrom;
 

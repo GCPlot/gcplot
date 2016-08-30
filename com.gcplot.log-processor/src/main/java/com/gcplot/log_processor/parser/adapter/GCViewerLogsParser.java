@@ -7,9 +7,9 @@ import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
 import com.gcplot.model.gc.*;
-import com.gcplot.model.gc.GCEvent;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
-import com.tagtraum.perf.gcviewer.model.*;
+import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
+import com.tagtraum.perf.gcviewer.model.GCResource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 

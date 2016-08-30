@@ -14,7 +14,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
-import static com.gcplot.model.gc.cassandra.Mapper.*;
+import static com.gcplot.model.gc.cassandra.Mapper.objectsAgeFrom;
+import static com.gcplot.model.gc.cassandra.Mapper.objectsAgesFrom;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

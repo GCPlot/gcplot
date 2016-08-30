@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static com.gcplot.commons.CollectionUtils.*;
+import static com.gcplot.commons.CollectionUtils.transformValue;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
