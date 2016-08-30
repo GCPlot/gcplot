@@ -11,7 +11,7 @@ public class AddJvmRequest {
     public String jvmId;
     @JsonProperty(value = "an_id", required = true)
     public String analyseId;
-    @JsonProperty(value = "vm_vers", required = true)
+    @JsonProperty(value = "vm_ver", required = true)
     public int vmVersion;
     @JsonProperty(value = "gc_type", required = true)
     public int gcType;
@@ -22,7 +22,7 @@ public class AddJvmRequest {
 
     public AddJvmRequest(@JsonProperty(value = "id", required = true) String jvmId,
                          @JsonProperty(value = "an_id", required = true) String analyseId,
-                         @JsonProperty(value = "vm_vers", required = true) int vmVersion,
+                         @JsonProperty(value = "vm_ver", required = true) int vmVersion,
                          @JsonProperty(value = "gc_type", required = true) int gcType,
                          @JsonProperty("headers") String headers,
                          @JsonProperty("mem") MemoryStatus memoryStatus) {

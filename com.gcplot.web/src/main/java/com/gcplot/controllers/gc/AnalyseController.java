@@ -41,6 +41,8 @@ public class AnalyseController extends Controller {
                 .delete("/analyse/delete", this::deleteAnalyse);
         dispatcher.requireAuth().get("/analyse/all", this::analyses);
         dispatcher.requireAuth().post("/analyse/jvm/add", AddJvmRequest.class, this::addJvm);
+        dispatcher.requireAuth().post("/analyse/jvm/update/version", UpdateJvmVersionRequest.class, this::updateJvmVersion);
+        dispatcher.requireAuth().post("/analyse/jvm/update/info", UpdateJvmInfoRequest.class, this::updateJvmInfo);
         dispatcher.requireAuth()
                 .filter(c -> c.hasParam("analyse_id"), "Param 'analyse_id' is missing.")
                 .filter(c -> c.hasParam("jvm_id"), "Param 'jvm_id' is missing.")
@@ -118,6 +120,38 @@ public class AnalyseController extends Controller {
         String jvmId = ctx.param("jvm_id");
 
         analyseRepository.removeJvm(account(ctx).id(), analyseId, jvmId);
+        ctx.response(SUCCESS);
+    }
+
+    /**
+     * POST /analyse/jvm/update/version
+     * Require Auth (token)
+     * Body: UpdateJvmVersionRequest (JSON)
+     * Responds: SUCCESS or ERROR
+     */
+    public void updateJvmVersion(UpdateJvmVersionRequest req, RequestContext ctx) {
+        VMVersion vmVersion = null;
+        GarbageCollectorType gcType = null;
+        if (req.vmVersion != null) {
+            vmVersion = VMVersion.get(req.vmVersion);
+        }
+        if (req.gcType != null) {
+            gcType = GarbageCollectorType.get(req.gcType);
+        }
+        analyseRepository.updateJvmVersion(account(ctx).id(), req.analyseId, req.jvmId,
+                vmVersion, gcType);
+        ctx.response(SUCCESS);
+    }
+
+    /**
+     * POST /analyse/jvm/update/info
+     * Require Auth (token)
+     * Body: UpdateJvmInfoRequest (JSON)
+     * Responds: SUCCESS or ERROR
+     */
+    public void updateJvmInfo(UpdateJvmInfoRequest req, RequestContext ctx) {
+        analyseRepository.updateJvmInfo(account(ctx).id(), req.analyseId, req.jvmId, req.headers,
+                req.memoryStatus != null ? req.memoryStatus.toDetails() : null);
         ctx.response(SUCCESS);
     }
 

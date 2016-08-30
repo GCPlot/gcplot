@@ -233,6 +233,7 @@ public abstract class IntegrationTest {
     protected JsonObject post(String path, String message, Predicate<JsonObject> test, long expectedError) throws Exception {
         final CountDownLatch l = new CountDownLatch(1);
         final JsonObject[] jo = new JsonObject[1];
+        LOG.info("POST {} BODY {}", path, message);
         client.post(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(jo, test, expectedError, l, b))).end(message);
         Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
         return jo[0];

@@ -9,13 +9,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class NewAnalyseRequest {
     @JsonProperty(value = "name")
     public String name;
-    @JsonProperty(value = "continuous")
+    @JsonProperty(value = "cnts")
     public boolean isContinuous;
     @JsonProperty(value = "ext")
     public String ext;
 
     public NewAnalyseRequest(@JsonProperty(value = "name", required = true) String name,
-                             @JsonProperty(value = "continuous", required = true) boolean isContinuous,
+                             @JsonProperty(value = "cnts", required = true) boolean isContinuous,
                              @JsonProperty(value = "ext", required = true) String ext) {
         this.name = name;
         this.isContinuous = isContinuous;

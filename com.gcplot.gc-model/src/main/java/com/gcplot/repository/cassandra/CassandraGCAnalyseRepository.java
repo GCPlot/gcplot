@@ -14,8 +14,11 @@ import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
 import com.gcplot.repository.GCAnalyseRepository;
+import com.google.common.base.Preconditions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
@@ -26,6 +29,7 @@ import static com.gcplot.model.gc.cassandra.Mapper.analyseFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.analysesFrom;
 
 public class CassandraGCAnalyseRepository extends AbstractCassandraRepository implements GCAnalyseRepository {
+    private static final Logger LOG = LoggerFactory.getLogger(CassandraGCAnalyseRepository.class);
     protected static final String TABLE_NAME = "gc_analyse";
 
     @Override
@@ -106,11 +110,17 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     @Override
     public void updateJvmInfo(Identifier accId, String analyseId,
                               String jvmId, String headers, MemoryDetails memoryDetails) {
+        Preconditions.checkState(!(headers == null && memoryDetails == null), "Nothing to update.");
         UUID uuid = UUID.fromString(analyseId);
-        Batch batch = QueryBuilder.batch(
-                updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)));
+        Batch batch = QueryBuilder.batch();
+        if (headers != null) {
+            batch.add(updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)));
+        }
         if (memoryDetails != null) {
             insertMemoryDetails(accId, jvmId, memoryDetails, uuid, batch);
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("updateJvmInfo: {}", batch);
         }
         connector.session().execute(batch.setConsistencyLevel(ConsistencyLevel.ALL));
     }
@@ -118,11 +128,16 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     @Override
     public void updateJvmVersion(Identifier accId, String analyseId, String jvmId,
                                  VMVersion version, GarbageCollectorType type) {
+        Preconditions.checkState(!(version == null && type == null), "Nothing to update.");
         UUID uuid = UUID.fromString(analyseId);
-        connector.session().execute(QueryBuilder.batch(
-                updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())),
-                updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())))
-                .setConsistencyLevel(ConsistencyLevel.ALL));
+        Batch batch = QueryBuilder.batch();
+        if (version != null) {
+            batch.add(updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())));
+        }
+        if (type != null) {
+            batch.add(updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())));
+        }
+        connector.session().execute(batch.setConsistencyLevel(ConsistencyLevel.ALL));
     }
 
     @Override
