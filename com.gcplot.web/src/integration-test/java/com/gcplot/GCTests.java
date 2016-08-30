@@ -28,7 +28,7 @@ import java.util.function.Predicate;
 public class GCTests extends IntegrationTest {
 
     @Test
-    public void test() throws Exception {
+    public void testAnalyseController() throws Exception {
         String token = login();
         NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "");
         final String[] analyseId = { "" };
