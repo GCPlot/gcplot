@@ -48,13 +48,16 @@ public class S3ResourceManager implements ResourceManager {
         if (contentType != null) {
             om.addUserMetadata("Content-Type", contentType);
         }
-        InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest(bucket, newPath, om);
-        InitiateMultipartUploadResult initResponse = client.initiateMultipartUpload(initRequest);
-
-        long contentLength = file.length();
-        long partSize = 5242880; // Set part size to 5 MB.
+        InitiateMultipartUploadRequest initRequest;
+        InitiateMultipartUploadResult initResponse = null;
 
         try {
+            initRequest = new InitiateMultipartUploadRequest(bucket, newPath, om);
+            initRequest.setCannedACL(CannedAccessControlList.PublicRead);
+            initResponse = client.initiateMultipartUpload(initRequest);
+
+            long contentLength = file.length();
+            long partSize = 5242880; // Set part size to 5 MB.
             // Step 2: Upload parts.
             long filePosition = 0;
             for (int i = 1; filePosition < contentLength; i++) {
@@ -86,8 +89,10 @@ public class S3ResourceManager implements ResourceManager {
             client.completeMultipartUpload(compRequest);
         } catch (Throwable e) {
             LOG.error(e.getMessage(), e);
-            client.abortMultipartUpload(new AbortMultipartUploadRequest(
-                    bucket, newPath, initResponse.getUploadId()));
+            if (initResponse != null) {
+                client.abortMultipartUpload(new AbortMultipartUploadRequest(
+                        bucket, newPath, initResponse.getUploadId()));
+            }
         }
     }
 

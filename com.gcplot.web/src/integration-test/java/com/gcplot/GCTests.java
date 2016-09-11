@@ -15,6 +15,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -113,11 +114,13 @@ public class GCTests extends IntegrationTest {
                 .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream("hs18_log_cms.log"),
                         ContentType.TEXT_PLAIN, "hs18_log_cms.log").build();
         HttpPost post = new HttpPost("http://" + LOCALHOST + ":" +
-                getPort() + "/gc/jvm/log/process?token=" + token + "&analyse_id=" + analyseId + "&jvm_id=" + jvmId);
+                getPort() + "/gc/jvm/log/process?token=" + token + "&analyse_id=" + analyseId
+                + "&jvm_id=" + jvmId + "&sync=true");
         post.setEntity(file);
         HttpResponse response = hc.execute(post);
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-
+        JsonObject resp = new JsonObject(EntityUtils.toString(response.getEntity()));
+        Assert.assertTrue(success().test(resp));
     }
 
     private String createAnalyse(String token) throws Exception {

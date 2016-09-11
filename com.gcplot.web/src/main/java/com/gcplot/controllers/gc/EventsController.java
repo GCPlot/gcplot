@@ -38,9 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
@@ -77,6 +75,7 @@ public class EventsController extends Controller {
 
     public void processJvmLog(RequestContext ctx) {
         UploadedFile uf = ctx.files().get(0);
+        final boolean isSync = Boolean.parseBoolean(ctx.param("sync", "false"));
         final String analyseId = ctx.param("analyse_id");
         final String jvmId = ctx.param("jvm_id");
         final Identifier userId = account(ctx).id();
@@ -112,7 +111,7 @@ public class EventsController extends Controller {
                     persistObjectAges(analyseId, jvmId, pr);
                 }
             }
-            uploadLogFile(analyseId, jvmId, username, logFile);
+            uploadLogFile(isSync, analyseId, jvmId, username, logFile);
             ctx.response(SUCCESS);
         } catch (Throwable t) {
             throw Exceptions.runtime(t);
@@ -143,17 +142,25 @@ public class EventsController extends Controller {
         agesStateRepository.add(oas);
     }
 
-    private void uploadLogFile(String analyseId, String jvmId, String username, File logFile) {
+    private void uploadLogFile(boolean isSync, String analyseId, String jvmId, String username, File logFile) {
         if (!resourceManager.isDisabled()) {
-            executor.submit(() -> {
+            Future f = executor.submit(() -> {
                 try {
                     LOG.debug("Starting uploading {}", logFile);
                     resourceManager.upload(logFile,
                             "log/" + username + "/" + esc(jvmId) + "/" + esc(analyseId));
+                } catch (Throwable t) {
+                    LOG.error(t.getMessage(), t);
                 } finally {
                     org.apache.commons.io.FileUtils.deleteQuietly(logFile);
                 }
             });
+            if (isSync) {
+                try {
+                    f.get();
+                } catch (InterruptedException | ExecutionException ignored) {
+                }
+            }
         } else {
             LOG.warn("Resource Manager is currently disabled, can't upload log file.");
             org.apache.commons.io.FileUtils.deleteQuietly(logFile);
