@@ -6,6 +6,15 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
     <context:annotation-config/>
 
+    <import resource="applicationContext-metrics.xml"/>
+    <import resource="applicationContext-config.xml"/>
 
+    <bean id="logsParser" class="com.gcplot.log_processor.parser.adapter.GCViewerLogsParser">
+        <property name="batchSize" value="${logs.parser.batch.size:128}"/>
+        <property name="configurationManager" ref="config"/>
+        <property name="eventFactory">
+            <bean class="com.gcplot.parser.DefaultGCEventFactory"/>
+        </property>
+    </bean>
 
 </beans>

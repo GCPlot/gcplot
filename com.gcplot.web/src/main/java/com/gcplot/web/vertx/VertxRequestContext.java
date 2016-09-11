@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class VertxRequestContext implements RequestContext {
+    protected static final String APPLICATION_JSON = "application/json; charset=utf-8";
 
     @Override
     public RequestContext response(Object response) {
@@ -143,6 +144,12 @@ public class VertxRequestContext implements RequestContext {
     }
 
     @Override
+    public String param(String key, String defaultValue) {
+        String param = param(key);
+        return param == null ? defaultValue : param;
+    }
+
+    @Override
     public boolean hasParam(String key) {
         return param(key) != null;
     }
@@ -190,6 +197,19 @@ public class VertxRequestContext implements RequestContext {
             case PATCH: return HttpMethod.PATCH;
             default: throw new RuntimeException("Unsupported http method: " + httpMethod);
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("context", context)
+                .add("userAgent", getUserAgent())
+                .add("method", method())
+                .add("mimeType", mimeType())
+                .add("path", path())
+                .add("headers", headers())
+                .add("getIp", getIp())
+                .toString();
     }
 
     public RoutingContext context;
@@ -295,6 +315,4 @@ public class VertxRequestContext implements RequestContext {
                     .toString();
         }
     }
-
-    protected static final String APPLICATION_JSON = "application/json; charset=utf-8";
 }

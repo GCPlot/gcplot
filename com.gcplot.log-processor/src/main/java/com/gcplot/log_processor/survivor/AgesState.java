@@ -1,10 +1,9 @@
 package com.gcplot.log_processor.survivor;
 
 import com.google.common.base.Preconditions;
-import gnu.trove.impl.unmodifiable.TUnmodifiableLongList;
-import gnu.trove.list.TLongList;
 
-import static com.gcplot.commons.CollectionUtils.emptyLongList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -17,24 +16,24 @@ public class AgesState {
         return ages;
     }
 
-    private final TLongList occupied;
-    public TLongList getOccupied() {
+    private final List<Long> occupied;
+    public List<Long> getOccupied() {
         return occupied;
     }
 
-    private final TLongList total;
-    public TLongList getTotal() {
+    private final List<Long> total;
+    public List<Long> getTotal() {
         return total;
     }
 
-    public AgesState(TLongList occupied, TLongList total) {
+    public AgesState(List<Long> occupied, List<Long> total) {
         Preconditions.checkState(occupied.size() == total.size(), "Unknown situation where occupied.lenght != total.length");
         this.ages = occupied.size();
-        this.occupied = new TUnmodifiableLongList(occupied);
-        this.total = new TUnmodifiableLongList(total);
+        this.occupied = Collections.unmodifiableList(occupied);
+        this.total = Collections.unmodifiableList(total);
     }
 
-    public static final AgesState NONE = new AgesState(emptyLongList(), emptyLongList());
+    public static final AgesState NONE = new AgesState(Collections.emptyList(), Collections.emptyList());
 
     @Override
     public String toString() {

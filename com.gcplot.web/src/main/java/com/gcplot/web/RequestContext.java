@@ -40,6 +40,8 @@ public interface RequestContext {
 
     String param(String key);
 
+    String param(String key, String defaultValue);
+
     boolean hasParam(String key);
 
     String mimeType();

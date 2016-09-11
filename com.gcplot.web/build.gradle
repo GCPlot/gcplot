@@ -46,6 +46,8 @@ dependencies {
     compile project(":com.gcplot.gc-model")
     compile project(":com.gcplot.log-processor")
 
+    compile "com.amazonaws:aws-java-sdk-s3:$s3Version"
+    compile "org.slf4j:slf4j-simple:$slf4jVersion"
     compile "io.vertx:vertx-web:$vertxVersion"
     compile "io.vertx:vertx-codegen:$vertxVersion"
     compile "org.springframework:spring-context:$springVersion"

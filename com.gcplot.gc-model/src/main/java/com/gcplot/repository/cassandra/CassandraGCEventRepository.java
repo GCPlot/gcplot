@@ -33,7 +33,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
             "occurred", "vm_event_type", "capacity", "total_capacity", "tmstm",
             "pause_mu", "generations", "concurrency", "ext"};
     public static final String[] LAST_EVENT_FIELDS = Utils.concat(NON_KEY_FIELDS, new String[] { "bucket_id" });
-    public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "generations", "concurrency" };
+    public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "tmstm", "generations", "concurrency" };
 
     @Override
     public Optional<GCEvent> lastEvent(String analyseId, String jvmId, String bucketId, DateTime start) {

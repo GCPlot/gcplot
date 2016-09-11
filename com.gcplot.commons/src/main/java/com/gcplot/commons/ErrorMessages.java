@@ -17,7 +17,11 @@ public class ErrorMessages {
     public static final long USER_IS_BLOCKED = 0x128;
     public static final long NOT_FOUND = 0x194;
     public static final long SAME_PASSWORD = 0x195;
+
     public static final long RESOURCE_NOT_FOUND_RESPONSE = 0x197;
+
+    public static final long UNKNOWN_GC_ANALYSE = 0x201;
+    public static final long UNKNOWN_JVM_ID = 0x202;
 
     public static String buildJson(long code) {
         ObjectNode node = new ObjectNode(JSON_NODE_FACTORY);

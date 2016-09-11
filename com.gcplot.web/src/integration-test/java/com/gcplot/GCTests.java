@@ -30,9 +30,8 @@ public class GCTests extends IntegrationTest {
     @Test
     public void testAnalyseController() throws Exception {
         String token = login();
-        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "");
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 0);
-        String analyseId = r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");
+        String analyseId = createAnalyse(token);
         Assert.assertNotNull(analyseId);
 
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
@@ -104,14 +103,26 @@ public class GCTests extends IntegrationTest {
 
     @Test
     public void simpleLogsUploadTest() throws Exception {
+        String token = login();
+        String analyseId = createAnalyse(token);
+        String jvmId = "jvm1";
+        post("/analyse/jvm/add", new AddJvmRequest(jvmId, analyseId, VMVersion.HOTSPOT_1_8.type(),
+                GarbageCollectorType.ORACLE_CMS.type(), null, null), token, success());
         HttpClient hc = HttpClientBuilder.create().build();
         HttpEntity file = MultipartEntityBuilder.create()
                 .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream("hs18_log_cms.log"),
                         ContentType.TEXT_PLAIN, "hs18_log_cms.log").build();
-        HttpPost post = new HttpPost("http://" + LOCALHOST + ":" + getPort() + "/gc/upload_log?token=" + login());
+        HttpPost post = new HttpPost("http://" + LOCALHOST + ":" +
+                getPort() + "/gc/jvm/log/process?token=" + token + "&analyse_id=" + analyseId + "&jvm_id=" + jvmId);
         post.setEntity(file);
         HttpResponse response = hc.execute(post);
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+
+    }
+
+    private String createAnalyse(String token) throws Exception {
+        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "");
+        return r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");
     }
 
     private AnalyseResponse getAnalyse(String token, String analyseId) throws Exception {

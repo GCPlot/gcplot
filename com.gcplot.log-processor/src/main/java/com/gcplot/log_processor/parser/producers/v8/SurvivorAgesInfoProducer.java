@@ -3,8 +3,10 @@ package com.gcplot.log_processor.parser.producers.v8;
 import com.gcplot.log_processor.survivor.AgesState;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,8 +25,8 @@ public class SurvivorAgesInfoProducer {
     private static final Pattern AGE_PATTERN = Pattern.compile(AGES_PREFIX + "[ \\t]+(?<" + AGE_NUM_GROUP + ">[0-9]+):[ \\t]+" +
             "(?<" + AGE_OCCUPIED_GROUP + ">[0-9]+)[ \\t]+bytes,[ \\t]+(?<" + AGE_TOTAL_GROUP + ">[0-9]+)[ \\t]+total");
     protected List<AgesState> agesStates = new ArrayList<>();
-    protected TLongList occupied = new TLongArrayList();
-    protected TLongList total = new TLongArrayList();
+    protected List<Long> occupied = new ArrayList<>();
+    protected List<Long> total = new ArrayList<>();
     protected int lastAge = -1;
     protected int maxAge = 0;
     protected Runnable onFinished = () -> {};
@@ -34,8 +36,8 @@ public class SurvivorAgesInfoProducer {
             Matcher m = AGE_PATTERN.matcher(s);
             if (m.matches()) {
                 int age = Integer.parseInt(m.group(AGE_NUM_GROUP));
-                int ocp = Integer.parseInt(m.group(AGE_OCCUPIED_GROUP));
-                int ttl = Integer.parseInt(m.group(AGE_TOTAL_GROUP));
+                long ocp = Long.parseLong(m.group(AGE_OCCUPIED_GROUP));
+                long ttl = Long.parseLong(m.group(AGE_TOTAL_GROUP));
                 if (age <= lastAge) {
                     finish();
                 }
@@ -48,7 +50,7 @@ public class SurvivorAgesInfoProducer {
 
     public void finish() {
         onFinished.run();
-        agesStates.add(new AgesState(copy(occupied), copy(total)));
+        agesStates.add(new AgesState(new ArrayList<>(occupied), new ArrayList<>(total)));
         occupied.clear();
         total.clear();
         if (lastAge > maxAge) {
@@ -87,7 +89,8 @@ public class SurvivorAgesInfoProducer {
             total[i] /= count[i];
         }
 
-        return new AgesState(new TLongArrayList(occupied), new TLongArrayList(total));
+        return new AgesState(Arrays.asList(ArrayUtils.toObject(occupied)),
+                Arrays.asList(ArrayUtils.toObject(total)));
     }
 
     public void setOnFinished(Runnable onFinished) {

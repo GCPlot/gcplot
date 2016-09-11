@@ -2,7 +2,6 @@ package com.gcplot.bootstrap;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -59,11 +58,12 @@ public class Bootstrap {
         }
         properties.forEach((k, v) -> System.setProperty((String) k, (String) v));
 
-        File log4File = new File(configDir,
+        // for logback should be set logback.configurationFile = /path/to/config.xml
+        /*File log4File = new File(configDir,
                 properties.getProperty(LOG4J_FILENAME_PROPERTY, "log4j.properties"));
         if (log4File.exists()) {
             PropertyConfigurator.configure(log4File.getAbsolutePath());
-        }
+        }*/
 
         URL resource = Thread.currentThread().getContextClassLoader().getResource("applicationContext.xml");
         applicationContext = new FileSystemXmlApplicationContext(new String[]{

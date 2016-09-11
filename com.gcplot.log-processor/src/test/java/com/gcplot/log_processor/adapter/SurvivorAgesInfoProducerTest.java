@@ -28,8 +28,8 @@ public class SurvivorAgesInfoProducerTest {
 
         AgesState as = sp.averageAgesState();
         Assert.assertEquals(as.getAges(), 6);
-        Assert.assertEquals(as.getOccupied().get(0), 20_037_749);
-        Assert.assertEquals(as.getOccupied().get(5), 375_393);
+        Assert.assertEquals((long) as.getOccupied().get(0), 20_037_749L);
+        Assert.assertEquals((long) as.getOccupied().get(5), 375_393L);
     }
 
 }
