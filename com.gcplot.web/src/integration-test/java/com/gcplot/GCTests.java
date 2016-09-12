@@ -19,6 +19,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -121,6 +122,12 @@ public class GCTests extends IntegrationTest {
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         JsonObject resp = new JsonObject(EntityUtils.toString(response.getEntity()));
         Assert.assertTrue(success().test(resp));
+
+        AnalyseResponse ar = getAnalyse(token, analyseId);
+        Assert.assertTrue(ar.lastEventUTC > 0);
+
+        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+        Assert.assertEquals(19, events.size());
     }
 
     private String createAnalyse(String token) throws Exception {
@@ -130,10 +137,16 @@ public class GCTests extends IntegrationTest {
 
     private AnalyseResponse getAnalyse(String token, String analyseId) throws Exception {
         JsonObject analyseJson;
-        AnalyseResponse ar;
         analyseJson = get("/analyse/get?id=" + analyseId, token, a -> true);
-        ar = JsonSerializer.deserialize(r(analyseJson).toString(), AnalyseResponse.class);
-        return ar;
+        return JsonSerializer.deserialize(r(analyseJson).toString(), AnalyseResponse.class);
+    }
+
+    private List<GCEventResponse> getEvents(String token, String analyseId, String jvmId,
+                                            long from, long to) throws Exception {
+        JsonObject eventsJson;
+        eventsJson = get("/gc/jvm/events?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to,
+                token, a -> true);
+        return JsonSerializer.deserializeList(ra(eventsJson).toString(), GCEventResponse.class);
     }
 
     private String login() throws Exception {

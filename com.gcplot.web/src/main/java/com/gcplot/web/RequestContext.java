@@ -26,6 +26,10 @@ public interface RequestContext {
 
     RequestContext clear();
 
+    RequestContext setChunked(boolean chunked);
+
+    boolean isChunked();
+
     boolean isFinished();
 
     String getIp();

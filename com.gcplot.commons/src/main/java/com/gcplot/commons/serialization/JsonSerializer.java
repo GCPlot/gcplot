@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gcplot.commons.exceptions.Exceptions;
 
 import java.io.IOException;
+import java.util.List;
 
 public abstract class JsonSerializer {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -30,6 +31,14 @@ public abstract class JsonSerializer {
     public static <U> U deserialize(String input, Class<? extends U> type) {
         try {
             return mapper.readValue(input, type);
+        } catch (IOException e) {
+            throw Exceptions.runtime(e);
+        }
+    }
+
+    public static <U> List<U> deserializeList(String input, Class<? extends U> type) {
+        try {
+            return mapper.readValue(input, mapper.getTypeFactory().constructCollectionType(List.class, type));
         } catch (IOException e) {
             throw Exceptions.runtime(e);
         }

@@ -17,6 +17,7 @@ import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.*;
@@ -274,6 +275,10 @@ public abstract class IntegrationTest {
 
     protected JsonObject r(JsonObject j) {
         return j.getJsonObject("result");
+    }
+
+    protected JsonArray ra(JsonObject j) {
+        return j.getJsonArray("result");
     }
 
     private String withToken(String path, String token) {

@@ -23,6 +23,8 @@ public class ErrorMessages {
     public static final long UNKNOWN_GC_ANALYSE = 0x201;
     public static final long UNKNOWN_JVM_ID = 0x202;
 
+    public static final long INVALID_REQUEST_PARAM = 0x301;
+
     public static String buildJson(long code) {
         ObjectNode node = new ObjectNode(JSON_NODE_FACTORY);
         node.put("error", code);

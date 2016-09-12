@@ -29,7 +29,11 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public RequestContext response(Object response) {
-        return finish(JsonSerializer.serialize(new Wrapper(response)));
+        if (!isChunked()) {
+            return finish(JsonSerializer.serialize(new Wrapper(response)));
+        } else {
+            return write(JsonSerializer.serialize(response));
+        }
     }
 
     @Override
@@ -58,7 +62,11 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public RequestContext write(String value) {
-        sb.append(value);
+        if (isChunked()) {
+            context.response().write(value);
+        } else {
+            sb.append(value);
+        }
         return this;
     }
 
@@ -69,14 +77,18 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public RequestContext finish(String value) {
-        sb.append(value);
-        byte[] response = new byte[0];
-        try {
-            response = sb.toString().getBytes("UTF-8");
-        } catch (UnsupportedEncodingException ignored) {
+        if (!isChunked()) {
+            sb.append(value);
+            byte[] response = new byte[0];
+            try {
+                response = sb.toString().getBytes("UTF-8");
+            } catch (UnsupportedEncodingException ignored) {
+            }
+            context.response().putHeader("Content-Length", response.length + "");
+            context.response().end(Buffer.buffer(response));
+        } else {
+            context.response().end(value);
         }
-        context.response().putHeader("Content-Length", response.length + "");
-        context.response().end(Buffer.buffer(response));
         if (Strings.isNullOrEmpty(mimeType)) {
             context.response().putHeader("Content-Type", mimeType);
         }
@@ -92,6 +104,17 @@ public class VertxRequestContext implements RequestContext {
     public RequestContext clear() {
         sb = new StringBuilder();
         return this;
+    }
+
+    @Override
+    public RequestContext setChunked(boolean chunked) {
+        context.response().setChunked(chunked);
+        return this;
+    }
+
+    @Override
+    public boolean isChunked() {
+        return context.response().isChunked();
     }
 
     @Override

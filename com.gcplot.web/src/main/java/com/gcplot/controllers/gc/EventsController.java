@@ -6,6 +6,7 @@ import ch.qos.logback.core.FileAppender;
 import com.gcplot.Identifier;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.FileUtils;
+import com.gcplot.commons.Range;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
 import com.gcplot.log_processor.LogMetadata;
@@ -13,6 +14,7 @@ import com.gcplot.log_processor.parser.ParseResult;
 import com.gcplot.log_processor.survivor.AgesState;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
+import com.gcplot.messages.GCEventResponse;
 import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
@@ -31,11 +33,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -60,6 +62,14 @@ public class EventsController extends Controller {
                 .filter(c -> c.hasParam("analyse_id") && c.hasParam("jvm_id"),
                         "Params analyse_id and jvm_id are restricted.")
                 .post("/gc/jvm/log/process", this::processJvmLog);
+        dispatcher.requireAuth().filter(c -> c.hasParam("analyse_id") && c.hasParam("jvm_id")
+                        && c.hasParam("from") && c.hasParam("to"),
+                "Params required: analyse_id, jvm_id, from, to")
+                .get("/gc/jvm/events", this::jvmEvents);
+        dispatcher.requireAuth().filter(c -> c.hasParam("analyse_id") && c.hasParam("jvm_id")
+                        && c.hasParam("from") && c.hasParam("to"),
+                "Params required: analyse_id, jvm_id, from, to")
+                .get("/gc/jvm/events/stream", this::jvmEventsStream);
     }
 
     @Override
@@ -73,6 +83,9 @@ public class EventsController extends Controller {
         }
     }
 
+    /**
+     * POST /gc/jvm/log/process
+     */
     public void processJvmLog(RequestContext ctx) {
         UploadedFile uf = ctx.files().get(0);
         final boolean isSync = Boolean.parseBoolean(ctx.param("sync", "false"));
@@ -119,6 +132,48 @@ public class EventsController extends Controller {
             // TODO log file size processed per user
             FileUtils.deleteSilent(uf.file());
         }
+    }
+
+    /**
+     * GET /gc/jvm/events
+     */
+    public void jvmEvents(RequestContext ctx) {
+        DateTimeZone tz;
+        try {
+            tz = DateTimeZone.forID(ctx.param("tz", "UTC"));
+        } catch (Throwable t) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Param tz is invalid."));
+            return;
+        }
+        final String analyseId = ctx.param("analyse_id");
+        final String jvmId = ctx.param("jvm_id");
+        final DateTime from = new DateTime(Long.parseLong(ctx.param("from")), tz);
+        final DateTime to = new DateTime(Long.parseLong(ctx.param("to")), tz);
+
+        ctx.setChunked(false);
+        List<GCEvent> events = eventRepository.pauseEvents(analyseId, jvmId, Range.of(from, to));
+        ctx.response(GCEventResponse.from(events, tz));
+    }
+
+    public void jvmEventsStream(RequestContext ctx) {
+        DateTimeZone tz;
+        try {
+            tz = DateTimeZone.forID(ctx.param("tz", "UTC"));
+        } catch (Throwable t) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Param tz is invalid."));
+            return;
+        }
+        final String analyseId = ctx.param("analyse_id");
+        final String jvmId = ctx.param("jvm_id");
+        final DateTime from = new DateTime(Long.parseLong(ctx.param("from")), tz);
+        final DateTime to = new DateTime(Long.parseLong(ctx.param("to")), tz);
+
+        ctx.setChunked(true);
+        Iterator<GCEvent> eventIterator = eventRepository.lazyPauseEvents(analyseId, jvmId, Range.of(from, to));
+        while (eventIterator.hasNext()) {
+            ctx.response(GCEventResponse.from(eventIterator.next(), tz));
+        }
+        ctx.finish();
     }
 
     private void updateAnalyseMetadata(String analyseId, String jvmId, Identifier userId, ParseResult pr) {
