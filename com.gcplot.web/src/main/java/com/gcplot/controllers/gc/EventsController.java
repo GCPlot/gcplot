@@ -24,7 +24,6 @@ import com.gcplot.resources.ResourceManager;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
 import com.google.common.base.Strings;
-import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

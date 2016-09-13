@@ -5,7 +5,6 @@ import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;
-import com.gcplot.model.gc.MemoryDetailsImpl;
 import com.google.common.collect.Sets;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;

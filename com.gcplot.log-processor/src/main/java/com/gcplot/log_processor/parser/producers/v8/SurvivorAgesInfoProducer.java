@@ -1,8 +1,6 @@
 package com.gcplot.log_processor.parser.producers.v8;
 
 import com.gcplot.log_processor.survivor.AgesState;
-import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TLongArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
@@ -10,8 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.gcplot.commons.CollectionUtils.copy;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
