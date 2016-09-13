@@ -6,6 +6,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.gcplot.commons.Range;
 import com.gcplot.model.gc.ObjectsAges;
+import org.apache.cassandra.utils.UUIDGen;
 import org.joda.time.DateTime;
 
 import java.util.Iterator;
@@ -90,7 +91,7 @@ public class CassandraObjectsAgesRepository extends AbstractVMEventsCassandraRep
         return QueryBuilder.insertInto(TABLE_NAME)
                 .value("analyse_id", UUID.fromString(oa.analyseId()))
                 .value("occurred", oa.occurred().toDate())
-                .value("written_at", now())
+                .value("written_at", UUIDGen.getTimeUUID(oa.occurred().getMillis()))
                 .value("jvm_id", oa.jvmId())
                 .value("occupied", oa.occupied())
                 .value("total", oa.total())

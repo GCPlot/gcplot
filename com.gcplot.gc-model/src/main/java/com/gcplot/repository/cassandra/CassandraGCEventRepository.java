@@ -11,6 +11,7 @@ import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.repository.GCEventRepository;
 import com.google.common.collect.Lists;
+import org.apache.cassandra.utils.UUIDGen;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Months;
@@ -105,13 +106,14 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
 
     protected Optional<Row> singleEvent(String analyseId, String jvmId, String bucketId,
                                         DateTime start, String[] fields) {
-        List<String> dates = dates(Range.of(start, DateTime.now(DateTimeZone.UTC)));
-        for (String date : dates) {
+        List<String> dates = dates(Range.of(start.toDateTime(DateTimeZone.UTC),
+                DateTime.now(DateTimeZone.UTC)));
+        for (int i = dates.size() - 1; i >= 0; i--) {
             Select from = QueryBuilder.select(fields).from(TABLE_NAME);
             Select.Where statement = from.limit(1)
                     .where(eq("analyse_id", UUID.fromString(analyseId)))
                     .and(eq("jvm_id", jvmId))
-                    .and(eq("date", date));
+                    .and(eq("date", dates.get(i)));
             if (bucketId != null) {
                 from.allowFiltering();
                 statement.and(eq("bucket_id", bucketId));
@@ -144,7 +146,8 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
         return IntStream.range(0, Months.monthsBetween(
                 range.from.monthOfYear().roundFloorCopy(),
                 range.to.monthOfYear().roundCeilingCopy()).getMonths())
-                .mapToObj(i -> range.from.plusMonths(i).toString(DATE_PATTERN)).collect(Collectors.toList());
+                .mapToObj(i -> range.from.plusMonths(i).toString(DATE_PATTERN))
+                .collect(Collectors.toList());
     }
 
     protected RegularStatement addStatement(GCEvent event) {
@@ -156,7 +159,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("jvm_id", event.jvmId())
                 .value("description", event.description())
                 .value("tmstm", event.timestamp())
-                .value("written_at", now())
+                .value("written_at", UUIDGen.getTimeUUID(event.occurred().getMillis()))
                 .value("occurred", event.occurred().toDate())
                 .value("vm_event_type", event.vmEventType().type())
                 .value("capacity", Lists.newArrayList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))

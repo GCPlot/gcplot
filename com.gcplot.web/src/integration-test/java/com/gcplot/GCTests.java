@@ -19,6 +19,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -110,17 +111,7 @@ public class GCTests extends IntegrationTest {
         String jvmId = "jvm1";
         post("/analyse/jvm/add", new AddJvmRequest(jvmId, analyseId, VMVersion.HOTSPOT_1_8.type(),
                 GarbageCollectorType.ORACLE_CMS.type(), null, null), token, success());
-        HttpClient hc = HttpClientBuilder.create().build();
-        HttpEntity file = MultipartEntityBuilder.create()
-                .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream("hs18_log_cms.log"),
-                        ContentType.TEXT_PLAIN, "hs18_log_cms.log").build();
-        HttpPost post = new HttpPost("http://" + LOCALHOST + ":" +
-                getPort() + "/gc/jvm/log/process?token=" + token + "&analyse_id=" + analyseId
-                + "&jvm_id=" + jvmId + "&sync=true");
-        post.setEntity(file);
-        HttpResponse response = hc.execute(post);
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-        JsonObject resp = new JsonObject(EntityUtils.toString(response.getEntity()));
+        JsonObject resp = processGCLogFile(token, analyseId, jvmId, "hs18_log_cms.log");
         Assert.assertTrue(success().test(resp));
 
         AnalyseResponse ar = getAnalyse(token, analyseId);
@@ -128,6 +119,32 @@ public class GCTests extends IntegrationTest {
 
         List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
         Assert.assertEquals(19, events.size());
+
+        // check that processing this file again won't make any effect
+        resp = processGCLogFile(token, analyseId, jvmId, "hs18_log_cms.log");
+        Assert.assertTrue(success().test(resp));
+        AnalyseResponse ar2 = getAnalyse(token, analyseId);
+        Assert.assertEquals(ar.lastEventUTC, ar2.lastEventUTC);
+
+        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+        Assert.assertEquals(19, events.size());
+
+        // test chunked response
+        // getEventsStream(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+    }
+
+    private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {
+        HttpClient hc = HttpClientBuilder.create().build();
+        HttpEntity file = MultipartEntityBuilder.create()
+                .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream(fileName),
+                        ContentType.TEXT_PLAIN, fileName).build();
+        HttpPost post = new HttpPost("http://" + LOCALHOST + ":" +
+                getPort() + "/gc/jvm/log/process?token=" + token + "&analyse_id=" + analyseId
+                + "&jvm_id=" + jvmId + "&sync=true");
+        post.setEntity(file);
+        HttpResponse response = hc.execute(post);
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        return new JsonObject(EntityUtils.toString(response.getEntity()));
     }
 
     private String createAnalyse(String token) throws Exception {
@@ -139,6 +156,14 @@ public class GCTests extends IntegrationTest {
         JsonObject analyseJson;
         analyseJson = get("/analyse/get?id=" + analyseId, token, a -> true);
         return JsonSerializer.deserialize(r(analyseJson).toString(), AnalyseResponse.class);
+    }
+
+    private List<GCEventResponse> getEventsStream(String token, String analyseId, String jvmId,
+                                            long from, long to) throws Exception {
+        JsonObject eventsJson;
+        eventsJson = get("/gc/jvm/events/stream?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to,
+                token, a -> true);
+        return JsonSerializer.deserializeList(ra(eventsJson).toString(), GCEventResponse.class);
     }
 
     private List<GCEventResponse> getEvents(String token, String analyseId, String jvmId,

@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class VertxRequestContext implements RequestContext {
@@ -285,9 +287,23 @@ public class VertxRequestContext implements RequestContext {
                 AsyncFile af = vertx.fileSystem().openBlocking(fu.uploadedFileName(), inOpts);
                 AsyncFile to = vertx.fileSystem().openBlocking(f.getAbsolutePath(), new OpenOptions());
                 Pump pump = Pump.pump(af, to);
-                af.endHandler(v -> af.close());
-                to.endHandler(v -> to.close());
+                CountDownLatch finished = new CountDownLatch(1);
+                af.endHandler(v -> {
+                    CountDownLatch closed = new CountDownLatch(1);
+                    af.close();
+                    to.close(a -> closed.countDown());
+                    try {
+                        closed.await(1, TimeUnit.SECONDS);
+                    } catch (InterruptedException ignored) {
+                    }
+                    finished.countDown();
+                });
                 pump.start();
+                try {
+                    finished.await();
+                } catch (InterruptedException e) {
+                    throw Exceptions.runtime(e);
+                }
                 req.resume();
                 file = f;
             }

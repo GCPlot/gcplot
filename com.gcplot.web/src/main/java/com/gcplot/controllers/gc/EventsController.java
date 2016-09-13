@@ -6,6 +6,7 @@ import ch.qos.logback.core.FileAppender;
 import com.gcplot.Identifier;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.FileUtils;
+import com.gcplot.commons.LazyVal;
 import com.gcplot.commons.Range;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
@@ -36,6 +37,8 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -96,17 +99,16 @@ public class EventsController extends Controller {
         String checksum = ctx.param("checksum");
 
         Optional<GCAnalyse> analyse = analyseRepository.analyse(analyseId);
-        if (isAnalyseIncorrect(ctx, analyseId, jvmId, analyse)) return;
+        if (isAnalyseIncorrect(ctx, analyseId, jvmId, analyse.orElse(null))) return;
         try {
             final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
             if (checksum == null) {
-                LOG.warn("No checksum was provided in the request, calculating own: {}", ctx);
-                checksum = Files.hash(uf.file(), Hashing.md5()).toString();
+                checksum = calculateFileChecksum(ctx, uf);
             }
             Logger log = createLogger(logFile);
-            DateTime[] last = new DateTime[1];
-            ParseResult pr = parseAndPersist(uf, jvmId, checksum, analyse, log, e -> {
-                last[0] = e.occurred();
+            DateTime[] lastEventTime = new DateTime[1];
+            ParseResult pr = parseAndPersist(uf, jvmId, checksum, analyse.get(), log, e -> {
+                lastEventTime[0] = e.occurred();
                 e.analyseId(analyseId);
                 e.jvmId(jvmId);
             });
@@ -114,8 +116,8 @@ public class EventsController extends Controller {
                 LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
                 log.error(pr.getException().get().getMessage(), pr.getException().get());
             } else {
-                if (last[0] != null) {
-                    analyseRepository.updateLastEvent(userId, analyseId, last[0]);
+                if (lastEventTime[0] != null) {
+                    analyseRepository.updateLastEvent(userId, analyseId, lastEventTime[0]);
                 }
                 if (pr.getLogMetadata().isPresent()) {
                     updateAnalyseMetadata(analyseId, jvmId, userId, pr);
@@ -155,6 +157,9 @@ public class EventsController extends Controller {
         ctx.response(GCEventResponse.from(events, tz));
     }
 
+    /**
+     * GET /gc/jvm/events
+     */
     public void jvmEventsStream(RequestContext ctx) {
         DateTimeZone tz;
         try {
@@ -174,6 +179,14 @@ public class EventsController extends Controller {
             ctx.response(GCEventResponse.from(eventIterator.next(), tz));
         }
         ctx.finish();
+    }
+
+    private String calculateFileChecksum(RequestContext ctx, UploadedFile uf) throws IOException, NoSuchAlgorithmException {
+        String checksum;
+        LOG.warn("No checksum was provided in the request, calculating own: {}", ctx);
+        checksum = FileUtils.getFileChecksum(MessageDigest.getInstance("MD5"), uf.file());
+        LOG.warn("The calculated checksum for {} is {}", uf.fileName(), checksum);
+        return checksum;
     }
 
     private void updateAnalyseMetadata(String analyseId, String jvmId, Identifier userId, ParseResult pr) {
@@ -226,31 +239,42 @@ public class EventsController extends Controller {
         return username.toLowerCase().replaceAll("[^a-zA-Z0-9.-]", "_");
     }
 
-    private boolean isAnalyseIncorrect(RequestContext ctx, String analyseId, String jvmId,
-                                       Optional<GCAnalyse> analyse) {
-        if (!analyse.isPresent()) {
+    private boolean isAnalyseIncorrect(RequestContext ctx, String analyseId, String jvmId, GCAnalyse analyse) {
+        if (analyse == null) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYSE, analyseId));
             return true;
         }
-        if (!analyse.get().jvmIds().contains(jvmId)) {
+        if (!analyse.jvmIds().contains(jvmId)) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_JVM_ID, jvmId));
             return true;
         }
         return false;
     }
 
-    private ParseResult parseAndPersist(UploadedFile uf, String jvmId, String checksum, Optional<GCAnalyse> analyse,
+    private ParseResult parseAndPersist(UploadedFile uf, String jvmId, String checksum, GCAnalyse analyse,
                                         Logger log, Consumer<GCEventImpl> enricher) throws IOException {
-        ParserContext pctx = new ParserContext(log, checksum, analyse.get().jvmGCTypes().get(jvmId),
-                analyse.get().jvmVersions().get(jvmId));
+        ParserContext pctx = new ParserContext(log, checksum, analyse.jvmGCTypes().get(jvmId),
+                analyse.jvmVersions().get(jvmId));
         List<GCEvent> eventsBatch = new ArrayList<>();
+        final GCEvent[] firstParsed = new GCEvent[1];
+        LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
+                eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
         try (FileInputStream fis = new FileInputStream(uf.file())) {
             pr = logsParser.parse(fis, e -> {
                 enricher.accept((GCEventImpl) e);
-                eventsBatch.add(e);
-                if (eventsBatch.size() == 10) {
-                    persist(eventsBatch);
+                if (firstParsed[0] == null) {
+                    firstParsed[0] = e;
+                }
+                if (lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
+                        e.timestamp()) {
+                    eventsBatch.add(e);
+                    if (eventsBatch.size() == 10) {
+                        persist(eventsBatch);
+                    }
+                } else {
+                    log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                    LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
                 }
             }, pctx);
         }
