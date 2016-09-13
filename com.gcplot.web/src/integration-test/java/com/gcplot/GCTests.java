@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -129,7 +130,9 @@ public class GCTests extends IntegrationTest {
         Assert.assertEquals(19, events.size());
 
         // test chunked response
-        // getEventsStream(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+        List<GCEventResponse> streamEvents =
+                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+        Assert.assertEquals(19, streamEvents.size());
     }
 
     private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {
@@ -159,10 +162,10 @@ public class GCTests extends IntegrationTest {
 
     private List<GCEventResponse> getEventsStream(String token, String analyseId, String jvmId,
                                             long from, long to) throws Exception {
-        JsonObject eventsJson;
-        eventsJson = get("/gc/jvm/events/stream?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to,
-                token, a -> true);
-        return JsonSerializer.deserializeList(ra(eventsJson).toString(), GCEventResponse.class);
+        List<JsonObject> ejs;
+        ejs = getChunked("/gc/jvm/events/stream?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to,
+                token);
+        return ejs.stream().map(j -> JsonSerializer.deserialize(j.toString(), GCEventResponse.class)).collect(Collectors.toList());
     }
 
     private List<GCEventResponse> getEvents(String token, String analyseId, String jvmId,

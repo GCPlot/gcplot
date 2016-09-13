@@ -17,6 +17,7 @@ import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
@@ -31,12 +32,17 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public abstract class IntegrationTest {
-
+    protected static final int WAIT_SECONDS = 3;
+    protected static final String LOCALHOST = "127.0.0.1";
+    protected static final Logger LOG = LoggerFactory.getLogger(IntegrationTest.class);
+    protected HttpClient client;
     protected SimpleSmtpServer smtpServer;
     protected static Server cassandraServer = new Server();
     private Bootstrap bootstrap;
@@ -174,7 +180,7 @@ public abstract class IntegrationTest {
         } else {
             client.delete(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(jo, a -> true, expectedError, l, b))).end();
         }
-        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(l.await(WAIT_SECONDS, TimeUnit.SECONDS));
         return jo[0];
     }
 
@@ -203,8 +209,42 @@ public abstract class IntegrationTest {
         } else {
             client.get(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(jo, test, expectedError, l, b))).end();
         }
-        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(l.await(WAIT_SECONDS, TimeUnit.SECONDS));
         return jo[0];
+    }
+
+    protected List<JsonObject> getChunked(String path, String token) throws Exception {
+        return getChunked(path, token, -1);
+    }
+
+    protected List<JsonObject> getChunked(String path, String token, long expectedError) throws Exception {
+        path = withToken(path, token);
+        final CountDownLatch l = new CountDownLatch(1);
+        final List<JsonObject> result = new ArrayList<>();
+        LOG.info("GET {}", path);
+        if (path.startsWith("http")) {
+            client.getAbs(path, r -> {
+                r.handler(b -> handleChunkedResponse(result, b));
+                r.endHandler(a -> l.countDown());
+            }).end();
+        } else {
+            client.get(port.value, LOCALHOST, path, r -> {
+                LOG.info("Chunked response: {}", r.headers());
+                r.handler(b -> handleChunkedResponse(result, b));
+                r.endHandler(a -> l.countDown());
+            }).end();
+        }
+        Assert.assertTrue(l.await(WAIT_SECONDS, TimeUnit.SECONDS));
+        if (expectedError != -1) {
+            if (result.size() == 1 && result.get(0).containsKey("error")) {
+                if (!result.get(0).getLong("error").equals(expectedError)) {
+                    Assert.fail();
+                }
+            } else {
+                Assert.fail();
+            }
+        }
+        return result;
     }
 
     protected JsonObject post(String path, String message, String token, long expectedError) throws Exception {
@@ -236,7 +276,7 @@ public abstract class IntegrationTest {
         final JsonObject[] jo = new JsonObject[1];
         LOG.info("POST {} BODY {}", path, message);
         client.post(port.value, LOCALHOST, path, r -> r.bodyHandler(b -> handleResponse(jo, test, expectedError, l, b))).end(message);
-        Assert.assertTrue(l.await(3, TimeUnit.SECONDS));
+        Assert.assertTrue(l.await(WAIT_SECONDS, TimeUnit.SECONDS));
         return jo[0];
     }
 
@@ -247,6 +287,12 @@ public abstract class IntegrationTest {
             return jo.containsKey("result");
         });
         return new JsonObject(sb.toString()).getJsonObject("result");
+    }
+
+    protected void handleChunkedResponse(List<JsonObject> result, Buffer b) {
+        JsonObject jo = new JsonObject(new String(b.getBytes()));
+        LOG.info("Chunked Response: {}", jo);
+        result.add(jo);
     }
 
     protected void handleResponse(JsonObject[] jr, Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
@@ -284,8 +330,4 @@ public abstract class IntegrationTest {
     private String withToken(String path, String token) {
         return path.contains("?") ? path + "&token=" + token : path + "?token=" + token;
     }
-
-    protected HttpClient client;
-    protected static final String LOCALHOST = "127.0.0.1";
-    protected static final Logger LOG = LoggerFactory.getLogger(IntegrationTest.class);
 }

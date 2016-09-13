@@ -89,7 +89,11 @@ public class VertxRequestContext implements RequestContext {
             context.response().putHeader("Content-Length", response.length + "");
             context.response().end(Buffer.buffer(response));
         } else {
-            context.response().end(value);
+            if (Strings.isNullOrEmpty(value)) {
+                context.response().end();
+            } else {
+                context.response().end(value);
+            }
         }
         if (Strings.isNullOrEmpty(mimeType)) {
             context.response().putHeader("Content-Type", mimeType);
