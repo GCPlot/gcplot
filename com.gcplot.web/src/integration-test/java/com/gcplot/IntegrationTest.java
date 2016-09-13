@@ -222,18 +222,32 @@ public abstract class IntegrationTest {
         final CountDownLatch l = new CountDownLatch(1);
         final List<JsonObject> result = new ArrayList<>();
         LOG.info("GET {}", path);
+        final StringBuilder sb = new StringBuilder();
         if (path.startsWith("http")) {
             client.getAbs(path, r -> {
-                r.handler(b -> handleChunkedResponse(result, b));
+                r.handler(b -> handleChunkedResponse(sb, b));
                 r.endHandler(a -> l.countDown());
             }).end();
         } else {
             client.get(port.value, LOCALHOST, path, r -> {
-                r.handler(b -> handleChunkedResponse(result, b));
+                r.handler(b -> handleChunkedResponse(sb, b));
                 r.endHandler(a -> l.countDown());
             }).end();
         }
         Assert.assertTrue(l.await(WAIT_SECONDS, TimeUnit.SECONDS));
+        String json = sb.toString();
+        LOG.info("Complete chunked response: {}", json);
+        String[] split = json.split("\\}\\{");
+        for (String s : split) {
+            if (!s.startsWith("{")) {
+                s = "{" + s;
+            }
+            if (!s.endsWith("}")) {
+                s += "}";
+            }
+            JsonObject jo = new JsonObject(s);
+            result.add(jo);
+        }
         if (expectedError != -1) {
             if (result.size() == 1 && result.get(0).containsKey("error")) {
                 if (!result.get(0).getLong("error").equals(expectedError)) {
@@ -288,11 +302,10 @@ public abstract class IntegrationTest {
         return new JsonObject(sb.toString()).getJsonObject("result");
     }
 
-    protected void handleChunkedResponse(List<JsonObject> result, Buffer b) {
+    protected void handleChunkedResponse(StringBuilder sb, Buffer b) {
         String json = new String(b.getBytes());
         LOG.info("Chunked Response: {}", json);
-        JsonObject jo = new JsonObject(json);
-        result.add(jo);
+        sb.append(json);
     }
 
     protected void handleResponse(JsonObject[] jr, Predicate<JsonObject> test, long expectedError, CountDownLatch l, Buffer b) {
