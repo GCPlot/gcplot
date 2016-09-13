@@ -91,7 +91,7 @@ public class TestCassandraObjectsAgesRepository extends BaseCassandraTest {
 
     private void fillEvent(String analyseId, String jvmId, ObjectsAgesImpl oa, int addition) {
         oa.analyseId(analyseId).jvmId(jvmId)
-                .occurred(DateTime.now(DateTimeZone.UTC).dayOfYear().roundCeilingCopy())
+                .occurred(DateTime.now(DateTimeZone.UTC).plusMillis(addition))
                 .ext("ext1")
                 .occupied(Arrays.asList(5L + addition, 6L + addition, 7L + addition))
                 .total(Arrays.asList(10L + addition, 11L + addition, 12L + addition));
