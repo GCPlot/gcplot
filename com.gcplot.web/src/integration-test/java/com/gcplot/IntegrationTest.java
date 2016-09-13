@@ -229,7 +229,6 @@ public abstract class IntegrationTest {
             }).end();
         } else {
             client.get(port.value, LOCALHOST, path, r -> {
-                LOG.info("Chunked response: {}", r.headers());
                 r.handler(b -> handleChunkedResponse(result, b));
                 r.endHandler(a -> l.countDown());
             }).end();
@@ -290,8 +289,9 @@ public abstract class IntegrationTest {
     }
 
     protected void handleChunkedResponse(List<JsonObject> result, Buffer b) {
-        JsonObject jo = new JsonObject(new String(b.getBytes()));
-        LOG.info("Chunked Response: {}", jo);
+        String json = new String(b.getBytes());
+        LOG.info("Chunked Response: {}", json);
+        JsonObject jo = new JsonObject(json);
         result.add(jo);
     }
 
