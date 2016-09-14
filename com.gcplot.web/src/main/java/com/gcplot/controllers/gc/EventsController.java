@@ -55,9 +55,6 @@ public class EventsController extends Controller {
 
     @PostConstruct
     public void init() {
-        if (Strings.isNullOrEmpty(logsDir)) {
-            logsDir = Files.createTempDir().getAbsolutePath();
-        }
         dispatcher.requireAuth().blocking().filter(c ->
                 c.files().size() == 1,
                 "You should provide only a single log file.")
@@ -333,6 +330,4 @@ public class EventsController extends Controller {
     protected LogsParser<ParseResult> logsParser;
     @Autowired
     protected ResourceManager resourceManager;
-    @Value("${event.controller.logs.dir}")
-    protected String logsDir;
 }
