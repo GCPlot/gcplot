@@ -7,6 +7,7 @@ import com.gcplot.model.account.Account;
 import com.gcplot.repository.AccountRepository;
 import com.gcplot.web.*;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -169,6 +170,7 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public String param(String key) {
+        Preconditions.checkNotNull(key);
         return context.request().getParam(key);
     }
 
@@ -180,7 +182,7 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public boolean hasParam(String key) {
-        return param(key) != null;
+        return param(key, null) != null;
     }
 
     @Override

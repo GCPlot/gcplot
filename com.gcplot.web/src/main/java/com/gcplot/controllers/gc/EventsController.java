@@ -4,10 +4,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.FileAppender;
 import com.gcplot.Identifier;
-import com.gcplot.commons.ErrorMessages;
-import com.gcplot.commons.FileUtils;
-import com.gcplot.commons.LazyVal;
-import com.gcplot.commons.Range;
+import com.gcplot.commons.*;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
 import com.gcplot.log_processor.LogMetadata;
@@ -23,14 +20,14 @@ import com.gcplot.repository.VMEventsRepository;
 import com.gcplot.resources.ResourceManager;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
-import com.google.common.base.Strings;
-import com.google.common.io.Files;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
+import org.omg.CORBA.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -44,12 +41,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/13/16
  */
 public class EventsController extends Controller {
+    private static final int ERASE_ALL_PERIOD_YEARS = 10;
     protected static final Logger LOG = LoggerFactory.getLogger(EventsController.class);
     protected static final String LOG_PATTERN = "%d{yyyyMMdd HH:mm:ss.SSS} [[%5p] %c{1} [%t]] %m%n";
 
@@ -58,17 +57,16 @@ public class EventsController extends Controller {
         dispatcher.requireAuth().blocking().filter(c ->
                 c.files().size() == 1,
                 "You should provide only a single log file.")
-                .filter(c -> c.hasParam("analyse_id") && c.hasParam("jvm_id"),
-                        "Params analyse_id and jvm_id are restricted.")
+                .filter(requiredWithoutPeriod(), message())
                 .post("/gc/jvm/log/process", this::processJvmLog);
-        dispatcher.requireAuth().filter(c -> c.hasParam("analyse_id") && c.hasParam("jvm_id")
-                        && c.hasParam("from") && c.hasParam("to"),
-                "Params required: analyse_id, jvm_id, from, to")
+        dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events", this::jvmEvents);
-        dispatcher.requireAuth().filter(c -> c.hasParam("analyse_id") && c.hasParam("jvm_id")
-                        && c.hasParam("from") && c.hasParam("to"),
-                "Params required: analyse_id, jvm_id, from, to")
+        dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/stream", this::jvmEventsStream);
+        dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
+                .get("/gc/jvm/events/erase", this::jvmEventsErase);
+        dispatcher.requireAuth().filter(requiredWithoutPeriod(), message())
+                .get("/gc/jvm/events/erase/all", this::jvmEventsEraseAll);
     }
 
     @Override
@@ -84,6 +82,8 @@ public class EventsController extends Controller {
 
     /**
      * POST /gc/jvm/log/process
+     * Require Auth (token)
+     * Body: Single file upload
      */
     public void processJvmLog(RequestContext ctx) {
         UploadedFile uf = ctx.files().get(0);
@@ -92,7 +92,7 @@ public class EventsController extends Controller {
         final String jvmId = ctx.param("jvm_id");
         final Identifier userId = account(ctx).id();
         final String username = esc(account(ctx).username());
-        String checksum = ctx.param("checksum");
+        String checksum = ctx.param("checksum", null);
 
         Optional<GCAnalyse> analyse = analyseRepository.analyse(analyseId);
         if (isAnalyseIncorrect(ctx, analyseId, jvmId, analyse.orElse(null))) return;
@@ -134,47 +134,91 @@ public class EventsController extends Controller {
 
     /**
      * GET /gc/jvm/events
+     * Require Auth (token)
+     * Params:
+     *  - analyse_id, string (required)
+     *  - jvm_id, string (required)
+     *  - from, timestamp (required)
+     *  - to, timestamp (required)
+     *  - tz, string (optional)
      */
     public void jvmEvents(RequestContext ctx) {
-        DateTimeZone tz;
-        try {
-            tz = DateTimeZone.forID(ctx.param("tz", "UTC"));
-        } catch (Throwable t) {
-            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Param tz is invalid."));
-            return;
-        }
-        final String analyseId = ctx.param("analyse_id");
-        final String jvmId = ctx.param("jvm_id");
-        final DateTime from = new DateTime(Long.parseLong(ctx.param("from")), tz);
-        final DateTime to = new DateTime(Long.parseLong(ctx.param("to")), tz);
+        PeriodParams pp = new PeriodParams(ctx);
 
-        ctx.setChunked(false);
-        List<GCEvent> events = eventRepository.pauseEvents(analyseId, jvmId, Range.of(from, to));
-        ctx.response(GCEventResponse.from(events, tz));
+        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
+                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
+        } else {
+            ctx.setChunked(false);
+            List<GCEvent> events = eventRepository.pauseEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
+            ctx.response(GCEventResponse.from(events, pp.getTimeZone()));
+        }
     }
 
     /**
      * GET /gc/jvm/events
+     * Require Auth (token)
+     * Params:
+     *  - analyse_id, string (required)
+     *  - jvm_id, string (required)
+     *  - from, timestamp (required)
+     *  - to, timestamp (required)
+     *  - tz, string (optional)
      */
     public void jvmEventsStream(RequestContext ctx) {
-        DateTimeZone tz;
-        try {
-            tz = DateTimeZone.forID(ctx.param("tz", "UTC"));
-        } catch (Throwable t) {
-            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Param tz is invalid."));
-            return;
+        PeriodParams pp = new PeriodParams(ctx);
+
+        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
+                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
+        } else {
+            ctx.setChunked(true);
+            Iterator<GCEvent> eventIterator = eventRepository.lazyPauseEvents(pp.getAnalyseId(), pp.getJvmId(),
+                    Range.of(pp.getFrom(), pp.getTo()));
+            while (eventIterator.hasNext()) {
+                ctx.response(GCEventResponse.from(eventIterator.next(), pp.getTimeZone()));
+            }
+            ctx.finish();
         }
+    }
+
+    /**
+     * GET /gc/jvm/events/erase
+     * Require Auth (token)
+     * Params:
+     *  - analyse_id, string (required)
+     *  - jvm_id, string (required)
+     *  - from, timestamp (required)
+     *  - to, timestamp (required)
+     *  - tz, string (optional)
+     */
+    public void jvmEventsErase(RequestContext ctx) {
+        PeriodParams pp = new PeriodParams(ctx);
+
+        if (!checkAnalyseBelongsToAccount(ctx, pp.getAnalyseId()).getLeft()) return;
+        eventRepository.erase(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
+        ctx.response(SUCCESS);
+    }
+
+    /**
+     * GET /gc/jvm/events/erase/all
+     * Require Auth (token)
+     * Params:
+     *  - analyse_id, string (required)
+     *  - jvm_id, string (required)
+     */
+    public void jvmEventsEraseAll(RequestContext ctx) {
         final String analyseId = ctx.param("analyse_id");
         final String jvmId = ctx.param("jvm_id");
-        final DateTime from = new DateTime(Long.parseLong(ctx.param("from")), tz);
-        final DateTime to = new DateTime(Long.parseLong(ctx.param("to")), tz);
 
-        ctx.setChunked(true);
-        Iterator<GCEvent> eventIterator = eventRepository.lazyPauseEvents(analyseId, jvmId, Range.of(from, to));
-        while (eventIterator.hasNext()) {
-            ctx.response(GCEventResponse.from(eventIterator.next(), tz));
+        Pair<Boolean, GCAnalyse> r = checkAnalyseBelongsToAccount(ctx, analyseId);
+        if (!r.getLeft()) return;
+        DateTime lastEvent = r.getRight().lastEvent();
+
+        if (lastEvent != null) {
+            eventRepository.erase(analyseId, jvmId, Range.of(lastEvent.minusYears(ERASE_ALL_PERIOD_YEARS), lastEvent.plusDays(1)));
         }
-        ctx.finish();
+        ctx.response(SUCCESS);
     }
 
     private String calculateFileChecksum(RequestContext ctx, UploadedFile uf) throws IOException, NoSuchAlgorithmException {
@@ -242,6 +286,14 @@ public class EventsController extends Controller {
         }
         if (!analyse.jvmIds().contains(jvmId)) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_JVM_ID, jvmId));
+            return true;
+        }
+        return analyseNotInAccount(ctx, analyse);
+    }
+
+    private boolean analyseNotInAccount(RequestContext ctx, GCAnalyse analyse) {
+        if (!analyse.accountId().equals(account(ctx).id())) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Analyse doesn't belong to the current account."));
             return true;
         }
         return false;
@@ -312,6 +364,33 @@ public class EventsController extends Controller {
         return log;
     }
 
+    private Pair<Boolean, GCAnalyse> checkAnalyseBelongsToAccount(RequestContext ctx, String analyseId) {
+        Optional<GCAnalyse> analyse = analyseRepository.analyse(analyseId);
+        if (!(analyse.isPresent() && analyse.get().accountId().equals(account(ctx).id()))) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
+                    "An account doesn't contain analyse ID " + analyseId));
+            return Pair.of(false, null);
+        }
+        return Pair.of(true, analyse.get());
+    }
+
+    private Predicate<RequestContext> requiredWithoutPeriod() {
+        return c -> c.hasParam("analyse_id") && c.hasParam("jvm_id");
+    }
+
+    private Predicate<RequestContext> requiredWithPeriod() {
+        return c -> c.hasParam("analyse_id") && c.hasParam("jvm_id")
+                && c.hasParam("from") && c.hasParam("to");
+    }
+
+    private String message() {
+        return "Params analyse_id and jvm_id are restricted.";
+    }
+
+    private String periodMessage() {
+        return "Params required: analyse_id, jvm_id, from, to";
+    }
+
     protected ThreadLocal<ch.qos.logback.classic.Logger> loggers = new ThreadLocal<ch.qos.logback.classic.Logger>() {
         @Override
         protected ch.qos.logback.classic.Logger initialValue() {
@@ -330,4 +409,43 @@ public class EventsController extends Controller {
     protected LogsParser<ParseResult> logsParser;
     @Autowired
     protected ResourceManager resourceManager;
+
+    protected static class PeriodParams {
+        private final String analyseId;
+        private final String jvmId;
+        private final DateTime from;
+        private final DateTime to;
+        private final DateTimeZone timeZone;
+
+        public String getAnalyseId() {
+            return analyseId;
+        }
+        public String getJvmId() {
+            return jvmId;
+        }
+        public DateTime getFrom() {
+            return from;
+        }
+        public DateTime getTo() {
+            return to;
+        }
+        public DateTimeZone getTimeZone() {
+            return timeZone;
+        }
+
+        public PeriodParams(RequestContext ctx) {
+            DateTimeZone tz;
+            try {
+                tz = DateTimeZone.forID(ctx.param("tz", "UTC"));
+            } catch (Throwable t) {
+                ctx.finish(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Param tz is invalid."));
+                throw Exceptions.runtime(t);
+            }
+            this.timeZone = tz;
+            this.analyseId = ctx.param("analyse_id");
+            this.jvmId = ctx.param("jvm_id");
+            this.from = new DateTime(Long.parseLong(ctx.param("from")), tz);
+            this.to = new DateTime(Long.parseLong(ctx.param("to")), tz);
+        }
+    }
 }

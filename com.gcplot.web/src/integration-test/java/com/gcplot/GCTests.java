@@ -21,6 +21,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  *         8/23/16
  */
 public class GCTests extends IntegrationTest {
+    private static final long DAYS_BACK = TimeUnit.DAYS.toMillis(30);
 
     @Test
     public void testAnalyseController() throws Exception {
@@ -117,7 +119,7 @@ public class GCTests extends IntegrationTest {
         AnalyseResponse ar = getAnalyse(token, analyseId);
         Assert.assertTrue(ar.lastEventUTC > 0);
 
-        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC - TimeUnit.DAYS.toMillis(30), ar.lastEventUTC);
         Assert.assertEquals(19, events.size());
 
         // check that processing this file again won't make any effect
@@ -126,13 +128,20 @@ public class GCTests extends IntegrationTest {
         AnalyseResponse ar2 = getAnalyse(token, analyseId);
         Assert.assertEquals(ar.lastEventUTC, ar2.lastEventUTC);
 
-        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
         Assert.assertEquals(19, events.size());
 
         // test chunked response
         List<GCEventResponse> streamEvents =
-                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC / 2, ar.lastEventUTC);
+                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
         Assert.assertEquals(19, streamEvents.size());
+
+        get("/gc/jvm/events/erase/all" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, success());
+        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+        Assert.assertEquals(0, events.size());
+        streamEvents =
+                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+        Assert.assertEquals(0, streamEvents.size());
     }
 
     private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {
@@ -165,7 +174,7 @@ public class GCTests extends IntegrationTest {
         List<JsonObject> ejs;
         ejs = getChunked("/gc/jvm/events/stream?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to,
                 token);
-        return ejs.stream().map(j -> JsonSerializer.deserialize(j.toString(), GCEventResponse.class)).collect(Collectors.toList());
+        return ejs.stream().filter(e -> !e.isEmpty()).map(j -> JsonSerializer.deserialize(j.toString(), GCEventResponse.class)).collect(Collectors.toList());
     }
 
     private List<GCEventResponse> getEvents(String token, String analyseId, String jvmId,
