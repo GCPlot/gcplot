@@ -142,6 +142,16 @@ public class GCTests extends IntegrationTest {
         streamEvents =
                 getEventsStream(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
         Assert.assertEquals(0, streamEvents.size());
+
+        JsonObject oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, a -> true);
+        ObjectsAgesResponse oa = JsonSerializer.deserialize(r(oaj).toString(), ObjectsAgesResponse.class);
+        Assert.assertEquals(5, oa.occupied.size());
+        Assert.assertEquals(5, oa.total.size());
+        Assert.assertTrue(oa.time > 0);
+
+        get("/jvm/gc/ages/erase" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, success());
+        oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, a -> true);
+        Assert.assertTrue(oaj.isEmpty());
     }
 
     private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {

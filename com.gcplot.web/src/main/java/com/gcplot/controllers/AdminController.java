@@ -1,6 +1,4 @@
-package com.gcplot.controllers.gc;
-
-import com.gcplot.controllers.Controller;
+package com.gcplot.controllers;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

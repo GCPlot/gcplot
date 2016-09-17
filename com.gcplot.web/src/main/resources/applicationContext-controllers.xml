@@ -12,5 +12,6 @@
     <bean id="analyseController" class="com.gcplot.controllers.gc.AnalyseController"/>
     <bean id="eventsController" class="com.gcplot.controllers.gc.EventsController"/>
     <bean id="rolesController" class="com.gcplot.controllers.RolesController"/>
+    <bean id="objectsAgesController" class="com.gcplot.controllers.gc.ObjectsAgesController"/>
 
 </beans>
