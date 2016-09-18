@@ -25,6 +25,8 @@ public interface Account {
 
     boolean isBlocked();
 
+    boolean isRoleManagement();
+
     String confirmationSalt();
 
     List<Role> roles();

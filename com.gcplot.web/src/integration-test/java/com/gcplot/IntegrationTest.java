@@ -294,12 +294,16 @@ public abstract class IntegrationTest {
     }
 
     protected JsonObject login(RegisterRequest request) throws Exception {
+        return login(request.username, request.password);
+    }
+
+    protected JsonObject login(String username, String password) throws Exception {
         StringBuilder sb = new StringBuilder();
-        get("/user/login?login=" + request.username + "&password=" + request.password, jo -> {
+        get("/user/login?login=" + username + "&password=" + password, jo -> {
             sb.append(jo);
             return jo.containsKey("result");
         });
-        return new JsonObject(sb.toString()).getJsonObject("result");
+        return r(new JsonObject(sb.toString()));
     }
 
     protected void handleChunkedResponse(StringBuilder sb, Buffer b) {
@@ -338,6 +342,10 @@ public abstract class IntegrationTest {
 
     protected JsonArray ra(JsonObject j) {
         return j.getJsonArray("result");
+    }
+
+    protected Predicate<JsonObject> success() {
+        return a -> r(a).getInteger("success").equals(1);
     }
 
     private String withToken(String path, String token) {

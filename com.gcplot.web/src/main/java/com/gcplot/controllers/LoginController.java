@@ -149,15 +149,6 @@ public class LoginController extends Controller {
         this.accountRepository = accountRepository;
     }
 
-    protected RolesRepository rolesRepository;
-    public RolesRepository getRolesRepository() {
-        return rolesRepository;
-    }
-    @Autowired
-    public void setRolesRepository(RolesRepository rolesRepository) {
-        this.rolesRepository = rolesRepository;
-    }
-
     protected MailService mailService;
     public MailService getMailService() {
         return mailService;

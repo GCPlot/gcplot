@@ -197,14 +197,10 @@ public class GCTests extends IntegrationTest {
 
     private String login() throws Exception {
         RegisterRequest request = new RegisterRequest("admin", null, null, "root", "a@b.c");
-        post("/user/register", request, jo -> jo.containsKey("result"));
+        post("/user/register", request, success());
 
         JsonObject jo = login(request);
         return jo.getString("token");
-    }
-
-    private Predicate<JsonObject> success() {
-        return a -> r(a).getInteger("success").equals(1);
     }
 
 }

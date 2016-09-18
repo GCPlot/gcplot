@@ -77,8 +77,8 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
 
     @Override
-    public Dispatcher<String> preHandle(Consumer<RequestContext> handler) {
-        this.preHandler = preHandler.andThen(handler);
+    public Dispatcher<String> preHandle(Predicate<RequestContext> handler) {
+        this.preHandler = preHandler.and(handler);
         return this;
     }
 
@@ -240,20 +240,21 @@ public class VertxDispatcher implements Dispatcher<String> {
             final Handler<RoutingContext> r = rc -> {
                 VertxRequestContext c = contexts.get().reset(rc);
                 try {
-                    preHandler.accept(c);
-                    if (c.loginInfo().isPresent() && c.loginInfo().get().getAccount().isBlocked()) {
-                        c.finish(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
-                    } else {
-                        if (auth && !c.loginInfo().isPresent()) {
-                            c.finish(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
+                    if (preHandler.test(c)) {
+                        if (c.loginInfo().isPresent() && c.loginInfo().get().getAccount().isBlocked()) {
+                            c.finish(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
                         } else {
-                            if (confirmation && !c.loginInfo().get().getAccount().isConfirmed()) {
-                                c.finish(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
-                            } else if (filter == null || filter.test(c)) {
-                                handler.accept(rc, c);
-                            } else if (!rc.response().ended()) {
-                                c.finish(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
-                                        Strings.nullToEmpty(fm != null ? fm.get() : "")));
+                            if (auth && !c.loginInfo().isPresent()) {
+                                c.finish(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
+                            } else {
+                                if (confirmation && !c.loginInfo().get().getAccount().isConfirmed()) {
+                                    c.finish(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
+                                } else if (filter == null || filter.test(c)) {
+                                    handler.accept(rc, c);
+                                } else if (!rc.response().ended()) {
+                                    c.finish(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
+                                            Strings.nullToEmpty(fm != null ? fm.get() : "")));
+                                }
                             }
                         }
                     }
@@ -311,7 +312,7 @@ public class VertxDispatcher implements Dispatcher<String> {
     protected boolean requireConfirmed = false;
     protected String[] mimeTypes;
     protected BiConsumer<Throwable, RequestContext> exceptionHandler = (r,q) -> {};
-    protected Consumer<RequestContext> preHandler = r -> {};
+    protected Predicate<RequestContext> preHandler = r -> true;
     protected Consumer<RequestContext> postHandler = r -> {};
     protected Predicate<RequestContext> filter;
     protected Supplier<String> filterMessage;

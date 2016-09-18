@@ -91,6 +91,14 @@ public class AccountImpl implements Account {
     }
 
     @Override
+    public boolean isRoleManagement() {
+        return roleManagement;
+    }
+    public void setRoleManagement(boolean roleManagement) {
+        this.roleManagement = roleManagement;
+    }
+
+    @Override
     public String confirmationSalt() {
         return confirmationSalt;
     }
@@ -225,6 +233,7 @@ public class AccountImpl implements Account {
     protected boolean confirmed;
     protected boolean blocked;
     protected String confirmationSalt;
+    protected boolean roleManagement;
     @OneToMany(targetEntity = RoleImpl.class)
     protected ArrayList<? super RoleImpl> roles;
 }

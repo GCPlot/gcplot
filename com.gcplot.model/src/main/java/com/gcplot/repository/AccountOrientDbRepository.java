@@ -166,6 +166,11 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
         updateRoles(((AccountImpl)account).rolesImpl(), account);
     }
 
+    @Override
+    public void roleManagement(Account account, boolean isRoleManagement) {
+        execute(String.format(UPDATE_ROLE_MANAGEMENT_COMMAND, account.id().toString(), isRoleManagement));
+    }
+
     protected void updateRoles(List<RoleImpl> roles, Account account) {
         metrics.meter(ACCOUNT_UPDATE_ROLES_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
@@ -203,6 +208,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String UPDATE_INFO_COMMAND = "update %s" +
             " set username=\"%s\", email=\"%s\", firstName=\"%s\", lastName=\"%s\" LOCK RECORD";
     private static final String UPDATE_PASSWORD_COMMAND = "update %s set passHash=\"%s\" LOCK RECORD";
+    private static final String UPDATE_ROLE_MANAGEMENT_COMMAND = "update %s set roleManagement=%s LOCK RECORD";
 
     private static final String ALL_ACCOUNTS_METRIC = Metrics.name(AccountOrientDbRepository.class, "all_accounts");
     private static final String ACCOUNT_METRIC = Metrics.name(AccountOrientDbRepository.class, "account");
