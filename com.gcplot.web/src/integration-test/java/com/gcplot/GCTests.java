@@ -40,7 +40,7 @@ public class GCTests extends IntegrationTest {
         Assert.assertNotNull(analyseId);
 
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
-        JsonObject analyseJson = get("/analyse/get?id=" + analyseId, token, a -> true);
+        JsonObject analyseJson = get("/analyse/get?id=" + analyseId, token);
         Assert.assertNotNull(analyseJson);
         AnalyseResponse ar = JsonSerializer.deserialize(r(analyseJson).toString(), AnalyseResponse.class);
         Assert.assertEquals(analyseId, ar.id);
@@ -143,14 +143,14 @@ public class GCTests extends IntegrationTest {
                 getEventsStream(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
         Assert.assertEquals(0, streamEvents.size());
 
-        JsonObject oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, a -> true);
+        JsonObject oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token);
         ObjectsAgesResponse oa = JsonSerializer.deserialize(r(oaj).toString(), ObjectsAgesResponse.class);
         Assert.assertEquals(5, oa.occupied.size());
         Assert.assertEquals(5, oa.total.size());
         Assert.assertTrue(oa.time > 0);
 
         get("/jvm/gc/ages/erase" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, success());
-        oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, a -> true);
+        oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token);
         Assert.assertTrue(oaj.isEmpty());
     }
 
@@ -175,7 +175,7 @@ public class GCTests extends IntegrationTest {
 
     private AnalyseResponse getAnalyse(String token, String analyseId) throws Exception {
         JsonObject analyseJson;
-        analyseJson = get("/analyse/get?id=" + analyseId, token, a -> true);
+        analyseJson = get("/analyse/get?id=" + analyseId, token);
         return JsonSerializer.deserialize(r(analyseJson).toString(), AnalyseResponse.class);
     }
 
@@ -191,7 +191,7 @@ public class GCTests extends IntegrationTest {
                                             long from, long to) throws Exception {
         JsonObject eventsJson;
         eventsJson = get("/gc/jvm/events?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to,
-                token, a -> true);
+                token);
         return JsonSerializer.deserializeList(ra(eventsJson).toString(), GCEventResponse.class);
     }
 

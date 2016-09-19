@@ -37,7 +37,7 @@ public interface AccountRepository {
 
     void removeRole(Account account, Role role);
 
-    void roleManagement(Account account, boolean isRoleManagement);
+    void roleManagement(Identifier account, boolean isRoleManagement);
 
     enum LoginType {
         USERNAME, EMAIL

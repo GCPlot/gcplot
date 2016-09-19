@@ -167,8 +167,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
-    public void roleManagement(Account account, boolean isRoleManagement) {
-        execute(String.format(UPDATE_ROLE_MANAGEMENT_COMMAND, account.id().toString(), isRoleManagement));
+    public void roleManagement(Identifier id, boolean isRoleManagement) {
+        execute(String.format(UPDATE_ROLE_MANAGEMENT_COMMAND, id.toString(), isRoleManagement));
     }
 
     protected void updateRoles(List<RoleImpl> roles, Account account) {

@@ -192,6 +192,10 @@ public abstract class IntegrationTest {
         return get(path, a -> true, expectedError);
     }
 
+    protected JsonObject get(String path, String token) throws Exception {
+        return get(withToken(path, token), a -> true);
+    }
+
     protected JsonObject get(String path, String token, Predicate<JsonObject> test) throws Exception {
         return get(withToken(path, token), test);
     }
@@ -338,6 +342,10 @@ public abstract class IntegrationTest {
 
     protected JsonObject r(JsonObject j) {
         return j.getJsonObject("result");
+    }
+
+    protected String rs(JsonObject j) {
+        return j.getString("result");
     }
 
     protected JsonArray ra(JsonObject j) {
