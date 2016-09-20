@@ -161,7 +161,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
-    public void removeRole(Account account, Role role) {
+    public void detachRole(Account account, Role role) {
         ((AccountImpl)account).removeRole((RoleImpl) role);
         updateRoles(((AccountImpl)account).rolesImpl(), account);
     }

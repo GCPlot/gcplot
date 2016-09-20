@@ -1,5 +1,6 @@
 package com.gcplot.controllers;
 
+import com.gcplot.Identifier;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.messages.AccountResponse;
 import com.gcplot.model.account.Account;
@@ -55,7 +56,7 @@ public class AdminController extends Controller {
     public void getAccountInfo(RequestContext ctx) {
         String accountId = ctx.param("account_id");
 
-        Optional<Account> account = accountRepository.account(accountId);
+        Optional<Account> account = accountRepository.account(Identifier.fromStr(accountId));
         if (account.isPresent()) {
             ctx.response(AccountResponse.from(account.get()));
         } else {
@@ -76,7 +77,7 @@ public class AdminController extends Controller {
         boolean isRoleManager = Boolean.parseBoolean(ctx.param("role_manager"));
         String accountId = ctx.param("account_id");
 
-        Optional<Account> account = accountRepository.account(accountId);
+        Optional<Account> account = accountRepository.account(Identifier.fromStr(accountId));
         if (account.isPresent()) {
             accountRepository.roleManagement(account.get().id(), isRoleManager);
             ctx.response(SUCCESS);
