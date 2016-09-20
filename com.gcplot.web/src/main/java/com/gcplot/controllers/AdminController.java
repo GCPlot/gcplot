@@ -1,8 +1,10 @@
 package com.gcplot.controllers;
 
 import com.gcplot.Identifier;
+import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.messages.AccountResponse;
+import com.gcplot.messages.PutConfigMessage;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.role.Restriction;
 import com.gcplot.model.role.RestrictionType;
@@ -35,6 +37,30 @@ public class AdminController extends Controller {
                 .get("/admin/account/info", this::getAccountInfo);
         dispatcher.requireAuth()
                 .get("/admin/account/id", this::getCurrentAccountId);
+        dispatcher.requireAuth()
+                .filter(this::hasNonRestrictiveRole, MESSAGE)
+                .post("/admin/configs/put", PutConfigMessage.class, this::putConfig);
+    }
+
+    /**
+     * POST /admin/config/set
+     * Require Auth (token)
+     */
+    public void putConfig(PutConfigMessage req, RequestContext ctx) {
+        Object value = convertPropertyValue(req.value, req.type);
+        if (value == null) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
+                    String.format("Type '%s' wasn't found.", req.type)));
+        } else {
+            ConfigProperty cf = ConfigProperty.get(req.propertyName);
+            if (cf == null) {
+                ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
+                        String.format("Property '%s' wasn't found.", req.propertyName)));
+            } else {
+                config.putProperty(cf, value);
+                ctx.response(SUCCESS);
+            }
+        }
     }
 
     /**
@@ -87,6 +113,20 @@ public class AdminController extends Controller {
         }
     }
 
+    private Object convertPropertyValue(String value, String type) {
+        switch (type) {
+            case "byte": return Byte.parseByte(value);
+            case "short": return Short.parseShort(value);
+            case "int": return Integer.parseInt(value);
+            case "long": return Long.parseLong(value);
+            case "boolean": return Boolean.parseBoolean(value);
+            case "float": return Float.parseFloat(value);
+            case "double": return Double.parseDouble(value);
+            case "string": return value;
+            default: return null;
+        }
+    }
+
     private boolean hasNonRestrictiveRole(RequestContext ctx) {
         if (!ctx.loginInfo().isPresent()) {
             return false;
@@ -98,13 +138,6 @@ public class AdminController extends Controller {
         return rs.size() > 0 && rs.stream().allMatch(r -> !r.restricted());
     }
 
-    protected AccountRepository accountRepository;
-    public AccountRepository getAccountRepository() {
-        return accountRepository;
-    }
     @Autowired
-    public void setAccountRepository(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
-
+    private AccountRepository accountRepository;
 }

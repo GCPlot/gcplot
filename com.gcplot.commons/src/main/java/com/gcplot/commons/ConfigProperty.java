@@ -1,5 +1,8 @@
 package com.gcplot.commons;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum ConfigProperty {
 
     POLL_INTERVAL("config.poll.interval", 15000),
@@ -25,6 +28,18 @@ public enum ConfigProperty {
     USER_ANALYSE_COUNT_CACHE_SECONDS("user.analyse.cache.min", 120L),
     GC_EVENTS_MAX_INTERVAL_DAYS("user.gc.events.max.interval.days", 365),
     SURVIVOR_AGES_AVG_THRESHOLD("survivor.ages.avg.threshold", 100);
+
+    private static Map<String, ConfigProperty> types = new HashMap<>();
+
+    static {
+        for (ConfigProperty cp : ConfigProperty.values()) {
+            types.put(cp.getKey(), cp);
+        }
+    }
+
+    public static ConfigProperty get(String key) {
+        return types.get(key);
+    }
 
     private String key;
     public String getKey() {
