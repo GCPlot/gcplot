@@ -17,7 +17,7 @@ public interface Dispatcher<Route> extends Closeable {
      * @param handler
      * @return
      */
-    Dispatcher<Route> preHandle(Consumer<RequestContext> handler);
+    Dispatcher<Route> preHandle(Predicate<RequestContext> handler);
 
     /**
      * Chains the handlers.

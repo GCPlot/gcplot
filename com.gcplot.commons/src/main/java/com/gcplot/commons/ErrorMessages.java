@@ -15,6 +15,7 @@ public class ErrorMessages {
     public static final long INTERNAL_ERROR = 0x1F4;
     public static final long NOT_UNIQUE_FIELDS = 0x127;
     public static final long USER_IS_BLOCKED = 0x128;
+    public static final long ACCESS_DENIED = 0x193;
     public static final long NOT_FOUND = 0x194;
     public static final long SAME_PASSWORD = 0x195;
 
@@ -52,6 +53,7 @@ public class ErrorMessages {
         errorMessages.put(NOT_FOUND, "The requested path wasn't found.");
         errorMessages.put(SAME_PASSWORD, "Old and new passwords should be different.");
         errorMessages.put(RESOURCE_NOT_FOUND_RESPONSE, "Requested resource was not found in the system.");
+        errorMessages.put(ACCESS_DENIED, "The access to the given resource is denied by the internal role system.");
     }
 
     private static final JsonNodeFactory JSON_NODE_FACTORY = JsonNodeFactory.instance;

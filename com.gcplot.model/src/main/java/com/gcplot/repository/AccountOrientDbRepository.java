@@ -161,9 +161,14 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
-    public void removeRole(Account account, Role role) {
+    public void detachRole(Account account, Role role) {
         ((AccountImpl)account).removeRole((RoleImpl) role);
         updateRoles(((AccountImpl)account).rolesImpl(), account);
+    }
+
+    @Override
+    public void roleManagement(Identifier id, boolean isRoleManagement) {
+        execute(String.format(UPDATE_ROLE_MANAGEMENT_COMMAND, id.toString(), isRoleManagement));
     }
 
     protected void updateRoles(List<RoleImpl> roles, Account account) {
@@ -203,6 +208,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String UPDATE_INFO_COMMAND = "update %s" +
             " set username=\"%s\", email=\"%s\", firstName=\"%s\", lastName=\"%s\" LOCK RECORD";
     private static final String UPDATE_PASSWORD_COMMAND = "update %s set passHash=\"%s\" LOCK RECORD";
+    private static final String UPDATE_ROLE_MANAGEMENT_COMMAND = "update %s set roleManagement=%s LOCK RECORD";
 
     private static final String ALL_ACCOUNTS_METRIC = Metrics.name(AccountOrientDbRepository.class, "all_accounts");
     private static final String ACCOUNT_METRIC = Metrics.name(AccountOrientDbRepository.class, "account");

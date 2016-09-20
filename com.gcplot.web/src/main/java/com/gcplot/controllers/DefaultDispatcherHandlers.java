@@ -3,6 +3,8 @@ package com.gcplot.controllers;
 import com.codahale.metrics.MetricRegistry;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Metrics;
+import com.gcplot.model.role.Restriction;
+import com.gcplot.model.role.RestrictionType;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.RequestContext;
 import org.slf4j.Logger;
@@ -43,8 +45,20 @@ public class DefaultDispatcherHandlers {
         dispatcher.postHandle(this::postHandle);
     }
 
-    public void preHandle(RequestContext request) {
-        metrics.meter(Metrics.name("requests", query(request))).mark();
+    public boolean preHandle(RequestContext ctx) {
+        if (ctx.loginInfo().isPresent()) {
+            boolean accessRestricted = ctx.loginInfo().get().getAccount().roles()
+                    .stream().flatMap(r -> r.restrictions().stream())
+                    .filter(r -> r.type() == RestrictionType.TOGGLE)
+                    .filter(r -> r.action().equals(ctx.path()))
+                    .anyMatch(Restriction::restricted);
+            if (accessRestricted) {
+                ctx.write(ErrorMessages.buildJson(ErrorMessages.ACCESS_DENIED));
+                return false;
+            }
+        }
+        metrics.meter(Metrics.name("requests", query(ctx))).mark();
+        return true;
     }
 
     public void postHandle(RequestContext request) {

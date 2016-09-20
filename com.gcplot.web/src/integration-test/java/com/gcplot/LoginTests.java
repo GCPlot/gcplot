@@ -26,7 +26,7 @@ public class LoginTests extends IntegrationTest {
         request.email = "artem@gcplot.com";
         request.username = "admin";
         request.password = "root";
-        post("/user/register", request, jo -> jo.containsKey("result"));
+        post("/user/register", request, success());
 
         JsonObject jo = login(request);
         Assert.assertEquals(jo.getString("username"), request.username);
@@ -37,7 +37,7 @@ public class LoginTests extends IntegrationTest {
 
         Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(10)));
         String confirmUrl = smtpServer.getReceivedEmails().get(0).getBody();
-        get(confirmUrl, j -> j.containsKey("result"));
+        get(confirmUrl, success());
 
         jo = login(request);
         Assert.assertEquals(jo.getBoolean("confirmed"), true);
@@ -49,7 +49,7 @@ public class LoginTests extends IntegrationTest {
         request.email = "artem@gcplot.com";
         request.username = "admin";
         request.password = "root";
-        post("/user/register", request, jo -> jo.containsKey("result"));
+        post("/user/register", request, success());
 
         post("/user/register", request, ErrorMessages.NOT_UNIQUE_FIELDS);
     }
