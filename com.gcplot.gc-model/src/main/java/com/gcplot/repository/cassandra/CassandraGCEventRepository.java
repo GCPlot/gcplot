@@ -1,5 +1,6 @@
 package com.gcplot.repository.cassandra;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -151,7 +152,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
     }
 
     protected RegularStatement addStatement(GCEvent event) {
-        return QueryBuilder.insertInto(TABLE_NAME).value("id", event.id() != null ? UUID.fromString(event.id()) : uuid())
+        return (RegularStatement) QueryBuilder.insertInto(TABLE_NAME).value("id", event.id() != null ? UUID.fromString(event.id()) : uuid())
                 .value("parent_id", event.parentEvent().isPresent() ? UUID.fromString(event.parentEvent().orElse(null)) : null)
                 .value("analyse_id", UUID.fromString(event.analyseId()))
                 .value("bucket_id", event.bucketId())
@@ -167,7 +168,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("pause_mu", event.pauseMu())
                 .value("generations", EnumSetUtils.encode(event.generations()))
                 .value("concurrency", event.concurrency().type())
-                .value("ext", event.ext());
+                .value("ext", event.ext()).setConsistencyLevel(ConsistencyLevel.ONE);
     }
 
 }
