@@ -1,6 +1,21 @@
 plugins {
     id 'java' // or 'groovy' Must be explicitly applied
     id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'application'
+}
+
+mainClassName = "com.gcplot.bootstrap.Bootstrap"
+
+jar {
+    manifest {
+        attributes("Implementation-Title": "GCPlot",
+                "Implementation-Version": "$gcplotVersion",
+                "Main-Class": "com.gcplot.bootstrap.Bootstrap")
+    }
+}
+
+shadowJar {
+    zip64 = true
 }
 
 sourceSets {
@@ -71,3 +86,4 @@ integrationTest.mustRunAfter test
 tasks.withType(Test) {
     reports.html.destination = file("${reporting.baseDir}/${name}")
 }
+
