@@ -1,5 +1,5 @@
 CREATE KEYSPACE IF NOT EXISTS gcplot
-  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 2 };
 
 USE gcplot;
 
