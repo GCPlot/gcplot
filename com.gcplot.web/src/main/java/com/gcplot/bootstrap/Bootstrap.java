@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import java.io.File;
@@ -66,9 +67,7 @@ public class Bootstrap {
         }*/
 
         URL resource = Thread.currentThread().getContextClassLoader().getResource("applicationContext.xml");
-        applicationContext = new FileSystemXmlApplicationContext(new String[]{
-                "file:" + new File(resource.toURI()).getAbsolutePath()
-        }, true);
+        applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
         if (hang) {
             Thread.sleep(Long.MAX_VALUE);
         }
