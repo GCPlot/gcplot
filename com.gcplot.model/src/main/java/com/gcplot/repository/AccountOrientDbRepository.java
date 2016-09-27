@@ -36,12 +36,10 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
 
     @Override
     public void init(OObjectDatabaseTx db, OSchema schema) {
-        if (schema.getClass(RoleImpl.class) == null) {
-            db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
-            db.getEntityManager().registerEntityClass(RoleImpl.class);
-        }
+        db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
+        db.getEntityManager().registerEntityClass(RoleImpl.class);
+        db.getEntityManager().registerEntityClass(AccountImpl.class);
         if (schema.getClass(ACCOUNT_DOCUMENT_NAME) == null) {
-            db.getEntityManager().registerEntityClass(AccountImpl.class);
             OClass cls = db.getMetadata().getSchema().getClass(AccountImpl.class);
             String indexName = AccountImpl.class.getName() + ".unq";
             Table t = AccountImpl.class.getAnnotation(Table.class);

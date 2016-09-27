@@ -30,10 +30,8 @@ public class RolesOrientDbRepository extends AbstractOrientDbRepository implemen
 
     @Override
     protected void init(OObjectDatabaseTx db, OSchema schema) {
-        if (schema.getClass(ROLES_DOCUMENT_NAME) == null) {
-            db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
-            db.getEntityManager().registerEntityClass(RoleImpl.class);
-        }
+        db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
+        db.getEntityManager().registerEntityClass(RoleImpl.class);
     }
 
     @Override
