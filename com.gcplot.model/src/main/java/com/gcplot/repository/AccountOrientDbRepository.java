@@ -38,8 +38,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     public void init(OObjectDatabaseTx db, OSchema schema) {
         db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
         db.getEntityManager().registerEntityClass(RoleImpl.class);
-        db.getEntityManager().registerEntityClass(AccountImpl.class);
         if (schema.getClass(ACCOUNT_DOCUMENT_NAME) == null) {
+            db.getEntityManager().registerEntityClass(AccountImpl.class);
             OClass cls = db.getMetadata().getSchema().getClass(AccountImpl.class);
             String indexName = AccountImpl.class.getName() + ".unq";
             Table t = AccountImpl.class.getAnnotation(Table.class);
@@ -54,6 +54,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
                         cls.createIndex(indexName + "." + field, OClass.INDEX_TYPE.UNIQUE_HASH_INDEX, field);
                 }
             }
+        } else {
+            db.getEntityManager().registerEntityClass(AccountImpl.class);
         }
     }
 
