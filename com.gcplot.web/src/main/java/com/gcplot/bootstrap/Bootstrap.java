@@ -66,7 +66,7 @@ public class Bootstrap {
             PropertyConfigurator.configure(log4File.getAbsolutePath());
         }*/
 
-        URL resource = Thread.currentThread().getContextClassLoader().getResource("applicationContext.xml");
+        // URL resource = Thread.currentThread().getContextClassLoader().getResource("applicationContext.xml");
         applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
         if (hang) {
             Thread.sleep(Long.MAX_VALUE);

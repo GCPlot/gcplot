@@ -54,10 +54,10 @@ public abstract class AbstractOrientDbRepository {
     protected OObjectDatabaseTx db() {
         try {
             OObjectDatabaseTx db = new OObjectDatabaseTx(pool.acquire());
-            metrics().counter(POOL_ACQUIRE_METRIC).inc();
+            metrics().meter(POOL_ACQUIRE_METRIC).mark();
             return db;
         } catch (Exception e) {
-            metrics().counter(POOL_EXHAUSTED_METRIC).inc();
+            metrics().meter(POOL_EXHAUSTED_METRIC).mark();
             LOG.error(e.getMessage(), e);
             return new OObjectDatabaseTx(config.connectionString).open(config.user, config.password);
         }
@@ -66,10 +66,10 @@ public abstract class AbstractOrientDbRepository {
     protected ODatabaseDocumentTx docDb() {
         try {
             ODatabaseDocumentTx db = pool.acquire();
-            metrics().counter(POOL_ACQUIRE_METRIC).inc();
+            metrics().meter(POOL_ACQUIRE_METRIC).mark();
             return db;
         } catch (Exception e) {
-            metrics().counter(POOL_EXHAUSTED_METRIC).inc();
+            metrics().meter(POOL_EXHAUSTED_METRIC).mark();
             LOG.error(e.getMessage(), e);
             return new ODatabaseDocumentTx(config.connectionString).open(config.user, config.password);
         }
