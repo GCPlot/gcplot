@@ -41,7 +41,7 @@ public class MailService {
         }
         email.setSocketConnectionTimeout(config.readInt(ConfigProperty.EMAIL_CONNECTION_TIMEOUT));
         email.setSocketTimeout(config.readInt(ConfigProperty.EMAIL_SEND_TIMEOUT));
-        email.setSubject("Confirm your GC Plot Account");
+        email.setSubject("Confirmation notice");
         String template = config.readString(ConfigProperty.EMAIL_CONFIRM_TEMPLATE);
         String url = urlBuilder.apiUrl("/user/confirm", "token", account.token(), "salt", account.confirmationSalt());
         if (Strings.isNullOrEmpty(template)) {
