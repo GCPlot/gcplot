@@ -52,6 +52,7 @@ public class MailService {
         try {
             email.setMsg(template);
             email.addTo(account.email());
+            email.addHeader("Content-Type", "text/html; charset=\"UTF-8\"");
             executorService.submit(() -> {
                 try {
                     email.send();
