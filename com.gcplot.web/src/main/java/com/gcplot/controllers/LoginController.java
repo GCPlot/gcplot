@@ -1,5 +1,6 @@
 package com.gcplot.controllers;
 
+import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
@@ -104,7 +105,7 @@ public class LoginController extends Controller {
      */
     public void confirm(RequestContext ctx) {
         if (getAccountRepository().confirm(token(ctx), ctx.param("salt"))) {
-            ctx.response(SUCCESS);
+            ctx.redirect(config.readString(ConfigProperty.REDIRECT_URL_AFTER_CONFIRMATION));
         } else {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
                     String.format("Can't confirm user [username=%s]", account(ctx).username())));

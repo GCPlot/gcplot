@@ -53,6 +53,4 @@ public class UrlBuilder {
 
     public static final String HTTP = "http://";
     public static final String HTTPS = "https://";
-    public static final String HTTP_SHORT = HTTP.substring(0, HTTP.indexOf(':'));
-    public static final String HTTPS_SHORT = HTTPS.substring(0, HTTPS.indexOf(':'));
 }

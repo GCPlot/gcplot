@@ -37,7 +37,7 @@ public class LoginTests extends IntegrationTest {
 
         Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(10)));
         String confirmUrl = smtpServer.getReceivedEmails().get(0).getBody();
-        get(confirmUrl, success());
+        Assert.assertTrue(withRedirect(confirmUrl));
 
         jo = login(request);
         Assert.assertEquals(jo.getBoolean("confirmed"), true);

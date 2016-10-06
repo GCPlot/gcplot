@@ -120,6 +120,12 @@ public class VertxRequestContext implements RequestContext {
     }
 
     @Override
+    public RequestContext redirect(String url) {
+        context.response().setStatusCode(301).putHeader("Location", url).end();
+        return this;
+    }
+
+    @Override
     public boolean isChunked() {
         return context.response().isChunked();
     }

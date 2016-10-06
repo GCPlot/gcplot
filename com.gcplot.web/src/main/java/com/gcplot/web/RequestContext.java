@@ -28,6 +28,8 @@ public interface RequestContext {
 
     RequestContext setChunked(boolean chunked);
 
+    RequestContext redirect(String url);
+
     boolean isChunked();
 
     boolean isFinished();

@@ -17,6 +17,7 @@ import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -182,6 +183,18 @@ public abstract class IntegrationTest {
         }
         Assert.assertTrue(l.await(WAIT_SECONDS, TimeUnit.SECONDS));
         return jo[0];
+    }
+
+    protected boolean withRedirect(String path) throws Exception {
+        LOG.info("GET {}", path);
+        HttpClientResponse[] resp = new HttpClientResponse[1];
+        if (path.startsWith("http")) {
+            client.getAbs(path, r -> resp[0] = r).end();
+        } else {
+            client.get(port.value, LOCALHOST, path, r -> resp[0] = r).end();
+        }
+        Assert.assertTrue(Utils.waitFor(() -> resp[0] != null, TimeUnit.SECONDS.toNanos(WAIT_SECONDS)));
+        return resp[0].getHeader("Location") != null && resp[0].statusCode() == 301;
     }
 
     protected JsonObject get(String path, String token, long expectedError) throws Exception {
