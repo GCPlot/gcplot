@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -169,7 +170,7 @@ public class GCTests extends IntegrationTest {
     }
 
     private String createAnalyse(String token) throws Exception {
-        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "");
+        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, Collections.emptyList(), "");
         return r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");
     }
 

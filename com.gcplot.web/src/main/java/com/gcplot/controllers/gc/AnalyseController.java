@@ -17,8 +17,7 @@ import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -180,12 +179,27 @@ public class AnalyseController extends Controller {
         analyse.name(req.name);
         analyse.isContinuous(req.isContinuous);
         analyse.accountId(userId);
-        analyse.jvmGCTypes(Collections.emptyMap());
-        analyse.jvmVersions(Collections.emptyMap());
         analyse.start(DateTime.now(DateTimeZone.UTC));
         analyse.ext(req.ext);
         analyse.jvmHeaders(Collections.emptyMap());
         analyse.jvmMemoryDetails(Collections.emptyMap());
+        if (req.jvms == null || req.jvms.size() == 0) {
+            analyse.jvmGCTypes(Collections.emptyMap());
+            analyse.jvmVersions(Collections.emptyMap());
+            analyse.jvmIds(Collections.emptySet());
+        } else {
+            Set<String> jvmIds = new HashSet<>();
+            Map<String, GarbageCollectorType> jvmGCTypes = new HashMap<>();
+            Map<String, VMVersion> jvmVersions = new HashMap<>();
+            req.jvms.forEach(jvm -> {
+                jvmIds.add(jvm.jvmId);
+                jvmGCTypes.put(jvm.jvmId, GarbageCollectorType.get(jvm.gcType));
+                jvmVersions.put(jvm.jvmId, VMVersion.get(jvm.vmVersion));
+            });
+            analyse.jvmGCTypes(jvmGCTypes);
+            analyse.jvmVersions(jvmVersions);
+            analyse.jvmIds(jvmIds);
+        }
 
         ctx.response(new NewAnalyseResponse(analyseRepository.newAnalyse(analyse)));
         newAnalyses.invalidate(userId);
