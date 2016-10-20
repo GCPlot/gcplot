@@ -29,6 +29,8 @@ public interface GCAnalyseRepository {
      */
     String newAnalyse(GCAnalyse analyse);
 
+    void updateAnalyse(Identifier accountId, String analyseId, String name, String ext);
+
     void addJvm(Identifier accountId, String analyseId,
                 String jvmId, VMVersion version, GarbageCollectorType type,
                 String headers, MemoryDetails memoryDetails);

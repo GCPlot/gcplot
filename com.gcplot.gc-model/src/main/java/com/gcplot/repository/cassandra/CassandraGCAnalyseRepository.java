@@ -93,6 +93,17 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
+    public void updateAnalyse(Identifier accountId, String analyseId, String name, String ext) {
+        Preconditions.checkNotNull(name, "Analyse name can't be null.");
+        UUID uuid = UUID.fromString(analyseId);
+        Update.Assignments query = updateTable(accountId, uuid).with(set("analyse_name", name));
+        if (ext != null) {
+            query = query.and(set("ext", ext));
+        }
+        connector.session().execute(query.setConsistencyLevel(ConsistencyLevel.ALL));
+    }
+
+    @Override
     public void addJvm(Identifier accId, String analyseId, String jvmId,
                        VMVersion version, GarbageCollectorType type,
                        String headers, MemoryDetails memoryDetails) {

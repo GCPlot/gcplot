@@ -39,6 +39,7 @@ public class AnalyseController extends Controller {
         dispatcher.requireAuth().filter(c -> c.hasParam("id"), "Param 'id' of analyse is missing.")
                 .delete("/analyse/delete", this::deleteAnalyse);
         dispatcher.requireAuth().get("/analyse/all", this::analyses);
+        dispatcher.requireAuth().post("/analyse/update", UpdateAnalyseRequest.class, this::updateAnalyse);
         dispatcher.requireAuth().post("/analyse/jvm/add", AddJvmRequest.class, this::addJvm);
         dispatcher.requireAuth().post("/analyse/jvm/update/version", UpdateJvmVersionRequest.class, this::updateJvmVersion);
         dispatcher.requireAuth().post("/analyse/jvm/update/info", UpdateJvmInfoRequest.class, this::updateJvmInfo);
@@ -85,6 +86,17 @@ public class AnalyseController extends Controller {
         } else {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE));
         }
+    }
+
+    /**
+     * POST /analyse/update
+     * Require Auth (token)
+     * Body: UpdateAnalyseRequest (JSON)
+     * Responds: SUCCESS or ERROR
+     */
+    public void updateAnalyse(UpdateAnalyseRequest req, RequestContext ctx) {
+        analyseRepository.updateAnalyse(account(ctx).id(), req.id, req.name, req.ext);
+        ctx.response(SUCCESS);
     }
 
     /**

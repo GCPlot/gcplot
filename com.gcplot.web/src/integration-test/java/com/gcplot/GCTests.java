@@ -53,6 +53,8 @@ public class GCTests extends IntegrationTest {
         Assert.assertTrue(ar.jvmGCTypes.isEmpty());
         Assert.assertTrue(ar.memory.isEmpty());
 
+        post("/analyse/update", new UpdateAnalyseRequest(analyseId, "anan", ""), token, success());
+
         get("/analyse/get?id=123", token, ErrorMessages.INTERNAL_ERROR);
         get("/analyse/get?id=" + UUID.randomUUID().toString(), token, ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE);
 
@@ -64,6 +66,7 @@ public class GCTests extends IntegrationTest {
 
         ar = getAnalyse(token, analyseId);
         Assert.assertEquals(analyseId, ar.id);
+        Assert.assertEquals("anan", ar.name);
         Assert.assertEquals(Sets.newHashSet("jvm1", "jvm2"), ar.jvmIds);
         Assert.assertEquals(VMVersion.HOTSPOT_1_9.type(), (int) ar.jvmVersions.get("jvm1"));
         Assert.assertEquals(VMVersion.HOTSPOT_1_3_1.type(), (int) ar.jvmVersions.get("jvm2"));
