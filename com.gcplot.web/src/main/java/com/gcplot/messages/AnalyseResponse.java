@@ -31,7 +31,7 @@ public class AnalyseResponse {
     public Map<String, String> jvmHeaders;
     @JsonProperty("jvm_vers")
     public Map<String, Integer> jvmVersions;
-        @JsonProperty("jvm_gcts")
+    @JsonProperty("jvm_gcts")
     public Map<String, Integer> jvmGCTypes;
     @JsonProperty("jvm_ids")
     public Set<String> jvmIds;
