@@ -8,6 +8,7 @@ import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
+import com.gcplot.repository.operations.analyse.*;
 import com.gcplot.roles.Restrictions;
 import com.gcplot.web.RequestContext;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -43,6 +44,7 @@ public class AnalyseController extends Controller {
         dispatcher.requireAuth().post("/analyse/jvm/add", AddJvmRequest.class, this::addJvm);
         dispatcher.requireAuth().post("/analyse/jvm/update/version", UpdateJvmVersionRequest.class, this::updateJvmVersion);
         dispatcher.requireAuth().post("/analyse/jvm/update/info", UpdateJvmInfoRequest.class, this::updateJvmInfo);
+        dispatcher.requireAuth().post("/analyse/jvm/update/bulk", BulkJvmsUpdateRequest.class, this::updateJvmBulk);
         dispatcher.requireAuth()
                 .filter(c -> c.hasParam("analyse_id"), "Param 'analyse_id' is missing.")
                 .filter(c -> c.hasParam("jvm_id"), "Param 'jvm_id' is missing.")
@@ -95,7 +97,7 @@ public class AnalyseController extends Controller {
      * Responds: SUCCESS or ERROR
      */
     public void updateAnalyse(UpdateAnalyseRequest req, RequestContext ctx) {
-        analyseRepository.updateAnalyse(account(ctx).id(), req.id, req.name, req.ext);
+        analyseRepository.perform(new UpdateAnalyseOperation(account(ctx).id(), req.id, req.name, req.ext));
         ctx.response(SUCCESS);
     }
 
@@ -113,8 +115,8 @@ public class AnalyseController extends Controller {
                     req.memoryStatus.physicalTotal, req.memoryStatus.physicalFree,
                     req.memoryStatus.swapTotal, req.memoryStatus.swapFree);
         }
-        analyseRepository.addJvm(userId, req.analyseId, req.jvmId, VMVersion.get(req.vmVersion),
-                GarbageCollectorType.get(req.gcType), req.headers, md);
+        analyseRepository.perform(new AddJvmOperation(userId, req.analyseId, req.jvmId, VMVersion.get(req.vmVersion),
+                GarbageCollectorType.get(req.gcType), req.headers, md));
         ctx.response(SUCCESS);
     }
 
@@ -130,7 +132,7 @@ public class AnalyseController extends Controller {
         String analyseId = ctx.param("analyse_id");
         String jvmId = ctx.param("jvm_id");
 
-        analyseRepository.removeJvm(account(ctx).id(), analyseId, jvmId);
+        analyseRepository.perform(new RemoveJvmOperation(account(ctx).id(), analyseId, jvmId));
         ctx.response(SUCCESS);
     }
 
@@ -149,8 +151,8 @@ public class AnalyseController extends Controller {
         if (req.gcType != null) {
             gcType = GarbageCollectorType.get(req.gcType);
         }
-        analyseRepository.updateJvmVersion(account(ctx).id(), req.analyseId, req.jvmId,
-                vmVersion, gcType);
+        analyseRepository.perform(new UpdateJvmVersionOperation(account(ctx).id(), req.analyseId, req.jvmId,
+                vmVersion, gcType));
         ctx.response(SUCCESS);
     }
 
@@ -161,8 +163,39 @@ public class AnalyseController extends Controller {
      * Responds: SUCCESS or ERROR
      */
     public void updateJvmInfo(UpdateJvmInfoRequest req, RequestContext ctx) {
-        analyseRepository.updateJvmInfo(account(ctx).id(), req.analyseId, req.jvmId, req.headers,
-                req.memoryStatus != null ? req.memoryStatus.toDetails() : null);
+        analyseRepository.perform(new UpdateJvmInfoOperation(account(ctx).id(), req.analyseId, req.jvmId, req.headers,
+                req.memoryStatus != null ? req.memoryStatus.toDetails() : null));
+        ctx.response(SUCCESS);
+    }
+
+    /**
+     * POST /analyse/jvm/update/bulk
+     * Require Auth (token)
+     * Body: BulkJvmsUpdateRequest (JSON)
+     * Responds: SUCCESS or ERROR
+     */
+    public void updateJvmBulk(BulkJvmsUpdateRequest req, RequestContext ctx) {
+        Identifier accId = account(ctx).id();
+        List<AnalyseOperation> ops = new ArrayList<>();
+        if (req.updateJvms != null) {
+            req.updateJvms.forEach(r ->
+                    ops.add(new UpdateJvmVersionOperation(accId, req.analyseId, r.jvmId,
+                            r.vmVersion != null ? VMVersion.get(r.vmVersion) : null,
+                            r.gcType != null ? GarbageCollectorType.get(r.gcType) : null)));
+        }
+        if (req.removeJvms != null) {
+            req.removeJvms.forEach(jvm ->
+                    ops.add(new RemoveJvmOperation(accId, req.analyseId, jvm)));
+        }
+        if (req.newJvms != null) {
+            req.newJvms.forEach(r ->
+                    ops.add(new AddJvmOperation(accId, req.analyseId, r.jvmId, VMVersion.get(r.vmVersion),
+                    GarbageCollectorType.get(r.gcType), r.headers,
+                    r.memoryStatus != null ? r.memoryStatus.toDetails() : null)));
+        }
+        if (ops.size() > 0) {
+            analyseRepository.perform(ops);
+        }
         ctx.response(SUCCESS);
     }
 
@@ -175,7 +208,7 @@ public class AnalyseController extends Controller {
      */
     public void deleteAnalyse(RequestContext ctx) {
         String id = ctx.param("id");
-        analyseRepository.removeAnalyse(account(ctx).id(), id);
+        analyseRepository.perform(new RemoveAnalyseOperation(account(ctx).id(), id));
         ctx.response(SUCCESS);
     }
 

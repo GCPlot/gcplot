@@ -5,6 +5,7 @@ import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
+import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -29,22 +30,8 @@ public interface GCAnalyseRepository {
      */
     String newAnalyse(GCAnalyse analyse);
 
-    void updateAnalyse(Identifier accountId, String analyseId, String name, String ext);
+    void perform(AnalyseOperation operation);
 
-    void addJvm(Identifier accountId, String analyseId,
-                String jvmId, VMVersion version, GarbageCollectorType type,
-                String headers, MemoryDetails memoryDetails);
-
-    void updateJvmInfo(Identifier accountId, String analyseId,
-                       String jvmId, String headers, MemoryDetails memoryDetails);
-
-    void updateJvmVersion(Identifier accountId, String analyseId,
-                          String jvmId, VMVersion version, GarbageCollectorType type);
-
-    void removeJvm(Identifier accountId, String analyseId, String jvmId);
-
-    void removeAnalyse(Identifier accountId, String analyseId);
-
-    void updateLastEvent(Identifier accountId, String analyseId, DateTime lastEvent);
+    void perform(List<AnalyseOperation> operations);
 
 }

@@ -1,9 +1,6 @@
 package com.gcplot.repository.cassandra;
 
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.Batch;
 import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -14,6 +11,7 @@ import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
 import com.gcplot.repository.GCAnalyseRepository;
+import com.gcplot.repository.operations.analyse.*;
 import com.google.common.base.Preconditions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -93,37 +91,91 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
-    public void updateAnalyse(Identifier accountId, String analyseId, String name, String ext) {
+    public void perform(AnalyseOperation operation) {
+        perform(Collections.singletonList(operation));
+    }
+
+    @Override
+    public void perform(List<AnalyseOperation> operations) {
+        List<RegularStatement> statements = new ArrayList<>(2);
+        for (AnalyseOperation op : operations) {
+            switch (op.type()) {
+                case UPDATE_ANALYSE: {
+                    UpdateAnalyseOperation uao = (UpdateAnalyseOperation) op;
+                    statements.add(updateAnalyse(uao.accountId(), uao.analyseId(), uao.getName(), uao.getExt()));
+                    break;
+                }
+                case ADD_JVM: {
+                    AddJvmOperation ajo = (AddJvmOperation) op;
+                    statements.addAll(addJvm(ajo.accountId(), ajo.analyseId(), ajo.getJvmId(), ajo.getVersion(), ajo.getType(),
+                            ajo.getHeaders(), ajo.getMemoryDetails()));
+                    break;
+                }
+                case UPDATE_JVM_INFO: {
+                    UpdateJvmInfoOperation uji = (UpdateJvmInfoOperation) op;
+                    statements.addAll(updateJvmInfo(uji.accountId(), uji.analyseId(), uji.getJvmId(), uji.getHeaders(), uji.getMemoryDetails()));
+                    break;
+                }
+                case UPDATE_JVM_VERSION: {
+                    UpdateJvmVersionOperation ujv = (UpdateJvmVersionOperation) op;
+                    statements.addAll(updateJvmVersion(ujv.accountId(), ujv.analyseId(), ujv.getJvmId(), ujv.getVersion(),
+                            ujv.getType()));
+                    break;
+                }
+                case REMOVE_JVM: {
+                    RemoveJvmOperation rjo = (RemoveJvmOperation) op;
+                    statements.addAll(removeJvm(rjo.accountId(), rjo.analyseId(), rjo.getJvmId()));
+                    break;
+                }
+                case REMOVE_ANALYSE: {
+                    RemoveAnalyseOperation rao = (RemoveAnalyseOperation) op;
+                    statements.add(removeAnalyse(rao.accountId(), rao.analyseId()));
+                    break;
+                }
+                case UPDATE_LAST_EVENT: {
+                    UpdateLastEventOperation ule = (UpdateLastEventOperation) op;
+                    statements.add(updateLastEvent(ule.accountId(), ule.analyseId(), ule.getLastEvent()));
+                    break;
+                }
+            }
+        }
+        if (statements.size() > 1) {
+            connector.session().execute(QueryBuilder.batch(statements.toArray(new RegularStatement[statements.size()])));
+        } else {
+            connector.session().execute(statements.get(0));
+        }
+    }
+
+    public RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String ext) {
         Preconditions.checkNotNull(name, "Analyse name can't be null.");
         UUID uuid = UUID.fromString(analyseId);
         Update.Assignments query = updateTable(accountId, uuid).with(set("analyse_name", name));
         if (ext != null) {
             query = query.and(set("ext", ext));
         }
-        connector.session().execute(query.setConsistencyLevel(ConsistencyLevel.ALL));
+        return query;
     }
 
-    @Override
-    public void addJvm(Identifier accId, String analyseId, String jvmId,
-                       VMVersion version, GarbageCollectorType type,
-                       String headers, MemoryDetails memoryDetails) {
+    public List<RegularStatement> addJvm(Identifier accId, String analyseId, String jvmId,
+                            VMVersion version, GarbageCollectorType type,
+                            String headers, MemoryDetails memoryDetails) {
         UUID uuid = UUID.fromString(analyseId);
-        Batch batch = QueryBuilder.batch(updateTable(accId, uuid).with(add("jvm_ids", jvmId)),
-                updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)),
-                updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())),
-                updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())));
+        List<RegularStatement> batch = new ArrayList<>();
+        batch.add(updateTable(accId, uuid).with(add("jvm_ids", jvmId)));
+        batch.add(updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)));
+        batch.add(updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())));
+        batch.add(updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())));
         if (memoryDetails != null) {
             insertMemoryDetails(accId, jvmId, memoryDetails, uuid, batch);
         }
-        connector.session().execute(batch.setConsistencyLevel(ConsistencyLevel.ALL));
+        return batch;
     }
 
-    @Override
-    public void updateJvmInfo(Identifier accId, String analyseId,
-                              String jvmId, String headers, MemoryDetails memoryDetails) {
+    public List<RegularStatement> updateJvmInfo(Identifier accId, String analyseId,
+                                   String jvmId, String headers, MemoryDetails memoryDetails) {
         Preconditions.checkState(!(headers == null && memoryDetails == null), "Nothing to update.");
         UUID uuid = UUID.fromString(analyseId);
-        Batch batch = QueryBuilder.batch();
+        List<RegularStatement> batch = new ArrayList<>();
         if (headers != null) {
             batch.add(updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)));
         }
@@ -133,28 +185,26 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         if (LOG.isDebugEnabled()) {
             LOG.debug("updateJvmInfo: {}", batch);
         }
-        connector.session().execute(batch.setConsistencyLevel(ConsistencyLevel.ALL));
+        return batch;
     }
 
-    @Override
-    public void updateJvmVersion(Identifier accId, String analyseId, String jvmId,
-                                 VMVersion version, GarbageCollectorType type) {
+    public List<RegularStatement> updateJvmVersion(Identifier accId, String analyseId, String jvmId,
+                                      VMVersion version, GarbageCollectorType type) {
         Preconditions.checkState(!(version == null && type == null), "Nothing to update.");
         UUID uuid = UUID.fromString(analyseId);
-        Batch batch = QueryBuilder.batch();
+        List<RegularStatement> batch = new ArrayList<>();
         if (version != null) {
             batch.add(updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())));
         }
         if (type != null) {
             batch.add(updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())));
         }
-        connector.session().execute(batch.setConsistencyLevel(ConsistencyLevel.ALL));
+        return batch;
     }
 
-    @Override
-    public void removeJvm(Identifier accId, String analyseId, String jvmId) {
+    public List<RegularStatement> removeJvm(Identifier accId, String analyseId, String jvmId) {
         UUID uuid = UUID.fromString(analyseId);
-        connector.session().execute(QueryBuilder.batch(delete(accId, uuid, "jvm_ids", jvmId),
+        return Arrays.asList(delete(accId, uuid, "jvm_ids", jvmId),
                 delete(accId, uuid, "jvm_headers", jvmId),
                 delete(accId, uuid, "jvm_versions", jvmId),
                 delete(accId, uuid, "jvm_gc_types", jvmId),
@@ -162,25 +212,21 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 delete(accId, uuid, "jvm_md_phys_total", jvmId),
                 delete(accId, uuid, "jvm_md_phys_free", jvmId),
                 delete(accId, uuid, "jvm_md_swap_total", jvmId),
-                delete(accId, uuid, "jvm_md_swap_free", jvmId))
-                .setConsistencyLevel(ConsistencyLevel.ALL));
+                delete(accId, uuid, "jvm_md_swap_free", jvmId));
     }
 
-    @Override
-    public void removeAnalyse(Identifier accId, String analyseId) {
-        connector.session().execute(QueryBuilder.delete().all().from(TABLE_NAME)
-                .where(eq("id", UUID.fromString(analyseId))).and(eq("account_id", accId.toString())));
+    public Delete.Where removeAnalyse(Identifier accId, String analyseId) {
+        return QueryBuilder.delete().all().from(TABLE_NAME)
+                .where(eq("id", UUID.fromString(analyseId))).and(eq("account_id", accId.toString()));
     }
 
-    @Override
-    public void updateLastEvent(Identifier accId, String analyseId, DateTime lastEvent) {
-        Statement s = QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(analyseId)))
+    public Update.Assignments updateLastEvent(Identifier accId, String analyseId, DateTime lastEvent) {
+        return QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(analyseId)))
                 .and(eq("account_id", accId.toString()))
                 .with(set("last_event", lastEvent.toDateTime(DateTimeZone.UTC).toDate()));
-        connector.session().execute(s);
     }
 
-    protected void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, Batch batch) {
+    protected void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, List<RegularStatement> batch) {
         batch.add(updateTable(accId, uuid).with(put("jvm_md_page_size", jvmId, memoryDetails.pageSize())));
         batch.add(updateTable(accId, uuid).with(put("jvm_md_phys_total", jvmId, memoryDetails.physicalTotal())));
         batch.add(updateTable(accId, uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())));

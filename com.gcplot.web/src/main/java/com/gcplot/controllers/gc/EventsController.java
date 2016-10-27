@@ -17,6 +17,8 @@ import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
 import com.gcplot.repository.VMEventsRepository;
+import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
+import com.gcplot.repository.operations.analyse.UpdateLastEventOperation;
 import com.gcplot.resources.ResourceManager;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
@@ -108,12 +110,13 @@ public class EventsController extends Controller {
                 e.analyseId(analyseId);
                 e.jvmId(jvmId);
             });
+            // TODO perform operation in the single batch
             if (!pr.isSuccessful()) {
                 LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
                 log.error(pr.getException().get().getMessage(), pr.getException().get());
             } else {
                 if (lastEventTime[0] != null) {
-                    analyseRepository.updateLastEvent(userId, analyseId, lastEventTime[0]);
+                    analyseRepository.perform(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
                 }
                 if (pr.getLogMetadata().isPresent()) {
                     updateAnalyseMetadata(analyseId, jvmId, userId, pr);
@@ -231,9 +234,9 @@ public class EventsController extends Controller {
 
     private void updateAnalyseMetadata(String analyseId, String jvmId, Identifier userId, ParseResult pr) {
         LogMetadata md = pr.getLogMetadata().get();
-        analyseRepository.updateJvmInfo(userId, analyseId, jvmId, md.commandLines(),
+        analyseRepository.perform(new UpdateJvmInfoOperation(userId, analyseId, jvmId, md.commandLines(),
                 new MemoryDetailsImpl(md.pageSize(), md.physicalTotal(), md.physicalFree(),
-                        md.swapTotal(), md.swapFree()));
+                        md.swapTotal(), md.swapFree())));
     }
 
     private void persistObjectAges(String analyseId, String jvmId, ParseResult pr) {
