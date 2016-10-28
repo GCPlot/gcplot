@@ -78,6 +78,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("jvm_gc_types", analyse.jvmGCTypes() != null ?
                         transformValue(analyse.jvmGCTypes(), GarbageCollectorType::type) : Collections.emptyMap())
                 .value("jvm_ids", analyse.jvmIds() != null ? analyse.jvmIds() : Collections.emptySet())
+                .value("jvm_names", analyse.jvmNames() != null ? analyse.jvmNames() : Collections.emptyMap())
                 .value("jvm_headers", analyse.jvmHeaders() != null ? analyse.jvmHeaders() : Collections.emptyMap())
                 .value("jvm_md_page_size", memoryMap(analyse, MemoryDetails::pageSize))
                 .value("jvm_md_phys_total", memoryMap(analyse, MemoryDetails::physicalTotal))
@@ -107,8 +108,8 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 }
                 case ADD_JVM: {
                     AddJvmOperation ajo = (AddJvmOperation) op;
-                    statements.addAll(addJvm(ajo.accountId(), ajo.analyseId(), ajo.getJvmId(), ajo.getVersion(), ajo.getType(),
-                            ajo.getHeaders(), ajo.getMemoryDetails()));
+                    statements.addAll(addJvm(ajo.accountId(), ajo.analyseId(), ajo.getJvmId(), ajo.getJvmName(),
+                            ajo.getVersion(), ajo.getType(), ajo.getHeaders(), ajo.getMemoryDetails()));
                     break;
                 }
                 case UPDATE_JVM_INFO: {
@@ -118,8 +119,8 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 }
                 case UPDATE_JVM_VERSION: {
                     UpdateJvmVersionOperation ujv = (UpdateJvmVersionOperation) op;
-                    statements.addAll(updateJvmVersion(ujv.accountId(), ujv.analyseId(), ujv.getJvmId(), ujv.getVersion(),
-                            ujv.getType()));
+                    statements.addAll(updateJvmVersion(ujv.accountId(), ujv.analyseId(), ujv.getJvmId(),
+                            ujv.getJvmName(), ujv.getVersion(), ujv.getType()));
                     break;
                 }
                 case REMOVE_JVM: {
@@ -146,7 +147,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         }
     }
 
-    public RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String ext) {
+    private RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String ext) {
         Preconditions.checkNotNull(name, "Analyse name can't be null.");
         UUID uuid = UUID.fromString(analyseId);
         Update.Assignments query = updateTable(accountId, uuid).with(set("analyse_name", name));
@@ -156,12 +157,13 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         return query;
     }
 
-    public List<RegularStatement> addJvm(Identifier accId, String analyseId, String jvmId,
-                            VMVersion version, GarbageCollectorType type,
+    private List<RegularStatement> addJvm(Identifier accId, String analyseId, String jvmId,
+                            String jvmName, VMVersion version, GarbageCollectorType type,
                             String headers, MemoryDetails memoryDetails) {
         UUID uuid = UUID.fromString(analyseId);
         List<RegularStatement> batch = new ArrayList<>();
         batch.add(updateTable(accId, uuid).with(add("jvm_ids", jvmId)));
+        batch.add(updateTable(accId, uuid).with(put("jvm_names", jvmId, jvmName)));
         batch.add(updateTable(accId, uuid).with(put("jvm_headers", jvmId, headers)));
         batch.add(updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())));
         batch.add(updateTable(accId, uuid).with(put("jvm_gc_types", jvmId, type.type())));
@@ -171,7 +173,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         return batch;
     }
 
-    public List<RegularStatement> updateJvmInfo(Identifier accId, String analyseId,
+    private List<RegularStatement> updateJvmInfo(Identifier accId, String analyseId,
                                    String jvmId, String headers, MemoryDetails memoryDetails) {
         Preconditions.checkState(!(headers == null && memoryDetails == null), "Nothing to update.");
         UUID uuid = UUID.fromString(analyseId);
@@ -188,11 +190,14 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         return batch;
     }
 
-    public List<RegularStatement> updateJvmVersion(Identifier accId, String analyseId, String jvmId,
-                                      VMVersion version, GarbageCollectorType type) {
+    private List<RegularStatement> updateJvmVersion(Identifier accId, String analyseId, String jvmId,
+                                      String jvmName, VMVersion version, GarbageCollectorType type) {
         Preconditions.checkState(!(version == null && type == null), "Nothing to update.");
         UUID uuid = UUID.fromString(analyseId);
         List<RegularStatement> batch = new ArrayList<>();
+        if (jvmName != null) {
+            batch.add(updateTable(accId, uuid).with(put("jvm_names", jvmId, jvmName)));
+        }
         if (version != null) {
             batch.add(updateTable(accId, uuid).with(put("jvm_versions", jvmId, version.type())));
         }
@@ -202,9 +207,10 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         return batch;
     }
 
-    public List<RegularStatement> removeJvm(Identifier accId, String analyseId, String jvmId) {
+    private List<RegularStatement> removeJvm(Identifier accId, String analyseId, String jvmId) {
         UUID uuid = UUID.fromString(analyseId);
         return Arrays.asList(delete(accId, uuid, "jvm_ids", jvmId),
+                delete(accId, uuid, "jvm_names", jvmId),
                 delete(accId, uuid, "jvm_headers", jvmId),
                 delete(accId, uuid, "jvm_versions", jvmId),
                 delete(accId, uuid, "jvm_gc_types", jvmId),
@@ -215,18 +221,18 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 delete(accId, uuid, "jvm_md_swap_free", jvmId));
     }
 
-    public Delete.Where removeAnalyse(Identifier accId, String analyseId) {
+    private Delete.Where removeAnalyse(Identifier accId, String analyseId) {
         return QueryBuilder.delete().all().from(TABLE_NAME)
                 .where(eq("id", UUID.fromString(analyseId))).and(eq("account_id", accId.toString()));
     }
 
-    public Update.Assignments updateLastEvent(Identifier accId, String analyseId, DateTime lastEvent) {
+    private Update.Assignments updateLastEvent(Identifier accId, String analyseId, DateTime lastEvent) {
         return QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(analyseId)))
                 .and(eq("account_id", accId.toString()))
                 .with(set("last_event", lastEvent.toDateTime(DateTimeZone.UTC).toDate()));
     }
 
-    protected void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, List<RegularStatement> batch) {
+    private void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, List<RegularStatement> batch) {
         batch.add(updateTable(accId, uuid).with(put("jvm_md_page_size", jvmId, memoryDetails.pageSize())));
         batch.add(updateTable(accId, uuid).with(put("jvm_md_phys_total", jvmId, memoryDetails.physicalTotal())));
         batch.add(updateTable(accId, uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())));
@@ -234,7 +240,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         batch.add(updateTable(accId, uuid).with(put("jvm_md_swap_free", jvmId, memoryDetails.swapFree())));
     }
 
-    protected Update.Where updateTable(Identifier accId, UUID uuid) {
+    private Update.Where updateTable(Identifier accId, UUID uuid) {
         return QueryBuilder.update(TABLE_NAME).where(eq("id", uuid)).and(eq("account_id", accId.toString()));
     }
 

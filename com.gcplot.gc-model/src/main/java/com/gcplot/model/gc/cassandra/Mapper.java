@@ -43,6 +43,7 @@ public abstract class Mapper {
                 .jvmVersions(transformValue(row.getMap("jvm_versions", String.class, Integer.class), VMVersion::get))
                 .jvmGCTypes(transformValue(row.getMap("jvm_gc_types", String.class, Integer.class), GarbageCollectorType::get))
                 .jvmIds(row.getSet("jvm_ids", String.class))
+                .jvmNames(row.getMap("jvm_names", String.class, String.class))
                 .jvmHeaders(row.getMap("jvm_headers", String.class, String.class))
                 .ext(op(row, "ext", r -> r.getString("ext")));
         Map<String, MemoryDetails> memoryDetails = new HashMap<>();

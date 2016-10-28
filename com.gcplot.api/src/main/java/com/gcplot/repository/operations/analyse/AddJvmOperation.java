@@ -12,6 +12,7 @@ import com.gcplot.repository.operations.OperationType;
  */
 public class AddJvmOperation extends AnalyseOperationBase {
     private final String jvmId;
+    private final String jvmName;
     private final VMVersion version;
     private final GarbageCollectorType type;
     private final String headers;
@@ -19,6 +20,10 @@ public class AddJvmOperation extends AnalyseOperationBase {
 
     public String getJvmId() {
         return jvmId;
+    }
+
+    public String getJvmName() {
+        return jvmName;
     }
 
     public VMVersion getVersion() {
@@ -38,10 +43,11 @@ public class AddJvmOperation extends AnalyseOperationBase {
     }
 
     public AddJvmOperation(Identifier accountId, String analyseId, String jvmId,
-                           VMVersion version, GarbageCollectorType type,
+                           String jvmName, VMVersion version, GarbageCollectorType type,
                            String headers, MemoryDetails memoryDetails) {
         super(accountId, analyseId);
         this.jvmId = jvmId;
+        this.jvmName = jvmName;
         this.version = version;
         this.type = type;
         this.headers = headers;

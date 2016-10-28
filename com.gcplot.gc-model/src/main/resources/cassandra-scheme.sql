@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   start timestamp,
   last_event timestamp,
   jvm_ids set<varchar>,
+  jvm_names map<varchar, varchar>,
   jvm_versions map<varchar, int>,
   jvm_gc_types map<varchar, int>,
   jvm_headers map<varchar, varchar>,

@@ -115,8 +115,8 @@ public class AnalyseController extends Controller {
                     req.memoryStatus.physicalTotal, req.memoryStatus.physicalFree,
                     req.memoryStatus.swapTotal, req.memoryStatus.swapFree);
         }
-        analyseRepository.perform(new AddJvmOperation(userId, req.analyseId, req.jvmId, VMVersion.get(req.vmVersion),
-                GarbageCollectorType.get(req.gcType), req.headers, md));
+        analyseRepository.perform(new AddJvmOperation(userId, req.analyseId, req.jvmId, req.jvmName,
+                VMVersion.get(req.vmVersion), GarbageCollectorType.get(req.gcType), req.headers, md));
         ctx.response(SUCCESS);
     }
 
@@ -152,7 +152,7 @@ public class AnalyseController extends Controller {
             gcType = GarbageCollectorType.get(req.gcType);
         }
         analyseRepository.perform(new UpdateJvmVersionOperation(account(ctx).id(), req.analyseId, req.jvmId,
-                vmVersion, gcType));
+                req.jvmName, vmVersion, gcType));
         ctx.response(SUCCESS);
     }
 
@@ -179,7 +179,7 @@ public class AnalyseController extends Controller {
         List<AnalyseOperation> ops = new ArrayList<>();
         if (req.updateJvms != null) {
             req.updateJvms.forEach(r ->
-                    ops.add(new UpdateJvmVersionOperation(accId, req.analyseId, r.jvmId,
+                    ops.add(new UpdateJvmVersionOperation(accId, req.analyseId, r.jvmId, r.jvmName,
                             r.vmVersion != null ? VMVersion.get(r.vmVersion) : null,
                             r.gcType != null ? GarbageCollectorType.get(r.gcType) : null)));
         }
@@ -189,7 +189,7 @@ public class AnalyseController extends Controller {
         }
         if (req.newJvms != null) {
             req.newJvms.forEach(r ->
-                    ops.add(new AddJvmOperation(accId, req.analyseId, r.jvmId, VMVersion.get(r.vmVersion),
+                    ops.add(new AddJvmOperation(accId, req.analyseId, r.jvmId, r.jvmName, VMVersion.get(r.vmVersion),
                     GarbageCollectorType.get(r.gcType), r.headers,
                     r.memoryStatus != null ? r.memoryStatus.toDetails() : null)));
         }
@@ -232,18 +232,22 @@ public class AnalyseController extends Controller {
             analyse.jvmGCTypes(Collections.emptyMap());
             analyse.jvmVersions(Collections.emptyMap());
             analyse.jvmIds(Collections.emptySet());
+            analyse.jvmNames(Collections.emptyMap());
         } else {
             Set<String> jvmIds = new HashSet<>();
+            Map<String, String> jvmNames = new HashMap<>();
             Map<String, GarbageCollectorType> jvmGCTypes = new HashMap<>();
             Map<String, VMVersion> jvmVersions = new HashMap<>();
             req.jvms.forEach(jvm -> {
                 jvmIds.add(jvm.jvmId);
+                jvmNames.put(jvm.jvmId, jvm.jvmName);
                 jvmGCTypes.put(jvm.jvmId, GarbageCollectorType.get(jvm.gcType));
                 jvmVersions.put(jvm.jvmId, VMVersion.get(jvm.vmVersion));
             });
             analyse.jvmGCTypes(jvmGCTypes);
             analyse.jvmVersions(jvmVersions);
             analyse.jvmIds(jvmIds);
+            analyse.jvmNames(jvmNames);
         }
 
         ctx.response(new NewAnalyseResponse(analyseRepository.newAnalyse(analyse)));

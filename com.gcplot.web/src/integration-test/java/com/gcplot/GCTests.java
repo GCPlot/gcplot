@@ -58,9 +58,9 @@ public class GCTests extends IntegrationTest {
         get("/analyse/get?id=123", token, ErrorMessages.INTERNAL_ERROR);
         get("/analyse/get?id=" + UUID.randomUUID().toString(), token, ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE);
 
-        post("/analyse/jvm/add", new AddJvmRequest("jvm1", analyseId, VMVersion.HOTSPOT_1_9.type(),
+        post("/analyse/jvm/add", new AddJvmRequest("jvm1", analyseId, "JVM 1", VMVersion.HOTSPOT_1_9.type(),
                 GarbageCollectorType.ORACLE_SERIAL.type(), "h1,h2", null), token, success());
-        post("/analyse/jvm/add", new AddJvmRequest("jvm2", analyseId, VMVersion.HOTSPOT_1_3_1.type(),
+        post("/analyse/jvm/add", new AddJvmRequest("jvm2", analyseId, "JVM 2", VMVersion.HOTSPOT_1_3_1.type(),
                 GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), null, new MemoryStatus(1,2,3,4,5)),
                 token, success());
 
@@ -84,19 +84,19 @@ public class GCTests extends IntegrationTest {
         Assert.assertEquals(new MemoryStatus(11,12,13,14,15), ar.memory.get("jvm2"));
         Assert.assertNull(ar.memory.get("jvm1"));
 
-        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", null,
+        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", null, null,
                 GarbageCollectorType.ORACLE_G1.type()), token, success());
         ar = getAnalyse(token, analyseId);
         Assert.assertEquals(GarbageCollectorType.ORACLE_G1.type(), (int) ar.jvmGCTypes.get("jvm1"));
         Assert.assertEquals(GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), (int) ar.jvmGCTypes.get("jvm2"));
 
-        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", VMVersion.HOTSPOT_1_2_2.type(),
+        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", null, VMVersion.HOTSPOT_1_2_2.type(),
                 null), token, success());
         ar = getAnalyse(token, analyseId);
         Assert.assertEquals(VMVersion.HOTSPOT_1_2_2.type(), (int) ar.jvmVersions.get("jvm1"));
         Assert.assertEquals(VMVersion.HOTSPOT_1_3_1.type(), (int) ar.jvmVersions.get("jvm2"));
 
-        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", null, null), token, ErrorMessages.INTERNAL_ERROR);
+        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", null, null, null), token, ErrorMessages.INTERNAL_ERROR);
 
         Assert.assertEquals(1, (int) r(delete("/analyse/jvm/delete?analyse_id=" + analyseId + "&jvm_id=jvm1", token)).getInteger("success"));
         ar = getAnalyse(token, analyseId);
@@ -115,7 +115,7 @@ public class GCTests extends IntegrationTest {
         String token = login();
         String analyseId = createAnalyse(token);
         String jvmId = "jvm1";
-        post("/analyse/jvm/add", new AddJvmRequest(jvmId, analyseId, VMVersion.HOTSPOT_1_8.type(),
+        post("/analyse/jvm/add", new AddJvmRequest(jvmId, analyseId, "JVM 1", VMVersion.HOTSPOT_1_8.type(),
                 GarbageCollectorType.ORACLE_CMS.type(), null, null), token, success());
         JsonObject resp = processGCLogFile(token, analyseId, jvmId, "hs18_log_cms.log");
         Assert.assertTrue(success().test(resp));

@@ -84,6 +84,15 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
+    public Map<String, String> jvmNames() {
+        return jvmNames;
+    }
+    public GCAnalyseImpl jvmNames(Map<String, String> jvmNames) {
+        this.jvmNames = jvmNames;
+        return this;
+    }
+
+    @Override
     public Map<String, VMVersion> jvmVersions() {
         return Collections.unmodifiableMap(jvmVersions);
     }
@@ -127,6 +136,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected DateTime lastEvent;
     protected Map<String, String> jvmHeaders = Collections.emptyMap();
     protected Set<String> jvmIds = Collections.emptySet();
+    protected Map<String, String> jvmNames = Collections.emptyMap();
     protected Map<String, VMVersion> jvmVersions = Collections.emptyMap();
     protected Map<String, GarbageCollectorType> jvmGCTypes = Collections.emptyMap();
     protected Map<String, MemoryDetails> jvmMemoryDetails = Collections.emptyMap();

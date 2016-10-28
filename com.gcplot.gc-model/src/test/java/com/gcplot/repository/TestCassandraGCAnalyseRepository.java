@@ -4,6 +4,10 @@ import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
 import com.gcplot.repository.cassandra.CassandraGCAnalyseRepository;
+import com.gcplot.repository.operations.analyse.AddJvmOperation;
+import com.gcplot.repository.operations.analyse.RemoveAnalyseOperation;
+import com.gcplot.repository.operations.analyse.RemoveJvmOperation;
+import com.gcplot.repository.operations.analyse.UpdateLastEventOperation;
 import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -30,6 +34,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
                 .jvmVersions(map("jvm1", VMVersion.HOTSPOT_1_7, "jvm2", VMVersion.HOTSPOT_1_8))
                 .jvmGCTypes(map("jvm1", GarbageCollectorType.ORACLE_CMS, "jvm2", GarbageCollectorType.ORACLE_G1))
                 .jvmIds(Sets.newHashSet("jvm1", "jvm2"))
+                .jvmNames(map("jvm1", "JVM 1", "jvm2", "JVM 2"))
                 .jvmHeaders(map("jvm1", "header1,header2", "jvm2", "header3"))
                 .jvmMemoryDetails(map("jvm1", md(1024, 8 * 1024, 4 * 1024, 1024, 812),
                         "jvm2", md(4 * 1024, 16 * 1024, 2 * 1024, 3 * 1024, 918)));
@@ -48,6 +53,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(0, Sets.difference(gcAnalyse.jvmIds(), rawAnalyse.jvmIds()).size());
         Assert.assertEquals("header1,header2", rawAnalyse.jvmHeaders().get("jvm1"));
         Assert.assertEquals("header3", rawAnalyse.jvmHeaders().get("jvm2"));
+        Assert.assertEquals(gcAnalyse.jvmNames(), rawAnalyse.jvmNames());
         Assert.assertEquals(gcAnalyse.jvmMemoryDetails().get("jvm1"), rawAnalyse.jvmMemoryDetails().get("jvm1"));
         Assert.assertEquals(gcAnalyse.jvmMemoryDetails().get("jvm2"), rawAnalyse.jvmMemoryDetails().get("jvm2"));
 
@@ -55,13 +61,13 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(1, r.analysesFor(Identifier.fromStr("user1")).size());
 
         DateTime newLastTime = DateTime.now(DateTimeZone.UTC).plusDays(1);
-        r.updateLastEvent(rawAnalyse.accountId(), rawAnalyse.id(), newLastTime);
+        r.perform(new UpdateLastEventOperation(rawAnalyse.accountId(), rawAnalyse.id(), newLastTime));
         rawAnalyse = r.analyse(rawAnalyse.id()).get();
         Assert.assertEquals(rawAnalyse.lastEvent(), newLastTime);
 
         MemoryDetails newMd = md(918, 3 * 1024, 2 * 1024, 17 * 1024, 9 * 1024);
-        r.addJvm(rawAnalyse.accountId(), rawAnalyse.id(), "jvm3", VMVersion.HOTSPOT_1_8,
-                GarbageCollectorType.ORACLE_G1, "header4,header10", newMd);
+        r.perform(new AddJvmOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm3", "JVM 3", VMVersion.HOTSPOT_1_8,
+                GarbageCollectorType.ORACLE_G1, "header4,header10", newMd));
 
         rawAnalyse = r.analyse(rawAnalyse.id()).get();
         Assert.assertEquals(3, rawAnalyse.jvmMemoryDetails().size());
@@ -71,7 +77,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(rawAnalyse.jvmGCTypes().get("jvm3"), GarbageCollectorType.ORACLE_G1);
         Assert.assertTrue(rawAnalyse.jvmIds().contains("jvm3"));
 
-        r.removeJvm(rawAnalyse.accountId(), rawAnalyse.id(), "jvm2");
+        r.perform(new RemoveJvmOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm2"));
 
         rawAnalyse = r.analyse(rawAnalyse.id()).get();
         Assert.assertEquals(2, rawAnalyse.jvmMemoryDetails().size());
@@ -83,7 +89,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         OptionalLong count = r.analysesCount(gcAnalyse.accountId());
         Assert.assertEquals(1, count.getAsLong());
 
-        r.removeAnalyse(rawAnalyse.accountId(), rawAnalyse.id());
+        r.perform(new RemoveAnalyseOperation(rawAnalyse.accountId(), rawAnalyse.id()));
         Assert.assertEquals(0, r.analyses().size());
         Assert.assertEquals(0, r.analysesCount(gcAnalyse.accountId()).getAsLong());
     }

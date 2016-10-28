@@ -25,6 +25,8 @@ public interface GCAnalyse {
 
     Set<String> jvmIds();
 
+    Map<String, String> jvmNames();
+
     Map<String, VMVersion> jvmVersions();
 
     Map<String, GarbageCollectorType> jvmGCTypes();

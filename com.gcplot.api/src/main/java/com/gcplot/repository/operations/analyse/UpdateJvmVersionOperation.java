@@ -11,11 +11,16 @@ import com.gcplot.repository.operations.OperationType;
  */
 public class UpdateJvmVersionOperation extends AnalyseOperationBase {
     private final String jvmId;
+    private final String jvmName;
     private final VMVersion version;
     private final GarbageCollectorType type;
 
     public String getJvmId() {
         return jvmId;
+    }
+
+    public String getJvmName() {
+        return jvmName;
     }
 
     public VMVersion getVersion() {
@@ -27,9 +32,10 @@ public class UpdateJvmVersionOperation extends AnalyseOperationBase {
     }
 
     public UpdateJvmVersionOperation(Identifier accountId, String analyseId, String jvmId,
-                                     VMVersion version, GarbageCollectorType type) {
+                                     String jvmName, VMVersion version, GarbageCollectorType type) {
         super(accountId, analyseId);
         this.jvmId = jvmId;
+        this.jvmName = jvmName;
         this.version = version;
         this.type = type;
     }

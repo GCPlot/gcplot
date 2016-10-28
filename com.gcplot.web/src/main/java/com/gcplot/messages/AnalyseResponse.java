@@ -35,6 +35,8 @@ public class AnalyseResponse {
     public Map<String, Integer> jvmGCTypes;
     @JsonProperty("jvm_ids")
     public Set<String> jvmIds;
+    @JsonProperty("jvm_names")
+    public Map<String, String> jvmNames;
     @JsonProperty("jvm_mem")
     public Map<String, MemoryStatus> memory;
     @JsonProperty("ext")
@@ -49,6 +51,7 @@ public class AnalyseResponse {
                            @JsonProperty("jvm_vers") Map<String, Integer> jvmVersions,
                            @JsonProperty("jvm_gcts") Map<String, Integer> jvmGCTypes,
                            @JsonProperty("jvm_ids") Set<String> jvmIds,
+                           @JsonProperty("jvm_names") Map<String, String> jvmNames,
                            @JsonProperty("jvm_mem") Map<String, MemoryStatus> memory,
                            @JsonProperty("ext") String ext) {
         this.id = id;
@@ -60,6 +63,7 @@ public class AnalyseResponse {
         this.jvmVersions = jvmVersions;
         this.jvmGCTypes = jvmGCTypes;
         this.jvmIds = jvmIds;
+        this.jvmNames = jvmNames;
         this.memory = memory;
         this.ext = ext;
     }
@@ -76,6 +80,7 @@ public class AnalyseResponse {
                 transformValue(analyse.jvmGCTypes(), GarbageCollectorType::type) : Collections.emptyMap();
         this.jvmHeaders = analyse.jvmHeaders();
         this.jvmIds = analyse.jvmIds();
+        this.jvmNames = analyse.jvmNames();
         this.memory = analyse.jvmMemoryDetails() == null ? Collections.emptyMap() : transformValue(analyse.jvmMemoryDetails(), MemoryStatus::new);
         this.ext = analyse.ext();
     }
