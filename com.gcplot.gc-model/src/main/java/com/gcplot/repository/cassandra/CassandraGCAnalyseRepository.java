@@ -192,7 +192,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
 
     private List<RegularStatement> updateJvmVersion(Identifier accId, String analyseId, String jvmId,
                                       String jvmName, VMVersion version, GarbageCollectorType type) {
-        Preconditions.checkState(!(version == null && type == null), "Nothing to update.");
+        Preconditions.checkState(!(version == null && type == null && jvmName == null), "Nothing to update.");
         UUID uuid = UUID.fromString(analyseId);
         List<RegularStatement> batch = new ArrayList<>();
         if (jvmName != null) {
