@@ -12,7 +12,7 @@ public class UpdateJvmVersionRequest {
     public String analyseId;
     @JsonProperty(value = "jvm_id", required = true)
     public String jvmId;
-    @JsonProperty(value = "jvm_name")
+    @JsonProperty(value = "name")
     public String jvmName;
     @JsonProperty("vm_ver")
     public Integer vmVersion;
@@ -21,7 +21,7 @@ public class UpdateJvmVersionRequest {
 
     public UpdateJvmVersionRequest(@JsonProperty(value = "an_id", required = true) String analyseId,
                                    @JsonProperty(value = "jvm_id", required = true) String jvmId,
-                                   @JsonProperty(value = "jvm_name") String jvmName,
+                                   @JsonProperty(value = "name") String jvmName,
                                    @JsonProperty("vm_ver") Integer vmVersion,
                                    @JsonProperty("gc_type") Integer gcType) {
         this.analyseId = analyseId;
