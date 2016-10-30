@@ -17,6 +17,7 @@ import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
 import com.gcplot.repository.VMEventsRepository;
+import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.repository.operations.analyse.UpdateLastEventOperation;
 import com.gcplot.resources.ResourceManager;
@@ -115,11 +116,15 @@ public class EventsController extends Controller {
                 LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
                 log.error(pr.getException().get().getMessage(), pr.getException().get());
             } else {
+                List<AnalyseOperation> ops = new ArrayList<>(2);
                 if (lastEventTime[0] != null) {
-                    analyseRepository.perform(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
+                    ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
                 }
                 if (pr.getLogMetadata().isPresent()) {
-                    updateAnalyseMetadata(analyseId, jvmId, userId, pr);
+                    updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);
+                }
+                if (ops.size() > 0) {
+                    analyseRepository.perform(ops);
                 }
                 if (pr.getAgesStates().size() > 0) {
                     persistObjectAges(analyseId, jvmId, pr);
@@ -232,9 +237,10 @@ public class EventsController extends Controller {
         return checksum;
     }
 
-    private void updateAnalyseMetadata(String analyseId, String jvmId, Identifier userId, ParseResult pr) {
+    private void updateAnalyseMetadata(String analyseId, String jvmId, Identifier userId, ParseResult pr,
+                                       List<AnalyseOperation> ops) {
         LogMetadata md = pr.getLogMetadata().get();
-        analyseRepository.perform(new UpdateJvmInfoOperation(userId, analyseId, jvmId, md.commandLines(),
+        ops.add(new UpdateJvmInfoOperation(userId, analyseId, jvmId, md.commandLines(),
                 new MemoryDetailsImpl(md.pageSize(), md.physicalTotal(), md.physicalFree(),
                         md.swapTotal(), md.swapFree())));
     }
@@ -259,7 +265,7 @@ public class EventsController extends Controller {
                 try {
                     LOG.debug("Starting uploading {}", logFile);
                     resourceManager.upload(logFile,
-                            "log/" + username + "/" + esc(jvmId) + "/" + esc(analyseId));
+                            "log/" + username + "/" + esc(analyseId) + "/" + esc(jvmId));
                 } catch (Throwable t) {
                     LOG.error(t.getMessage(), t);
                 } finally {
@@ -320,7 +326,7 @@ public class EventsController extends Controller {
                 if (lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
                         e.timestamp()) {
                     eventsBatch.add(e);
-                    if (eventsBatch.size() == 10) {
+                    if (eventsBatch.size() == eventsBatchSize) {
                         persist(eventsBatch);
                     }
                 } else {
@@ -394,6 +400,10 @@ public class EventsController extends Controller {
         return "Params required: analyse_id, jvm_id, from, to";
     }
 
+    public void setEventsBatchSize(int eventsBatchSize) {
+        this.eventsBatchSize = eventsBatchSize;
+    }
+
     protected ThreadLocal<ch.qos.logback.classic.Logger> loggers = new ThreadLocal<ch.qos.logback.classic.Logger>() {
         @Override
         protected ch.qos.logback.classic.Logger initialValue() {
@@ -402,6 +412,7 @@ public class EventsController extends Controller {
     };
 
     protected ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+    protected int eventsBatchSize;
     @Autowired
     protected GCAnalyseRepository analyseRepository;
     @Autowired
