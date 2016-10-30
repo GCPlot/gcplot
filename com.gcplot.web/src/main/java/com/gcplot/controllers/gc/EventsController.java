@@ -33,9 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -45,6 +43,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -317,8 +316,14 @@ public class EventsController extends Controller {
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
-        try (FileInputStream fis = new FileInputStream(uf.file())) {
-            pr = logsParser.parse(fis, e -> {
+        InputStream fis;
+        if (isGzipped(uf.file())) {
+            fis = new GZIPInputStream(new FileInputStream(uf.file()));
+        } else {
+            fis = new FileInputStream(uf.file());
+        }
+        try {
+            pr = logsParser.parse(new BufferedInputStream(fis), e -> {
                 enricher.accept((GCEventImpl) e);
                 if (firstParsed[0] == null) {
                     firstParsed[0] = e;
@@ -334,11 +339,25 @@ public class EventsController extends Controller {
                     LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
                 }
             }, pctx);
+        } finally {
+            fis.close();
         }
         if (eventsBatch.size() != 0) {
             persist(eventsBatch);
         }
         return pr;
+    }
+
+    private boolean isGzipped(File file) throws IOException {
+        try (FileInputStream in = new FileInputStream(file)) {
+            final int b1 = in.read();
+            final int b2 = in.read();
+            if (b2 < 0) {
+                throw new EOFException();
+            }
+            int firstBytes = (b2 << 8) | b1;
+            return firstBytes == GZIPInputStream.GZIP_MAGIC;
+        }
     }
 
     private void persist(List<GCEvent> eventsBatch) {
