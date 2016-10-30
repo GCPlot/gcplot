@@ -183,7 +183,7 @@ public class VertxRequestContext implements RequestContext {
     @Override
     public String param(String key, String defaultValue) {
         String param = param(key);
-        return param == null ? defaultValue : param;
+        return Strings.isNullOrEmpty(param) ? defaultValue : param;
     }
 
     @Override

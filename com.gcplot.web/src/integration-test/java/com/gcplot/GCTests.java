@@ -2,6 +2,7 @@ package com.gcplot;
 
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.serialization.JsonSerializer;
+import com.gcplot.controllers.gc.EventsController;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;
@@ -164,6 +165,27 @@ public class GCTests extends IntegrationTest {
         get("/jvm/gc/ages/erase" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, success());
         oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token);
         Assert.assertTrue(oaj.isEmpty());
+
+        // test case with empty analyse and jvm
+
+        resp = processGCLogFile(token, "", "", "hs18_log_cms.log");
+        Assert.assertTrue(success().test(resp));
+        ar = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
+
+        events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, ar.jvmIds.iterator().next(),
+                ar.lastEventUTC - TimeUnit.DAYS.toMillis(30), ar.lastEventUTC);
+        Assert.assertEquals(19, events.size());
+
+        resp = processGCLogFile(token, "", "", "hs18_log_cms.log");
+        Assert.assertTrue(success().test(resp));
+        ar2 = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
+        Assert.assertEquals(ar.lastEventUTC, ar2.lastEventUTC);
+
+        Assert.assertEquals(ar2.jvmIds.size(), 2);
+        for (String jvm : ar2.jvmIds) {
+            events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+            Assert.assertEquals(19, events.size());
+        }
     }
 
     private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {

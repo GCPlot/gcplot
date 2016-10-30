@@ -13,7 +13,10 @@ import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TIntHashSet;
 import gnu.trove.set.hash.TLongHashSet;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -62,6 +65,18 @@ public abstract class CollectionUtils {
     public static <K, V1, V2> Map<K, V2> transformValue(Map<K, V1> map, Function<V1, V2> valueMapper) {
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 e -> valueMapper.apply(e.getValue())));
+    }
+
+    public static <T> Set<T> cloneAndAdd(Set<T> old, T element) {
+        Set<T> set = new HashSet<>(old);
+        set.add(element);
+        return set;
+    }
+
+    public static <K, V> Map<K, V> cloneAndPut(Map<K, V> old, K key, V value) {
+        Map<K, V> map = new HashMap<>(old);
+        map.put(key, value);
+        return map;
     }
 
 }

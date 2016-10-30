@@ -18,7 +18,7 @@ public interface GCAnalyseRepository {
 
     OptionalLong analysesCount(Identifier accountId);
 
-    Optional<GCAnalyse> analyse(String id);
+    Optional<GCAnalyse> analyse(Identifier accountId, String id);
 
     List<GCAnalyse> analysesFor(Identifier accountId);
 

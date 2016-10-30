@@ -50,9 +50,9 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
-    public Optional<GCAnalyse> analyse(String id) {
+    public Optional<GCAnalyse> analyse(Identifier accountId, String id) {
         Statement statement = QueryBuilder.select().all()
-                .from(TABLE_NAME).allowFiltering().where(eq("id", UUID.fromString(id)));
+                .from(TABLE_NAME).where(eq("id", UUID.fromString(id))).and(eq("account_id", accountId.toString()));
         return Optional.ofNullable(analyseFrom(connector.session().execute(statement).one()));
     }
 
@@ -65,7 +65,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
 
     @Override
     public String newAnalyse(GCAnalyse analyse) {
-        UUID newId = UUID.randomUUID();
+        UUID newId = analyse.id() == null ? UUID.randomUUID() : UUID.fromString(analyse.id());
         Statement insert = QueryBuilder.insertInto(TABLE_NAME).value("id", newId)
                 .value("account_id", analyse.accountId().toString())
                 .value("analyse_name", analyse.name())

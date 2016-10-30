@@ -67,7 +67,7 @@ public class GCAnalyseImpl implements GCAnalyse {
 
     @Override
     public Map<String, String> jvmHeaders() {
-        return jvmHeaders;
+        return Collections.unmodifiableMap(jvmHeaders);
     }
     public GCAnalyseImpl jvmHeaders(Map<String, String> jvmHeaders) {
         this.jvmHeaders = jvmHeaders;
@@ -85,7 +85,7 @@ public class GCAnalyseImpl implements GCAnalyse {
 
     @Override
     public Map<String, String> jvmNames() {
-        return jvmNames;
+        return Collections.unmodifiableMap(jvmNames);
     }
     public GCAnalyseImpl jvmNames(Map<String, String> jvmNames) {
         this.jvmNames = jvmNames;
@@ -126,6 +126,25 @@ public class GCAnalyseImpl implements GCAnalyse {
     public GCAnalyseImpl ext(String ext) {
         this.ext = ext;
         return this;
+    }
+
+    public GCAnalyseImpl() {
+    }
+
+    public GCAnalyseImpl(GCAnalyse other) {
+        this.id = other.id();
+        this.accountId = other.accountId();
+        this.name = other.name();
+        this.isContinuous = other.isContinuous();
+        this.start = other.start();
+        this.lastEvent = other.lastEvent();
+        this.jvmHeaders = other.jvmHeaders();
+        this.jvmIds = other.jvmIds();
+        this.jvmNames = other.jvmNames();
+        this.jvmVersions = other.jvmVersions();
+        this.jvmGCTypes = other.jvmGCTypes();
+        this.jvmMemoryDetails = other.jvmMemoryDetails();
+        this.ext = other.ext();
     }
 
     protected String id;

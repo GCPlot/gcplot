@@ -77,7 +77,7 @@ public class AnalyseController extends Controller {
      */
     public void analyse(RequestContext ctx) {
         String id = ctx.param("id");
-        Optional<GCAnalyse> oa = analyseRepository.analyse(id);
+        Optional<GCAnalyse> oa = analyseRepository.analyse(account(ctx).id(), id);
         if (oa.isPresent()) {
             GCAnalyse analyse = oa.get();
             if (analyse.accountId().equals(account(ctx).id())) {

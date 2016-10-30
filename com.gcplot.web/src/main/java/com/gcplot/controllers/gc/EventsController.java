@@ -9,6 +9,8 @@ import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
 import com.gcplot.log_processor.LogMetadata;
 import com.gcplot.log_processor.parser.ParseResult;
+import com.gcplot.log_processor.parser.detect.VMProperties;
+import com.gcplot.log_processor.parser.detect.VMPropertiesDetector;
 import com.gcplot.log_processor.survivor.AgesState;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
@@ -17,17 +19,16 @@ import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
 import com.gcplot.repository.VMEventsRepository;
+import com.gcplot.repository.operations.analyse.AddJvmOperation;
 import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.repository.operations.analyse.UpdateLastEventOperation;
 import com.gcplot.resources.ResourceManager;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
-import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
-import org.omg.CORBA.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,20 +37,22 @@ import javax.annotation.PostConstruct;
 import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
+
+import static com.gcplot.commons.CollectionUtils.cloneAndPut;
+import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/13/16
  */
 public class EventsController extends Controller {
+    public static final String ANONYMOUS_ANALYSE_NAME = "Default";
+    public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
     private static final int ERASE_ALL_PERIOD_YEARS = 10;
     protected static final Logger LOG = LoggerFactory.getLogger(EventsController.class);
     protected static final String LOG_PATTERN = "%d{yyyyMMdd HH:mm:ss.SSS} [[%5p] %c{1} [%t]] %m%n";
@@ -59,7 +62,6 @@ public class EventsController extends Controller {
         dispatcher.requireAuth().blocking().filter(c ->
                 c.files().size() == 1,
                 "You should provide only a single log file.")
-                .filter(requiredWithoutPeriod(), message())
                 .post("/gc/jvm/log/process", this::processJvmLog);
         dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events", this::jvmEvents);
@@ -90,52 +92,83 @@ public class EventsController extends Controller {
     public void processJvmLog(RequestContext ctx) {
         UploadedFile uf = ctx.files().get(0);
         final boolean isSync = Boolean.parseBoolean(ctx.param("sync", "false"));
-        final String analyseId = ctx.param("analyse_id");
-        final String jvmId = ctx.param("jvm_id");
+        final String analyseId = ctx.param("analyse_id", ANONYMOUS_ANALYSE_ID);
+        final String jvmId = ctx.param("jvm_id", UUID.randomUUID().toString());
         final Identifier userId = account(ctx).id();
         final String username = esc(account(ctx).username());
         String checksum = ctx.param("checksum", null);
 
-        Optional<GCAnalyse> analyse = analyseRepository.analyse(analyseId);
-        if (isAnalyseIncorrect(ctx, analyseId, jvmId, analyse.orElse(null))) return;
-        try {
-            final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
-            if (checksum == null) {
-                checksum = calculateFileChecksum(ctx, uf);
+        Optional<GCAnalyse> oAnalyse = Optional.empty();
+        if (Objects.equals(analyseId, ANONYMOUS_ANALYSE_ID)) {
+            oAnalyse = analyseRepository.analyse(userId, ANONYMOUS_ANALYSE_ID);
+            if (!oAnalyse.isPresent()) {
+                GCAnalyseImpl analyse = new GCAnalyseImpl().name(ANONYMOUS_ANALYSE_NAME)
+                        .accountId(userId).id(ANONYMOUS_ANALYSE_ID).isContinuous(false)
+                        .start(DateTime.now(DateTimeZone.UTC)).ext("");
+                analyseRepository.newAnalyse(analyse);
+                oAnalyse = Optional.of(analyse);
             }
-            Logger log = createLogger(logFile);
-            DateTime[] lastEventTime = new DateTime[1];
-            ParseResult pr = parseAndPersist(uf, jvmId, checksum, analyse.get(), log, e -> {
-                lastEventTime[0] = e.occurred();
-                e.analyseId(analyseId);
-                e.jvmId(jvmId);
-            });
-            // TODO perform operation in the single batch
-            if (!pr.isSuccessful()) {
-                LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
-                log.error(pr.getException().get().getMessage(), pr.getException().get());
-            } else {
-                List<AnalyseOperation> ops = new ArrayList<>(2);
-                if (lastEventTime[0] != null) {
-                    ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
+            if (!oAnalyse.get().jvmIds().contains(jvmId)) {
+                VMProperties props = VMProperties.EMPTY;
+                try (InputStream fis = logStream(uf)) {
+                    props = VMPropertiesDetector.detect(fis);
+                } catch (Throwable ignored) {
                 }
-                if (pr.getLogMetadata().isPresent()) {
-                    updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);
+                if (props == VMProperties.EMPTY) {
+                    ctx.write(ErrorMessages.buildJson(ErrorMessages.LOG_FILE_UNDETECTABLE));
+                    return;
                 }
-                if (ops.size() > 0) {
-                    analyseRepository.perform(ops);
-                }
-                if (pr.getAgesStates().size() > 0) {
-                    persistObjectAges(analyseId, jvmId, pr);
-                }
+
+                analyseRepository.perform(new AddJvmOperation(userId, analyseId, jvmId, uf.originalName(),
+                        props.getVersion(), props.getGcType(), "", null));
+                GCAnalyseImpl newAnalyse = new GCAnalyseImpl(oAnalyse.get());
+                newAnalyse.jvmIds(cloneAndAdd(newAnalyse.jvmIds(), jvmId));
+                newAnalyse.jvmNames(cloneAndPut(newAnalyse.jvmNames(), jvmId, uf.originalName()));
+                newAnalyse.jvmVersions(cloneAndPut(newAnalyse.jvmVersions(), jvmId, props.getVersion()));
+                newAnalyse.jvmGCTypes(cloneAndPut(newAnalyse.jvmGCTypes(), jvmId, props.getGcType()));
+                oAnalyse = Optional.of(newAnalyse);
             }
-            uploadLogFile(isSync, analyseId, jvmId, username, logFile);
-            ctx.response(SUCCESS);
-        } catch (Throwable t) {
-            throw Exceptions.runtime(t);
-        } finally {
-            // TODO log file size processed per user
-            FileUtils.deleteSilent(uf.file());
+        }
+        GCAnalyse analyse = oAnalyse.orElse(analyseRepository.analyse(userId, analyseId).orElse(null));
+        if (!isAnalyseIncorrect(ctx, analyseId, jvmId, analyse)) {
+            try {
+                final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
+                if (checksum == null) {
+                    checksum = calculateFileChecksum(ctx, uf);
+                }
+                Logger log = createLogger(logFile);
+                DateTime[] lastEventTime = new DateTime[1];
+                ParseResult pr = parseAndPersist(uf, jvmId, checksum, analyse, log, e -> {
+                    lastEventTime[0] = e.occurred();
+                    e.analyseId(analyseId);
+                    e.jvmId(jvmId);
+                });
+                if (!pr.isSuccessful()) {
+                    LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
+                    log.error(pr.getException().get().getMessage(), pr.getException().get());
+                } else {
+                    List<AnalyseOperation> ops = new ArrayList<>(2);
+                    if (lastEventTime[0] != null) {
+                        ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
+                    }
+                    if (pr.getLogMetadata().isPresent()) {
+                        updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);
+                    }
+                    if (ops.size() > 0) {
+                        analyseRepository.perform(ops);
+                    }
+                    if (pr.getAgesStates().size() > 0) {
+                        persistObjectAges(analyseId, jvmId, pr);
+                    }
+                }
+                uploadLogFile(isSync, analyseId, jvmId, username, logFile);
+                ctx.response(SUCCESS);
+            } catch (Throwable t) {
+                throw Exceptions.runtime(t);
+            } finally {
+                // TODO log file size processed per user
+                FileUtils.deleteSilent(uf.file());
+            }
         }
     }
 
@@ -202,8 +235,10 @@ public class EventsController extends Controller {
     public void jvmEventsErase(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
 
-        if (!checkAnalyseBelongsToAccount(ctx, pp.getAnalyseId()).getLeft()) return;
-        eventRepository.erase(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
+        Optional<GCAnalyse> analyse = analyseRepository.analyse(account(ctx).id(), pp.getAnalyseId());
+        if (analyse.isPresent()) {
+            eventRepository.erase(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
+        }
         ctx.response(SUCCESS);
     }
 
@@ -218,12 +253,13 @@ public class EventsController extends Controller {
         final String analyseId = ctx.param("analyse_id");
         final String jvmId = ctx.param("jvm_id");
 
-        Pair<Boolean, GCAnalyse> r = checkAnalyseBelongsToAccount(ctx, analyseId);
-        if (!r.getLeft()) return;
-        DateTime lastEvent = r.getRight().lastEvent();
+        Optional<GCAnalyse> analyse = analyseRepository.analyse(account(ctx).id(), analyseId);
+        if (analyse.isPresent()) {
+            DateTime lastEvent = analyse.get().lastEvent();
 
-        if (lastEvent != null) {
-            eventRepository.erase(analyseId, jvmId, Range.of(lastEvent.minusYears(ERASE_ALL_PERIOD_YEARS), lastEvent.plusDays(1)));
+            if (lastEvent != null) {
+                eventRepository.erase(analyseId, jvmId, Range.of(lastEvent.minusYears(ERASE_ALL_PERIOD_YEARS), lastEvent.plusDays(1)));
+            }
         }
         ctx.response(SUCCESS);
     }
@@ -316,14 +352,8 @@ public class EventsController extends Controller {
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
-        InputStream fis;
-        if (isGzipped(uf.file())) {
-            fis = new GZIPInputStream(new FileInputStream(uf.file()));
-        } else {
-            fis = new FileInputStream(uf.file());
-        }
-        try {
-            pr = logsParser.parse(new BufferedInputStream(fis), e -> {
+        try (InputStream fis = logStream(uf)) {
+            pr = logsParser.parse(fis, e -> {
                 enricher.accept((GCEventImpl) e);
                 if (firstParsed[0] == null) {
                     firstParsed[0] = e;
@@ -339,8 +369,6 @@ public class EventsController extends Controller {
                     LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
                 }
             }, pctx);
-        } finally {
-            fis.close();
         }
         if (eventsBatch.size() != 0) {
             persist(eventsBatch);
@@ -348,8 +376,21 @@ public class EventsController extends Controller {
         return pr;
     }
 
-    private boolean isGzipped(File file) throws IOException {
-        try (FileInputStream in = new FileInputStream(file)) {
+    private InputStream logStream(UploadedFile uf) {
+        try {
+            InputStream fis = new BufferedInputStream(new FileInputStream(uf.file()));
+            if (isGzipped(fis)) {
+                fis = new GZIPInputStream(fis);
+            }
+            return fis;
+        } catch (Throwable t) {
+            throw Exceptions.runtime(t);
+        }
+    }
+
+    private boolean isGzipped(InputStream in) throws IOException {
+        in.mark(2);
+        try {
             final int b1 = in.read();
             final int b2 = in.read();
             if (b2 < 0) {
@@ -357,6 +398,8 @@ public class EventsController extends Controller {
             }
             int firstBytes = (b2 << 8) | b1;
             return firstBytes == GZIPInputStream.GZIP_MAGIC;
+        } finally {
+            in.reset();
         }
     }
 
@@ -390,16 +433,6 @@ public class EventsController extends Controller {
         log.addAppender(fileAppender);
 
         return log;
-    }
-
-    private Pair<Boolean, GCAnalyse> checkAnalyseBelongsToAccount(RequestContext ctx, String analyseId) {
-        Optional<GCAnalyse> analyse = analyseRepository.analyse(analyseId);
-        if (!(analyse.isPresent() && analyse.get().accountId().equals(account(ctx).id()))) {
-            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
-                    "An account doesn't contain analyse ID " + analyseId));
-            return Pair.of(false, null);
-        }
-        return Pair.of(true, analyse.get());
     }
 
     private Predicate<RequestContext> requiredWithoutPeriod() {
