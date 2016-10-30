@@ -100,11 +100,10 @@ public class EventsController extends Controller {
 
         Optional<GCAnalyse> oAnalyse = Optional.empty();
         if (Objects.equals(analyseId, ANONYMOUS_ANALYSE_ID)) {
-            oAnalyse = analyseRepository.analyse(userId, ANONYMOUS_ANALYSE_ID);
+            oAnalyse = analyseRepository.analyse(userId, analyseId);
             if (!oAnalyse.isPresent()) {
-                GCAnalyseImpl analyse = new GCAnalyseImpl().name(ANONYMOUS_ANALYSE_NAME)
-                        .accountId(userId).id(ANONYMOUS_ANALYSE_ID).isContinuous(false)
-                        .start(DateTime.now(DateTimeZone.UTC)).ext("");
+                GCAnalyseImpl analyse = new GCAnalyseImpl().name(ANONYMOUS_ANALYSE_NAME).accountId(userId).id(analyseId)
+                        .isContinuous(false).start(DateTime.now(DateTimeZone.UTC)).ext("");
                 analyseRepository.newAnalyse(analyse);
                 oAnalyse = Optional.of(analyse);
             }

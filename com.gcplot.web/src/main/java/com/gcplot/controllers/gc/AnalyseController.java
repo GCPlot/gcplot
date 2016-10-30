@@ -220,19 +220,12 @@ public class AnalyseController extends Controller {
      */
     public void newAnalyse(NewAnalyseRequest req, RequestContext ctx) {
         Identifier userId = account(ctx).id();
-        GCAnalyseImpl analyse = new GCAnalyseImpl();
-        analyse.name(req.name);
-        analyse.isContinuous(req.isContinuous);
-        analyse.accountId(userId);
-        analyse.start(DateTime.now(DateTimeZone.UTC));
-        analyse.ext(req.ext);
-        analyse.jvmHeaders(Collections.emptyMap());
-        analyse.jvmMemoryDetails(Collections.emptyMap());
+        GCAnalyseImpl analyse = new GCAnalyseImpl().name(req.name).isContinuous(req.isContinuous).accountId(userId)
+                .start(DateTime.now(DateTimeZone.UTC)).ext(req.ext).jvmHeaders(Collections.emptyMap())
+                .jvmMemoryDetails(Collections.emptyMap());
         if (req.jvms == null || req.jvms.size() == 0) {
-            analyse.jvmGCTypes(Collections.emptyMap());
-            analyse.jvmVersions(Collections.emptyMap());
-            analyse.jvmIds(Collections.emptySet());
-            analyse.jvmNames(Collections.emptyMap());
+            analyse.jvmGCTypes(Collections.emptyMap()).jvmVersions(Collections.emptyMap())
+                    .jvmIds(Collections.emptySet()).jvmNames(Collections.emptyMap());
         } else {
             Set<String> jvmIds = new HashSet<>();
             Map<String, String> jvmNames = new HashMap<>();
@@ -244,10 +237,7 @@ public class AnalyseController extends Controller {
                 jvmGCTypes.put(jvm.jvmId, GarbageCollectorType.get(jvm.gcType));
                 jvmVersions.put(jvm.jvmId, VMVersion.get(jvm.vmVersion));
             });
-            analyse.jvmGCTypes(jvmGCTypes);
-            analyse.jvmVersions(jvmVersions);
-            analyse.jvmIds(jvmIds);
-            analyse.jvmNames(jvmNames);
+            analyse.jvmGCTypes(jvmGCTypes).jvmVersions(jvmVersions).jvmIds(jvmIds).jvmNames(jvmNames);
         }
 
         ctx.response(new NewAnalyseResponse(analyseRepository.newAnalyse(analyse)));
