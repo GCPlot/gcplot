@@ -32,6 +32,8 @@ public class VertxDispatcher implements Dispatcher<String> {
         LOG.info("Starting Vert.x Dispatcher at [{}:{}]", host, port);
         httpServer = vertx.createHttpServer();
         router = Router.router(vertx);
+        router.exceptionHandler(e -> LOG.error(e.getMessage(), e));
+        router.route().order(0).handler(bodyHandler.setBodyLimit(maxUploadSize));
         router.route().last().handler(f -> {
             if (!f.response().ended() && f.response().bytesWritten() == 0) {
                 f.response().end(ErrorMessages.buildJson(ErrorMessages.NOT_FOUND));
@@ -46,7 +48,6 @@ public class VertxDispatcher implements Dispatcher<String> {
         } catch (Throwable t) {
             throw Exceptions.runtime(t);
         }
-        router.route().handler(bodyHandler.setBodyLimit(maxUploadSize));
         isOpen = true;
     }
 
@@ -124,6 +125,11 @@ public class VertxDispatcher implements Dispatcher<String> {
     @Override
     public Dispatcher<String> post(String s, BiConsumer<byte[], RequestContext> handler) {
         return handler(s, HttpMethod.POST, (rc, c) -> handler.accept(rc.getBody().getBytes(), c));
+    }
+
+    @Override
+    public Dispatcher<String> postUpload(String s, Consumer<RequestContext> handler) {
+        return handler(s, HttpMethod.POST, (rc, c) -> handler.accept(c));
     }
 
     @Override

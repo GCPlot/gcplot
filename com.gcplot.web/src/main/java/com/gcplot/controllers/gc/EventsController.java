@@ -62,7 +62,7 @@ public class EventsController extends Controller {
         dispatcher.requireAuth().blocking().filter(c ->
                 c.files().size() == 1,
                 "You should provide only a single log file.")
-                .post("/gc/jvm/log/process", this::processJvmLog);
+                .postUpload("/gc/jvm/log/process", this::processJvmLog);
         dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events", this::jvmEvents);
         dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())

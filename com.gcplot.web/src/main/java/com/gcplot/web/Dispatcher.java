@@ -42,6 +42,8 @@ public interface Dispatcher<Route> extends Closeable {
 
     Dispatcher<Route> post(Route route, BiConsumer<byte[], RequestContext> handler);
 
+    Dispatcher<Route> postUpload(Route route, Consumer<RequestContext> handler);
+
     Dispatcher<Route> put(Route route, Consumer<RequestContext> handler);
 
     <Payload> Dispatcher<Route> put(Route route, Class<? extends Payload> payloadType,
