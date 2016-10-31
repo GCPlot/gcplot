@@ -9,6 +9,7 @@ import com.gcplot.logs.ParserContext;
 import com.gcplot.model.gc.*;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
 import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
+import com.tagtraum.perf.gcviewer.model.ConcurrentGCEvent;
 import com.tagtraum.perf.gcviewer.model.GCResource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -106,7 +107,14 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             DateTimeZone z = DateTimeZone.forTimeZone(timeZone);
             datestamp = new DateTime(new DateTime(event.getDatestamp().toInstant().toEpochMilli(), z), DateTimeZone.UTC);
         }
-        if (!event.isVmEvent()) {
+        double pause = event.getPause();
+        if (event.isConcurrent()) {
+            ConcurrentGCEvent concurrentGCEvent = (ConcurrentGCEvent) event;
+            generations.add(Generation.TENURED);
+            pause = concurrentGCEvent.getDuration();
+        } else if (event.isVmEvent()) {
+            generations = EnumSet.of(Generation.OTHER);
+        } else {
             com.tagtraum.perf.gcviewer.model.GCEvent gcEvent = (com.tagtraum.perf.gcviewer.model.GCEvent) event;
             if (event.getGeneration() == AbstractGCEvent.Generation.YOUNG) {
                 capacity = of(gcEvent.getYoung());
@@ -128,12 +136,10 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                 }
             }
             totalCapacity = of(gcEvent);
-        } else {
-            generations = EnumSet.of(Generation.OTHER);
         }
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
-                event.getTimestamp(), (long)(event.getPause() * 1_000_000), generations, concurrency, ""));
-        if (!event.isVmEvent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
+                event.getTimestamp(), (long)(pause * 1_000_000), generations, concurrency, ""));
+        if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
             com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
             events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,
                     of(perm), totalCapacity, event.getTimestamp(), 0, EnumSet.of(metaspaceGeneration(perm.getTypeAsString())),
