@@ -311,7 +311,6 @@ public class VertxDispatcher implements Dispatcher<String> {
     protected volatile boolean isOpen = false;
     protected HttpServer httpServer;
     protected Router router;
-    protected BodyHandler bodyHandler = BodyHandler.create();
 
     protected boolean blocking = false;
     protected boolean requireAuth = true;
@@ -363,5 +362,13 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
     public void setMaxUploadSize(int maxUploadSize) {
         this.maxUploadSize = maxUploadSize;
+    }
+
+    private BodyHandler bodyHandler;
+    public BodyHandler getBodyHandler() {
+        return bodyHandler;
+    }
+    public void setBodyHandler(BodyHandler bodyHandler) {
+        this.bodyHandler = bodyHandler;
     }
 }

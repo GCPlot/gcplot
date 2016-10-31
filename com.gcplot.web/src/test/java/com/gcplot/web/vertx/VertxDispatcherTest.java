@@ -12,6 +12,7 @@ import com.gcplot.web.LoginInfo;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.handler.impl.BodyHandlerImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,6 +34,7 @@ public class VertxDispatcherTest {
         port = Utils.getFreePorts(1)[0];
         accountRepository = createMock(AccountRepository.class);
         dispatcher = new VertxDispatcher();
+        dispatcher.setBodyHandler(new BodyHandlerImpl());
         dispatcher.setHost(HOST);
         dispatcher.setPort(port.value);
         dispatcher.setVertx(vertx);
