@@ -117,15 +117,21 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         } else {
             com.tagtraum.perf.gcviewer.model.GCEvent gcEvent = (com.tagtraum.perf.gcviewer.model.GCEvent) event;
             if (event.getGeneration() == AbstractGCEvent.Generation.YOUNG) {
-                capacity = of(gcEvent.getYoung());
+                if (gcEvent.getYoung() != null) {
+                    capacity = of(gcEvent.getYoung());
+                }
                 generations.add(Generation.YOUNG);
             } else if (event.getGeneration() == AbstractGCEvent.Generation.TENURED ||
                     event.getGeneration() == AbstractGCEvent.Generation.ALL) {
                 generations.add(Generation.TENURED);
-                capacity = of(gcEvent.getTenured());
+                if (gcEvent.getTenured() != null) {
+                    capacity = of(gcEvent.getTenured());
+                }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.PERM) {
                 generations.add(metaspaceGeneration(gcEvent.getPerm().getTypeAsString()));
-                capacity = of(gcEvent.getPerm());
+                if (gcEvent.getPerm() != null) {
+                    capacity = of(gcEvent.getPerm());
+                }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.OTHER) {
                 ctx.logger().warn("Strangely, an event is considered OTHER: {}", event);
             }
