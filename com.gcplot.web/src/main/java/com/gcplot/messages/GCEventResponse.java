@@ -63,7 +63,7 @@ public class GCEventResponse {
     }
 
     public static String toJson(GCEvent event, DateTimeZone tz) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(128);
         int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
         sb.append("{").append("\"p\":").append(event.pauseMu()).append(",")
                 .append("\"d\":").append(event.occurred().toDateTime(tz).getMillis()).append(",")
