@@ -215,7 +215,6 @@ public class EventsController extends Controller {
             Iterator<GCEvent> eventIterator = eventRepository.lazyPauseEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
             while (eventIterator.hasNext()) {
-                LOG.info("Writing ...");
                 ctx.response(GCEventResponse.from(eventIterator.next(), pp.getTimeZone()));
             }
             ctx.finish();
