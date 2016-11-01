@@ -68,6 +68,10 @@ public class EventsController extends Controller {
         dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/stream", this::jvmEventsStream);
         dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
+                .get("/gc/jvm/events/full", this::fullJvmEvents);
+        dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
+                .get("/gc/jvm/events/full/stream", this::fullJvmEventsStream);
+        dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/erase", this::jvmEventsErase);
         dispatcher.requireAuth().filter(requiredWithoutPeriod(), message())
                 .get("/gc/jvm/events/erase/all", this::jvmEventsEraseAll);
@@ -184,6 +188,7 @@ public class EventsController extends Controller {
     public void jvmEvents(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
 
+        // FIXME: duplication
         if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
                     + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
@@ -218,6 +223,36 @@ public class EventsController extends Controller {
                 ctx.response(GCEventResponse.from(eventIterator.next(), pp.getTimeZone()));
             }
             ctx.finish();
+        }
+    }
+
+    public void fullJvmEventsStream(RequestContext ctx) {
+        PeriodParams pp = new PeriodParams(ctx);
+
+        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
+                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
+        } else {
+            ctx.setChunked(true);
+            Iterator<GCEvent> eventIterator = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
+                    Range.of(pp.getFrom(), pp.getTo()));
+            while (eventIterator.hasNext()) {
+                ctx.response(GCEventResponse.from(eventIterator.next(), pp.getTimeZone()));
+            }
+            ctx.finish();
+        }
+    }
+
+    public void fullJvmEvents(RequestContext ctx) {
+        PeriodParams pp = new PeriodParams(ctx);
+
+        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
+                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
+        } else {
+            ctx.setChunked(false);
+            List<GCEvent> events = eventRepository.events(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
+            ctx.response(GCEventResponse.from(events, pp.getTimeZone()));
         }
     }
 
