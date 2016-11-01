@@ -36,14 +36,14 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         Assert.assertNotNull(ge);
         Assert.assertFalse(i.hasNext());
 
-        Assert.assertNotNull(ge.id());
+        Assert.assertNull(ge.id());
         // we don't load jvmId and analyseId in order to save traffic
         // Assert.assertEquals(ge.jvmId(), jvmId);
         // Assert.assertEquals(ge.analyseId(), analyseId);
         Assert.assertNull(ge.jvmId());
         Assert.assertNull(ge.analyseId());
         Assert.assertNull(ge.bucketId());
-        Assert.assertEquals(ge.description(), event.description());
+        Assert.assertNull(ge.description());
         Assert.assertEquals(ge.occurred(), event.occurred().toDateTime(DateTimeZone.UTC));
         Assert.assertEquals(ge.vmEventType(), event.vmEventType());
         Assert.assertEquals(ge.capacity(), event.capacity());

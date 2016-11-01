@@ -220,7 +220,10 @@ public class EventsController extends Controller {
             Iterator<GCEvent> eventIterator = eventRepository.lazyPauseEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
             while (eventIterator.hasNext()) {
-                ctx.response(GCEventResponse.from(eventIterator.next(), pp.getTimeZone()));
+                GCEvent event = eventIterator.next();
+                if (event != null) {
+                    ctx.response(GCEventResponse.from(event, pp.getTimeZone()));
+                }
             }
             ctx.finish();
         }
@@ -237,7 +240,10 @@ public class EventsController extends Controller {
             Iterator<GCEvent> eventIterator = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
             while (eventIterator.hasNext()) {
-                ctx.response(GCEventResponse.from(eventIterator.next(), pp.getTimeZone()));
+                GCEvent event = eventIterator.next();
+                if (event != null) {
+                    ctx.response(GCEventResponse.from(event, pp.getTimeZone()));
+                }
             }
             ctx.finish();
         }
