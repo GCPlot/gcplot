@@ -110,8 +110,12 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         double pause = event.getPause();
         if (event.isConcurrent()) {
             ConcurrentGCEvent concurrentGCEvent = (ConcurrentGCEvent) event;
-            generations.add(Generation.TENURED);
-            pause = concurrentGCEvent.getDuration();
+            if (concurrentGCEvent.getDuration() > 0) {
+                generations.add(Generation.TENURED);
+                pause = concurrentGCEvent.getDuration();
+            } else {
+                return Collections.emptyList();
+            }
         } else if (event.isVmEvent()) {
             generations = EnumSet.of(Generation.OTHER);
         } else {
