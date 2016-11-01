@@ -1,9 +1,6 @@
 package com.gcplot.repository.cassandra;
 
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.RegularStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.gcplot.commons.Range;
@@ -16,6 +13,8 @@ import org.apache.cassandra.utils.UUIDGen;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Months;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +28,7 @@ import static com.gcplot.model.gc.cassandra.Mapper.eventFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 
 public class CassandraGCEventRepository extends AbstractVMEventsCassandraRepository<GCEvent> implements GCEventRepository {
+    private static final Logger LOG = LoggerFactory.getLogger(CassandraGCEventRepository.class);
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
     public static final String[] NON_KEY_FIELDS = new String[] { /*"id", "parent_id", "description",
@@ -129,13 +129,15 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
     }
 
     protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
-        return connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME)
+        Statement statement = QueryBuilder.select(fields).from(TABLE_NAME)
                 .allowFiltering()
                 .where(eq("analyse_id", UUID.fromString(analyseId)))
                 .and(eq("jvm_id", jvmId))
                 .and(in("date", dates(range)))
-                .and(gte("occurred", range.from.toDate()))
-                .and(lte("occurred", range.to.toDate())).setFetchSize(fetchSize));
+                .and(gte("occurred", range.from.getMillis()))
+                .and(lte("occurred", range.to.getMillis())).setFetchSize(fetchSize);
+        LOG.debug("Query: {}", statement);
+        return connector.session().execute(statement);
     }
 
     /**
