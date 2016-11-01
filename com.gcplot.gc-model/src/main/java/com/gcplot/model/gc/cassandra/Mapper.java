@@ -4,10 +4,13 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.gcplot.Identifier;
 import com.gcplot.commons.enums.EnumSetUtils;
+import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -20,6 +23,7 @@ import java.util.function.ToLongFunction;
 import static com.gcplot.commons.CollectionUtils.transformValue;
 
 public abstract class Mapper {
+    private static final Logger LOG = LoggerFactory.getLogger(Mapper.class);
 
     public static List<GCAnalyse> analysesFrom(ResultSet resultSet) {
         List<GCAnalyse> list = new LinkedList<>();
@@ -79,21 +83,26 @@ public abstract class Mapper {
             return null;
         }
         GCEventImpl gcEvent = new GCEventImpl();
-        gcEvent.id(op(row, "id", r -> r.getUUID("id").toString()))
-                .parentEvent(sop(row, "parent_id", r -> r.getUUID("parent_id")))
-                .analyseId(sop(row, "analyse_id", r -> r.getUUID("analyse_id")))
-                .bucketId(op(row, "bucket_id", r -> r.getString("bucket_id")))
-                .jvmId(op(row, "jvm_id", r -> r.getString("jvm_id")))
-                .description(op(row, "description", r -> r.getString("description")))
-                .timestamp(dop(row, "tmstm", r -> r.getDouble("tmstm")))
-                .occurred(op(row, "occurred", r -> new DateTime(r.getTimestamp("occurred"), DateTimeZone.UTC)))
-                .vmEventType(op(row, "vm_event_type", r -> VMEventType.get(r.getInt("vm_event_type"))))
-                .capacity(op(row, "capacity", r -> new Capacity(r.getList("capacity", Long.class))))
-                .totalCapacity(op(row, "total_capacity", r -> new Capacity(r.getList("total_capacity", Long.class))))
-                .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
-                .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
-                .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
-                .ext(op(row, "ext", r -> r.getString("ext")));
+        try {
+            gcEvent.id(op(row, "id", r -> r.getUUID("id").toString()))
+                    .parentEvent(sop(row, "parent_id", r -> r.getUUID("parent_id")))
+                    .analyseId(sop(row, "analyse_id", r -> r.getUUID("analyse_id")))
+                    .bucketId(op(row, "bucket_id", r -> r.getString("bucket_id")))
+                    .jvmId(op(row, "jvm_id", r -> r.getString("jvm_id")))
+                    .description(op(row, "description", r -> r.getString("description")))
+                    .timestamp(dop(row, "tmstm", r -> r.getDouble("tmstm")))
+                    .occurred(op(row, "occurred", r -> new DateTime(r.getTimestamp("occurred"), DateTimeZone.UTC)))
+                    .vmEventType(op(row, "vm_event_type", r -> VMEventType.get(r.getInt("vm_event_type"))))
+                    .capacity(op(row, "capacity", r -> new Capacity(r.getList("capacity", Long.class))))
+                    .totalCapacity(op(row, "total_capacity", r -> new Capacity(r.getList("total_capacity", Long.class))))
+                    .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
+                    .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
+                    .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
+                    .ext(op(row, "ext", r -> r.getString("ext")));
+        } catch (Throwable t) {
+            LOG.error(row.toString());
+            throw Exceptions.runtime(t);
+        }
         return gcEvent;
     }
 
