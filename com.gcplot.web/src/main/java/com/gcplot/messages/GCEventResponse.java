@@ -15,31 +15,31 @@ import java.util.stream.Collectors;
  *         9/12/16
  */
 public class GCEventResponse {
-    @JsonProperty("ps")
+    @JsonProperty("p")
     public long pauseMu;
-    @JsonProperty("dt")
+    @JsonProperty("d")
     public long dateTime;
-    @JsonProperty("gn")
+    @JsonProperty("g")
     public int[] generations;
-    @JsonProperty("cnt")
+    @JsonProperty("c")
     public int concurrency;
-    @JsonProperty("cap")
+    @JsonProperty("cp")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CapacityResponse capacity;
-    @JsonProperty("tcap")
+    @JsonProperty("tc")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CapacityResponse totalCapacity;
-    @JsonProperty("ext")
+    @JsonProperty("e")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String ext;
 
-    public GCEventResponse(@JsonProperty("ps") long pauseMu, @JsonProperty("dt") long dateTime,
-                           @JsonProperty("gn") int[] generations, @JsonProperty("cnt") int concurrency,
-                           @JsonProperty("cap")
+    public GCEventResponse(@JsonProperty("p") long pauseMu, @JsonProperty("d") long dateTime,
+                           @JsonProperty("g") int[] generations, @JsonProperty("c") int concurrency,
+                           @JsonProperty("cp")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse capacity,
-                           @JsonProperty("tcap")
+                           @JsonProperty("tc")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse totalCapacity,
-                           @JsonProperty("ext")
+                           @JsonProperty("e")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) String ext) {
         this.pauseMu = pauseMu;
         this.dateTime = dateTime;

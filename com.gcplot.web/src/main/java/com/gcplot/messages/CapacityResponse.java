@@ -8,16 +8,16 @@ import com.gcplot.model.gc.Capacity;
  *         9/12/16
  */
 public class CapacityResponse {
-    @JsonProperty("ub")
+    @JsonProperty("b")
     public long usedBefore;
-    @JsonProperty("ua")
+    @JsonProperty("a")
     public long usedAfter;
-    @JsonProperty("ttl")
+    @JsonProperty("t")
     public long total;
 
-    public CapacityResponse(@JsonProperty("ub") long usedBefore,
-                            @JsonProperty("ua") long usedAfter,
-                            @JsonProperty("ttl") long total) {
+    public CapacityResponse(@JsonProperty("b") long usedBefore,
+                            @JsonProperty("a") long usedAfter,
+                            @JsonProperty("t") long total) {
         this.usedBefore = usedBefore;
         this.usedAfter = usedAfter;
         this.total = total;
