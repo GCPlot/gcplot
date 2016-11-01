@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.enums.TypedEnum;
 import com.gcplot.model.gc.GCEvent;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -82,7 +83,7 @@ public class GCEventResponse {
         if (event.totalCapacity() != null) {
             sb.append(",\"tc\":").append(CapacityResponse.toJson(event.totalCapacity()));
         }
-        if (event.ext() != null) {
+        if (!Strings.isNullOrEmpty(event.ext())) {
             sb.append(",\"e\":").append("\"").append(event.ext()).append("\"");
         }
         return sb.append("}").toString();
