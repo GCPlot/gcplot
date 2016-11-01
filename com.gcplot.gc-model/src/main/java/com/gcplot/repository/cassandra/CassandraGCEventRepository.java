@@ -31,9 +31,10 @@ import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 public class CassandraGCEventRepository extends AbstractVMEventsCassandraRepository<GCEvent> implements GCEventRepository {
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
-    public static final String[] NON_KEY_FIELDS = new String[] { "id", "parent_id", "description",
+    public static final String[] NON_KEY_FIELDS = new String[] { /*"id", "parent_id", "description",
             "occurred", "vm_event_type", "capacity", "total_capacity", "tmstm",
-            "pause_mu", "generations", "concurrency", "ext"};
+            "pause_mu", "generations", "concurrency", "ext"*/
+            "occurred", "vm_event_type", "pause_mu", "tmstm", "generations", "concurrency", "capacity", "total_capacity", "ext"};
     public static final String[] LAST_EVENT_FIELDS = Utils.concat(NON_KEY_FIELDS, new String[] { "bucket_id" });
     public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "tmstm", "generations", "concurrency" };
 

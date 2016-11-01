@@ -73,7 +73,10 @@ public abstract class Mapper {
     public static List<GCEvent> eventsFrom(ResultSet resultSet) {
         List<GCEvent> events = new LinkedList<>();
         for (Row row : resultSet) {
-            events.add(eventFrom(row));
+            GCEvent event = eventFrom(row);
+            if (event != null) {
+                events.add(event);
+            }
         }
         return events;
     }
@@ -101,7 +104,7 @@ public abstract class Mapper {
                     .ext(op(row, "ext", r -> r.getString("ext")));
         } catch (Throwable t) {
             LOG.error(row.toString());
-            throw Exceptions.runtime(t);
+            return null;
         }
         return gcEvent;
     }
