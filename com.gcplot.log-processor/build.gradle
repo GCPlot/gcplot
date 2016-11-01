@@ -3,7 +3,7 @@ dependencies {
     compile project(":com.gcplot.api")
     compile "org.apache.commons:commons-lang3:$langVersion"
 
-    compile('com.github.chewiebug:gcviewer:1.35.7-SNAPSHOT') {
+    compile('com.github.chewiebug:gcviewer:1.35.8-SNAPSHOT') {
         exclude module: "slf4j-jdk14"
     }
 }
