@@ -130,12 +130,11 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
 
     protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
         Statement statement = QueryBuilder.select(fields).from(TABLE_NAME)
-                .allowFiltering()
                 .where(eq("analyse_id", UUID.fromString(analyseId)))
                 .and(eq("jvm_id", jvmId))
                 .and(in("date", dates(range)))
-                .and(gte("occurred", range.from.getMillis()))
-                .and(lte("occurred", range.to.getMillis())).setFetchSize(fetchSize);
+                .and(gte("written_at", QueryBuilder.fcall("minTimeuuid", range.from.getMillis())))
+                .and(lte("written_at", QueryBuilder.fcall("maxTimeuuid", range.to.getMillis()))).setFetchSize(fetchSize);
         LOG.debug("Query: {}", statement);
         return connector.session().execute(statement);
     }
