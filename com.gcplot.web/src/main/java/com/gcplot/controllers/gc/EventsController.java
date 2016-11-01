@@ -141,7 +141,7 @@ public class EventsController extends Controller {
                 }
                 Logger log = createLogger(logFile);
                 DateTime[] lastEventTime = new DateTime[1];
-                ParseResult pr = parseAndPersist(uf, jvmId, checksum, analyse, log, e -> {
+                ParseResult pr = parseAndPersist(isSync, uf, jvmId, checksum, analyse, log, e -> {
                     lastEventTime[0] = e.occurred();
                     e.analyseId(analyseId);
                     e.jvmId(jvmId);
@@ -383,7 +383,7 @@ public class EventsController extends Controller {
         return false;
     }
 
-    private ParseResult parseAndPersist(UploadedFile uf, String jvmId, String checksum, GCAnalyse analyse,
+    private ParseResult parseAndPersist(boolean isSync, UploadedFile uf, String jvmId, String checksum, GCAnalyse analyse,
                                         Logger log, Consumer<GCEventImpl> enricher) throws IOException {
         ParserContext pctx = new ParserContext(log, checksum, analyse.jvmGCTypes().get(jvmId),
                 analyse.jvmVersions().get(jvmId));
@@ -402,7 +402,7 @@ public class EventsController extends Controller {
                         e.timestamp()) {
                     eventsBatch.add(e);
                     if (eventsBatch.size() == eventsBatchSize) {
-                        persist(eventsBatch);
+                        persist(isSync, eventsBatch);
                     }
                 } else {
                     log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
@@ -411,7 +411,7 @@ public class EventsController extends Controller {
             }, pctx);
         }
         if (eventsBatch.size() != 0) {
-            persist(eventsBatch);
+            persist(isSync, eventsBatch);
         }
         return pr;
     }
@@ -443,9 +443,13 @@ public class EventsController extends Controller {
         }
     }
 
-    private void persist(List<GCEvent> eventsBatch) {
+    private void persist(boolean isSync, List<GCEvent> eventsBatch) {
         try {
-            eventRepository.addAsync(eventsBatch);
+            if (isSync) {
+                eventRepository.add(eventsBatch);
+            } else {
+                eventRepository.addAsync(eventsBatch);
+            }
         } finally {
             eventsBatch.clear();
         }
