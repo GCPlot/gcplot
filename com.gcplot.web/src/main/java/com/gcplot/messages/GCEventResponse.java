@@ -77,13 +77,13 @@ public class GCEventResponse {
         sb.append("],");
         sb.append("\"c\":").append(event.concurrency());
         if (event.capacity() != null) {
-            sb.append(",").append(CapacityResponse.toJson(event.capacity()));
+            sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));
         }
         if (event.totalCapacity() != null) {
-            sb.append(",").append(CapacityResponse.toJson(event.totalCapacity()));
+            sb.append(",\"tc\":").append(CapacityResponse.toJson(event.totalCapacity()));
         }
         if (event.ext() != null) {
-            sb.append(",").append("\"ext\":").append("\"").append(event.ext()).append("\"");
+            sb.append(",\"e\":").append("\"").append(event.ext()).append("\"");
         }
         return sb.append("}").toString();
     }
