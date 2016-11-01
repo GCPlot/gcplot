@@ -103,7 +103,7 @@ public abstract class Mapper {
                     .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
                     .ext(op(row, "ext", r -> r.getString("ext")));
         } catch (Throwable t) {
-            LOG.error(row.toString());
+            LOG.error(t.getMessage() + " | " + row.toString());
             return null;
         }
         return gcEvent;
