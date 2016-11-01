@@ -25,7 +25,7 @@ public class Capacity {
     protected final long total;
 
     public Capacity(List<Long> list) {
-        Preconditions.checkState(list.size() == 3, "Wrong input list: {}", list);
+        Preconditions.checkState(list.size() == 3, "Wrong input list: %s", list);
         this.usedBefore = list.get(0);
         this.usedAfter = list.get(1);
         this.total = list.get(2);
