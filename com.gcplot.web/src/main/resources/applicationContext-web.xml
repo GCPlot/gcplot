@@ -8,7 +8,14 @@
 
     <import resource="applicationContext-config.xml"/>
 
-    <bean id="vertx" class="io.vertx.core.Vertx" factory-method="vertx"/>
+    <bean id="vertxOpts" class="io.vertx.core.VertxOptions">
+        <property name="workerPoolSize" value="${vertx.worker.pool.size:20}"/>
+        <property name="internalBlockingPoolSize" value="${vertx.worker.blocking.pool.size:20}"/>
+    </bean>
+
+    <bean id="vertx" class="io.vertx.core.Vertx" factory-method="vertx">
+        <constructor-arg index="0" ref="vertxOpts"/>
+    </bean>
 
     <bean id="urlBuilder" class="com.gcplot.services.UrlBuilder">
         <property name="config" ref="config"/>
