@@ -75,7 +75,7 @@ public class GCEventResponse {
             }
          }
         sb.append("],");
-        sb.append("\"c\":").append(event.concurrency());
+        sb.append("\"c\":").append(event.concurrency().type());
         if (event.capacity() != null) {
             sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));
         }
