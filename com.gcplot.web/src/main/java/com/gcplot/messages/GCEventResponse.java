@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.enums.TypedEnum;
 import com.gcplot.model.gc.GCEvent;
 import com.google.common.base.Preconditions;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.util.List;
@@ -59,6 +60,32 @@ public class GCEventResponse {
         return new GCEventResponse(event.pauseMu(), event.occurred().toDateTime(tz).getMillis(),
                 gens, event.concurrency().type(), CapacityResponse.from(event.capacity()),
                 CapacityResponse.from(event.totalCapacity()), event.ext());
+    }
+
+    public static String toJson(GCEvent event, DateTimeZone tz) {
+        StringBuilder sb = new StringBuilder();
+        int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
+        sb.append("{").append("\"p\":").append(event.pauseMu()).append(",")
+                .append("\"d\":").append(event.occurred().toDateTime(tz).getMillis()).append(",")
+                .append("\"g\":[");
+        for (int i = 0; i < gens.length; i++) {
+            sb.append(gens[i]);
+            if (i < gens.length - 1) {
+                sb.append(",");
+            }
+         }
+        sb.append("],");
+        sb.append("\"c\":").append(event.concurrency());
+        if (event.capacity() != null) {
+            sb.append(",").append(CapacityResponse.toJson(event.capacity()));
+        }
+        if (event.totalCapacity() != null) {
+            sb.append(",").append(CapacityResponse.toJson(event.totalCapacity()));
+        }
+        if (event.ext() != null) {
+            sb.append(",").append("\"ext\":").append("\"").append(event.ext()).append("\"");
+        }
+        return sb.append("}").toString();
     }
 
     public static List<GCEventResponse> from(List<GCEvent> events, DateTimeZone tz) {

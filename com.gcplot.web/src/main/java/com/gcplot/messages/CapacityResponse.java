@@ -23,6 +23,10 @@ public class CapacityResponse {
         this.total = total;
     }
 
+    public static String toJson(Capacity capacity) {
+        return "{\"b\":" + capacity.usedBefore() + ",\"a\":" + capacity.usedAfter() + ",\"t\":" + capacity.total() + "}";
+    }
+
     public static CapacityResponse from(Capacity capacity) {
         if (capacity == null) {
             return null;

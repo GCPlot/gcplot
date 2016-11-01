@@ -222,7 +222,7 @@ public class EventsController extends Controller {
             while (eventIterator.hasNext()) {
                 GCEvent event = eventIterator.next();
                 if (event != null) {
-                    ctx.response(GCEventResponse.from(event, pp.getTimeZone()));
+                    ctx.write(GCEventResponse.toJson(event, pp.getTimeZone()));
                 }
             }
             ctx.finish();
@@ -242,7 +242,7 @@ public class EventsController extends Controller {
             while (eventIterator.hasNext()) {
                 GCEvent event = eventIterator.next();
                 if (event != null) {
-                    ctx.response(GCEventResponse.from(event, pp.getTimeZone()));
+                    ctx.write(GCEventResponse.toJson(event, pp.getTimeZone()));
                 }
             }
             ctx.finish();
