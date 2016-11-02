@@ -147,16 +147,51 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             }
             totalCapacity = of(gcEvent);
         }
+        Phase phase = detectPhase(event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
-                event.getTimestamp(), (long)(pause * 1_000_000), generations, concurrency, ""));
+                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, concurrency, ""));
         if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
             com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
             events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,
                     of(perm), totalCapacity, event.getTimestamp(), 0, EnumSet.of(metaspaceGeneration(perm.getTypeAsString())),
-                    EventConcurrency.SERIAL, ""));
+                    Phase.OTHER, EventConcurrency.SERIAL, ""));
         }
 
         return events;
+    }
+
+    private Phase detectPhase(AbstractGCEvent<?> event) {
+        String type = event.getTypeAsString();
+        if (event.isG1Event()) {
+            if (type.contains("(initial-mark)")) {
+                return Phase.G1_INITIAL_MARK;
+            } else if (event.isConcurrent() && type.contains("root-region-scan")) {
+                return Phase.G1_ROOT_REGION_SCANNING;
+            } else if (event.isConcurrent() && type.contains("concurrent-mark")) {
+                return Phase.G1_CONCURRENT_MARKING;
+            } else if (type.contains("GC remark")) {
+                return Phase.G1_REMARK;
+            } else if (event.isConcurrent() && type.contains("concurrent-cleanup")) {
+                return Phase.G1_CLEANUP;
+            } else if (type.contains("GC pause") && (type.contains("(young)") || type.contains("(mixed)"))) {
+                return Phase.G1_COPYING;
+            }
+        } else {
+            if (type.contains("CMS-initial-mark")) {
+                return Phase.CMS_INITIAL_MARK;
+            } else if (event.isConcurrent() && type.contains("CMS-concurrent-mark")) {
+                return Phase.CMS_CONCURRENT_MARK;
+            } else if (event.isConcurrent() && type.contains("CMS-concurrent") && type.contains("preclean")) {
+                return Phase.CMS_CONCURRENT_PRECLEAN;
+            } else if (type.contains("CMS-remark")) {
+                return Phase.CMS_REMARK;
+            } else if (event.isConcurrent() && type.contains("CMS-concurrent-sweep")) {
+                return Phase.CMS_CONCURRENT_SWEEP;
+            } else if (event.isConcurrent() && type.contains("CMS-concurrent-reset")) {
+                return Phase.CMS_CONCURRENT_RESET;
+            }
+        }
+        return Phase.OTHER;
     }
 
     protected Generation metaspaceGeneration(String type) {

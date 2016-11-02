@@ -18,6 +18,8 @@ public interface GCEvent extends VMEvent, DatedEvent {
 
     VMEventType vmEventType();
 
+    Phase phase();
+
     Capacity capacity();
 
     Capacity totalCapacity();
@@ -40,7 +42,7 @@ public interface GCEvent extends VMEvent, DatedEvent {
     String ext();
 
     default boolean isFull() {
-        return generations().size() > 1 && generations().contains(Generation.TENURED) &&
+        return generations().size() > 1 && generations().contains(Generation.YOUNG) &&
                 generations().contains(Generation.TENURED);
     }
 

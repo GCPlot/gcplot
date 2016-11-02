@@ -81,6 +81,15 @@ public class GCEventImpl implements GCEvent {
     }
 
     @Override
+    public Phase phase() {
+        return phase;
+    }
+    public GCEventImpl phase(Phase phase) {
+        this.phase = phase;
+        return this;
+    }
+
+    @Override
     public Capacity capacity() {
         return capacity;
     }
@@ -152,6 +161,7 @@ public class GCEventImpl implements GCEvent {
     protected DateTime occurred;
     protected double timestamp;
     protected VMEventType vmEventType;
+    protected Phase phase;
     protected Capacity capacity;
     protected Capacity totalCapacity;
     protected long pauseMu;
@@ -176,12 +186,14 @@ public class GCEventImpl implements GCEvent {
         if (description != null ? !description.equals(gcEvent.description) : gcEvent.description != null) return false;
         if (occurred != null ? !occurred.equals(gcEvent.occurred) : gcEvent.occurred != null) return false;
         if (vmEventType != gcEvent.vmEventType) return false;
+        if (phase != gcEvent.phase) return false;
         if (capacity != null ? !capacity.equals(gcEvent.capacity) : gcEvent.capacity != null) return false;
         if (totalCapacity != null ? !totalCapacity.equals(gcEvent.totalCapacity) : gcEvent.totalCapacity != null)
             return false;
         if (generations != null ? !generations.equals(gcEvent.generations) : gcEvent.generations != null) return false;
         if (concurrency != gcEvent.concurrency) return false;
         return ext != null ? ext.equals(gcEvent.ext) : gcEvent.ext == null;
+
     }
 
     @Override
@@ -198,6 +210,7 @@ public class GCEventImpl implements GCEvent {
         temp = Double.doubleToLongBits(timestamp);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (vmEventType != null ? vmEventType.hashCode() : 0);
+        result = 31 * result + (phase != null ? phase.hashCode() : 0);
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         result = 31 * result + (totalCapacity != null ? totalCapacity.hashCode() : 0);
         result = 31 * result + (int) (pauseMu ^ (pauseMu >>> 32));
@@ -209,22 +222,24 @@ public class GCEventImpl implements GCEvent {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("jvmId", jvmId)
-                .add("bucketId", bucketId)
-                .add("parentEvent", parentEvent)
-                .add("analyseId", analyseId)
-                .add("description", description)
-                .add("occurred", occurred)
-                .add("timestamp", timestamp)
-                .add("vmEventType", vmEventType)
-                .add("capacity", capacity)
-                .add("totalCapacity", totalCapacity)
-                .add("pauseMu", pauseMu)
-                .add("generations", generations)
-                .add("concurrency", concurrency)
-                .add("ext", ext)
-                .toString();
+        final StringBuffer sb = new StringBuffer("GCEventImpl{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", jvmId='").append(jvmId).append('\'');
+        sb.append(", bucketId='").append(bucketId).append('\'');
+        sb.append(", parentEvent='").append(parentEvent).append('\'');
+        sb.append(", analyseId='").append(analyseId).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", occurred=").append(occurred);
+        sb.append(", timestamp=").append(timestamp);
+        sb.append(", vmEventType=").append(vmEventType);
+        sb.append(", phase=").append(phase);
+        sb.append(", capacity=").append(capacity);
+        sb.append(", totalCapacity=").append(totalCapacity);
+        sb.append(", pauseMu=").append(pauseMu);
+        sb.append(", generations=").append(generations);
+        sb.append(", concurrency=").append(concurrency);
+        sb.append(", ext='").append(ext).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

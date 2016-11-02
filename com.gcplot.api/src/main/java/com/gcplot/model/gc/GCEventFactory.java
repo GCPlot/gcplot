@@ -12,6 +12,6 @@ public interface GCEventFactory {
 
     GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description,
                    VMEventType vmEventType, Capacity capacity, Capacity totalCapacity, double timestamp,
-                   long pauseMu, EnumSet<Generation> generations, EventConcurrency concurrency, String ext);
+                   long pauseMu, EnumSet<Generation> generations, Phase phase, EventConcurrency concurrency, String ext);
 
 }

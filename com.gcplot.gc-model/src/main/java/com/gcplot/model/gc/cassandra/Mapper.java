@@ -99,6 +99,7 @@ public abstract class Mapper {
                     .capacity(op(row, "capacity", r -> new Capacity(r.getList("capacity", Long.class))))
                     .totalCapacity(op(row, "total_capacity", r -> new Capacity(r.getList("total_capacity", Long.class))))
                     .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
+                    .phase(op(row, "phase", r -> Phase.get(r.getInt("phase"))))
                     .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
                     .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
                     .ext(op(row, "ext", r -> r.getString("ext")));

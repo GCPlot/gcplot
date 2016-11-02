@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS gc_event (
   total_capacity list<bigint>,
   pause_mu bigint,
   generations bigint,
+  phase int,
   concurrency int,
   ext varchar,
   PRIMARY KEY ((analyse_id, jvm_id, date), written_at)

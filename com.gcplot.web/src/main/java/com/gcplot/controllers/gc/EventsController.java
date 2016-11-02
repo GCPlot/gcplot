@@ -95,83 +95,85 @@ public class EventsController extends Controller {
      */
     public void processJvmLog(RequestContext ctx) {
         UploadedFile uf = ctx.files().get(0);
-        final boolean isSync = Boolean.parseBoolean(ctx.param("sync", "false"));
-        final String analyseId = ctx.param("analyse_id", ANONYMOUS_ANALYSE_ID);
-        final String jvmId = ctx.param("jvm_id", UUID.randomUUID().toString());
-        final Identifier userId = account(ctx).id();
-        final String username = esc(account(ctx).username());
-        String checksum = ctx.param("checksum", null);
+        try {
+            final boolean isSync = Boolean.parseBoolean(ctx.param("sync", "false"));
+            final String analyseId = ctx.param("analyse_id", ANONYMOUS_ANALYSE_ID);
+            final String jvmId = ctx.param("jvm_id", UUID.randomUUID().toString());
+            final Identifier userId = account(ctx).id();
+            final String username = esc(account(ctx).username());
+            String checksum = ctx.param("checksum", null);
 
-        Optional<GCAnalyse> oAnalyse = Optional.empty();
-        if (Objects.equals(analyseId, ANONYMOUS_ANALYSE_ID)) {
-            oAnalyse = analyseRepository.analyse(userId, analyseId);
-            if (!oAnalyse.isPresent()) {
-                GCAnalyseImpl analyse = new GCAnalyseImpl().name(ANONYMOUS_ANALYSE_NAME).accountId(userId).id(analyseId)
-                        .isContinuous(false).start(DateTime.now(DateTimeZone.UTC)).ext("");
-                analyseRepository.newAnalyse(analyse);
-                oAnalyse = Optional.of(analyse);
-            }
-            if (!oAnalyse.get().jvmIds().contains(jvmId)) {
-                VMProperties props = VMProperties.EMPTY;
-                try (InputStream fis = logStream(uf)) {
-                    props = VMPropertiesDetector.detect(fis);
-                } catch (Throwable ignored) {
+            Optional<GCAnalyse> oAnalyse = Optional.empty();
+            if (Objects.equals(analyseId, ANONYMOUS_ANALYSE_ID)) {
+                oAnalyse = analyseRepository.analyse(userId, analyseId);
+                if (!oAnalyse.isPresent()) {
+                    GCAnalyseImpl analyse = new GCAnalyseImpl().name(ANONYMOUS_ANALYSE_NAME).accountId(userId).id(analyseId)
+                            .isContinuous(false).start(DateTime.now(DateTimeZone.UTC)).ext("");
+                    analyseRepository.newAnalyse(analyse);
+                    oAnalyse = Optional.of(analyse);
                 }
-                if (props == VMProperties.EMPTY) {
-                    ctx.write(ErrorMessages.buildJson(ErrorMessages.LOG_FILE_UNDETECTABLE));
-                    return;
-                }
+                if (!oAnalyse.get().jvmIds().contains(jvmId)) {
+                    VMProperties props = VMProperties.EMPTY;
+                    try (InputStream fis = logStream(uf)) {
+                        props = VMPropertiesDetector.detect(fis);
+                    } catch (Throwable ignored) {
+                    }
+                    if (props == VMProperties.EMPTY) {
+                        ctx.write(ErrorMessages.buildJson(ErrorMessages.LOG_FILE_UNDETECTABLE));
+                        return;
+                    }
 
-                analyseRepository.perform(new AddJvmOperation(userId, analyseId, jvmId, uf.originalName(),
-                        props.getVersion(), props.getGcType(), "", null));
-                GCAnalyseImpl newAnalyse = new GCAnalyseImpl(oAnalyse.get());
-                newAnalyse.jvmIds(cloneAndAdd(newAnalyse.jvmIds(), jvmId));
-                newAnalyse.jvmNames(cloneAndPut(newAnalyse.jvmNames(), jvmId, uf.originalName()));
-                newAnalyse.jvmVersions(cloneAndPut(newAnalyse.jvmVersions(), jvmId, props.getVersion()));
-                newAnalyse.jvmGCTypes(cloneAndPut(newAnalyse.jvmGCTypes(), jvmId, props.getGcType()));
-                oAnalyse = Optional.of(newAnalyse);
-            }
-        }
-        GCAnalyse analyse = oAnalyse.orElse(analyseRepository.analyse(userId, analyseId).orElse(null));
-        if (!isAnalyseIncorrect(ctx, analyseId, jvmId, analyse)) {
-            try {
-                final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
-                if (checksum == null) {
-                    checksum = calculateFileChecksum(ctx, uf);
+                    analyseRepository.perform(new AddJvmOperation(userId, analyseId, jvmId, uf.originalName(),
+                            props.getVersion(), props.getGcType(), "", null));
+                    GCAnalyseImpl newAnalyse = new GCAnalyseImpl(oAnalyse.get());
+                    newAnalyse.jvmIds(cloneAndAdd(newAnalyse.jvmIds(), jvmId));
+                    newAnalyse.jvmNames(cloneAndPut(newAnalyse.jvmNames(), jvmId, uf.originalName()));
+                    newAnalyse.jvmVersions(cloneAndPut(newAnalyse.jvmVersions(), jvmId, props.getVersion()));
+                    newAnalyse.jvmGCTypes(cloneAndPut(newAnalyse.jvmGCTypes(), jvmId, props.getGcType()));
+                    oAnalyse = Optional.of(newAnalyse);
                 }
-                Logger log = createLogger(logFile);
-                DateTime[] lastEventTime = new DateTime[1];
-                ParseResult pr = parseAndPersist(isSync, uf, jvmId, checksum, analyse, log, e -> {
-                    lastEventTime[0] = e.occurred();
-                    e.analyseId(analyseId);
-                    e.jvmId(jvmId);
-                });
-                if (!pr.isSuccessful()) {
-                    LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
-                    log.error(pr.getException().get().getMessage(), pr.getException().get());
-                } else {
-                    List<AnalyseOperation> ops = new ArrayList<>(2);
-                    if (lastEventTime[0] != null) {
-                        ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
-                    }
-                    if (pr.getLogMetadata().isPresent()) {
-                        updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);
-                    }
-                    if (ops.size() > 0) {
-                        analyseRepository.perform(ops);
-                    }
-                    if (pr.getAgesStates().size() > 0) {
-                        persistObjectAges(analyseId, jvmId, pr);
-                    }
-                }
-                uploadLogFile(isSync, analyseId, jvmId, username, logFile);
-                ctx.response(SUCCESS);
-            } catch (Throwable t) {
-                throw Exceptions.runtime(t);
-            } finally {
-                // TODO log file size processed per user
-                FileUtils.deleteSilent(uf.file());
             }
+            GCAnalyse analyse = oAnalyse.orElse(analyseRepository.analyse(userId, analyseId).orElse(null));
+            if (!isAnalyseIncorrect(ctx, analyseId, jvmId, analyse)) {
+                try {
+                    final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
+                    if (checksum == null) {
+                        checksum = calculateFileChecksum(ctx, uf);
+                    }
+                    Logger log = createLogger(logFile);
+                    DateTime[] lastEventTime = new DateTime[1];
+                    ParseResult pr = parseAndPersist(isSync, uf, jvmId, checksum, analyse, log, e -> {
+                        lastEventTime[0] = e.occurred();
+                        e.analyseId(analyseId);
+                        e.jvmId(jvmId);
+                    });
+                    if (!pr.isSuccessful()) {
+                        LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
+                        log.error(pr.getException().get().getMessage(), pr.getException().get());
+                    } else {
+                        List<AnalyseOperation> ops = new ArrayList<>(2);
+                        if (lastEventTime[0] != null) {
+                            ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
+                        }
+                        if (pr.getLogMetadata().isPresent()) {
+                            updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);
+                        }
+                        if (ops.size() > 0) {
+                            analyseRepository.perform(ops);
+                        }
+                        if (pr.getAgesStates().size() > 0) {
+                            persistObjectAges(analyseId, jvmId, pr);
+                        }
+                    }
+                    uploadLogFile(isSync, analyseId, jvmId, username, logFile);
+                    ctx.response(SUCCESS);
+                } catch (Throwable t) {
+                    throw Exceptions.runtime(t);
+                }
+            }
+        } finally {
+            // TODO log file size processed per user
+            FileUtils.deleteSilent(uf.file());
         }
     }
 

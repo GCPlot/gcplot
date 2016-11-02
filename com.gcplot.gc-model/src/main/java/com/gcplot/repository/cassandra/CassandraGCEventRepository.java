@@ -34,9 +34,9 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
     public static final String[] NON_KEY_FIELDS = new String[] { /*"id", "parent_id", "description",
             "occurred", "vm_event_type", "capacity", "total_capacity", "tmstm",
             "pause_mu", "generations", "concurrency", "ext"*/
-            "occurred", "vm_event_type", "pause_mu", "tmstm", "generations", "concurrency", "capacity", "total_capacity", "ext"};
+            "occurred", "vm_event_type", "pause_mu", "tmstm", "generations", "concurrency", "phase", "capacity", "total_capacity", "ext"};
     public static final String[] LAST_EVENT_FIELDS = Utils.concat(NON_KEY_FIELDS, new String[] { "bucket_id" });
-    public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "tmstm", "generations", "concurrency" };
+    public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "tmstm", "phase", "generations", "concurrency" };
 
     @Override
     public Optional<GCEvent> lastEvent(String analyseId, String jvmId, String bucketId, DateTime start) {
@@ -168,6 +168,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("capacity", Lists.newArrayList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))
                 .value("total_capacity", Lists.newArrayList(event.totalCapacity().usedBefore(), event.totalCapacity().usedAfter(), event.totalCapacity().total()))
                 .value("pause_mu", event.pauseMu())
+                .value("phase", event.phase().type())
                 .value("generations", EnumSetUtils.encode(event.generations()))
                 .value("concurrency", event.concurrency().type())
                 .value("ext", event.ext()).setConsistencyLevel(ConsistencyLevel.ONE);

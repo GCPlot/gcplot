@@ -16,7 +16,7 @@ public class TestGCEventFactory implements GCEventFactory {
     @Override
     public GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description, VMEventType vmEventType,
                           Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, EnumSet<Generation> generations,
-                          EventConcurrency concurrency, String ext) {
+                          Phase phase, EventConcurrency concurrency, String ext) {
         return new GCEvent() {
             @Override
             public String id() {
@@ -41,6 +41,11 @@ public class TestGCEventFactory implements GCEventFactory {
             @Override
             public VMEventType vmEventType() {
                 return vmEventType;
+            }
+
+            @Override
+            public Phase phase() {
+                return phase;
             }
 
             @Override
