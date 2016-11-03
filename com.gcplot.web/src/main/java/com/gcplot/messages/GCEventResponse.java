@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.enums.TypedEnum;
 import com.gcplot.model.gc.GCEvent;
+import com.gcplot.model.gc.Phase;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.joda.time.DateTime;
@@ -25,6 +26,9 @@ public class GCEventResponse {
     public int[] generations;
     @JsonProperty("c")
     public int concurrency;
+    @JsonProperty(value = "ph", defaultValue = "0")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public int phase;
     @JsonProperty("cp")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CapacityResponse capacity;
@@ -37,6 +41,7 @@ public class GCEventResponse {
 
     public GCEventResponse(@JsonProperty("p") long pauseMu, @JsonProperty("d") long dateTime,
                            @JsonProperty("g") int[] generations, @JsonProperty("c") int concurrency,
+                           @JsonProperty("ph") @JsonInclude(JsonInclude.Include.NON_DEFAULT) int phase,
                            @JsonProperty("cp")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse capacity,
                            @JsonProperty("tc")
@@ -47,6 +52,7 @@ public class GCEventResponse {
         this.dateTime = dateTime;
         this.generations = generations;
         this.concurrency = concurrency;
+        this.phase = phase;
         this.capacity = capacity;
         this.totalCapacity = totalCapacity;
         this.ext = ext;
@@ -59,7 +65,7 @@ public class GCEventResponse {
         }
         int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
         return new GCEventResponse(event.pauseMu(), event.occurred().toDateTime(tz).getMillis(),
-                gens, event.concurrency().type(), CapacityResponse.from(event.capacity()),
+                gens, event.concurrency().type(), event.phase().type(), CapacityResponse.from(event.capacity()),
                 CapacityResponse.from(event.totalCapacity()), event.ext());
     }
 
@@ -76,6 +82,9 @@ public class GCEventResponse {
             }
          }
         sb.append("],");
+        if (event.phase() != Phase.OTHER) {
+            sb.append("\"ph\":").append(event.phase().type()).append(",");
+        }
         sb.append("\"c\":").append(event.concurrency().type());
         if (event.capacity() != null) {
             sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));
