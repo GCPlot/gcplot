@@ -185,7 +185,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             }
             totalCapacity = of(gcEvent);
         }
-        Phase phase = detectPhase(event);
+        Phase phase = detectPhase(ctx, event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
                 event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, concurrency, ""));
         if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
@@ -198,9 +198,9 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         return events;
     }
 
-    private Phase detectPhase(AbstractGCEvent<?> event) {
+    private Phase detectPhase(ParserContext ctx, AbstractGCEvent<?> event) {
         String type = event.getTypeAsString();
-        if (event.isG1Event()) {
+        if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
             if (type.contains("(initial-mark)")) {
                 return Phase.G1_INITIAL_MARK;
             } else if (event.isConcurrent() && type.contains("root-region-scan")) {
