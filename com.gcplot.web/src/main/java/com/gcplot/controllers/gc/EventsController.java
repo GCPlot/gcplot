@@ -39,6 +39,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
@@ -141,9 +142,9 @@ public class EventsController extends Controller {
                         checksum = calculateFileChecksum(ctx, uf);
                     }
                     Logger log = createLogger(logFile);
-                    DateTime[] lastEventTime = new DateTime[1];
+                    AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
                     ParseResult pr = parseAndPersist(isSync, uf, jvmId, checksum, analyse, log, e -> {
-                        lastEventTime[0] = e.occurred();
+                        lastEventTime.set(e.occurred());
                         e.analyseId(analyseId);
                         e.jvmId(jvmId);
                     });
@@ -152,8 +153,8 @@ public class EventsController extends Controller {
                         log.error(pr.getException().get().getMessage(), pr.getException().get());
                     } else {
                         List<AnalyseOperation> ops = new ArrayList<>(2);
-                        if (lastEventTime[0] != null) {
-                            ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime[0]));
+                        if (lastEventTime.get() != null) {
+                            ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime.get()));
                         }
                         if (pr.getLogMetadata().isPresent()) {
                             updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);
@@ -387,33 +388,27 @@ public class EventsController extends Controller {
 
     private ParseResult parseAndPersist(boolean isSync, UploadedFile uf, String jvmId, String checksum, GCAnalyse analyse,
                                         Logger log, Consumer<GCEventImpl> enricher) throws IOException {
-        ParserContext pctx = new ParserContext(log, checksum, analyse.jvmGCTypes().get(jvmId),
+        ParserContext ctx = new ParserContext(log, checksum, analyse.jvmGCTypes().get(jvmId),
                 analyse.jvmVersions().get(jvmId));
-        List<GCEvent> eventsBatch = new ArrayList<>();
         final GCEvent[] firstParsed = new GCEvent[1];
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
         try (InputStream fis = logStream(uf)) {
-            pr = logsParser.parse(fis, e -> {
-                enricher.accept((GCEventImpl) e);
-                if (firstParsed[0] == null) {
-                    firstParsed[0] = e;
-                }
-                if (lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                        e.timestamp()) {
-                    eventsBatch.add(e);
-                    if (eventsBatch.size() == eventsBatchSize) {
-                        persist(isSync, eventsBatch);
-                    }
-                } else {
-                    log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
-                    LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
-                }
-            }, pctx);
-        }
-        if (eventsBatch.size() != 0) {
-            persist(isSync, eventsBatch);
+            pr = logsParser.parse(fis, first -> {
+                        firstParsed[0] = first;
+                        lastPersistedEvent.get();
+                    }, last -> enricher.accept((GCEventImpl) last),
+                    e -> {
+                        enricher.accept((GCEventImpl) e);
+                        if (lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
+                                e.timestamp()) {
+                            persist(isSync, e);
+                        } else {
+                            log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                            LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                        }
+                    }, ctx);
         }
         return pr;
     }
@@ -445,15 +440,11 @@ public class EventsController extends Controller {
         }
     }
 
-    private void persist(boolean isSync, List<GCEvent> eventsBatch) {
-        try {
-            if (isSync) {
-                eventRepository.add(eventsBatch);
-            } else {
-                eventRepository.addAsync(eventsBatch);
-            }
-        } finally {
-            eventsBatch.clear();
+    private void persist(boolean isSync, GCEvent event) {
+        if (isSync) {
+            eventRepository.add(event);
+        } else {
+            eventRepository.addAsync(event);
         }
     }
 

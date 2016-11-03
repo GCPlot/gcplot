@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
 import com.tagtraum.perf.gcviewer.model.GCModel;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -67,7 +68,7 @@ public class StreamGCModel extends GCModel {
         if (fullGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
             fullGCEvents = cutBy(fullGCEvents, 2);
         }
-        eventsConsumer.accept(toConsume);
+        eventsConsumer.accept(new ArrayList<>(toConsume));
     }
 
     private <T> List<T> cutBy(List<T> list, int ratio) {

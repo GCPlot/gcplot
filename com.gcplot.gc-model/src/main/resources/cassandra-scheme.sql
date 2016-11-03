@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS gc_event (
 
 CREATE INDEX IF NOT EXISTS gc_event_ids ON gc_event( id );
 CREATE INDEX IF NOT EXISTS gc_event_occurred ON gc_event( occurred );
+CREATE INDEX IF NOT EXISTS gc_event_bucketid ON gc_event( bucket_id );
 
 CREATE TABLE IF NOT EXISTS objects_ages (
   analyse_id uuid,

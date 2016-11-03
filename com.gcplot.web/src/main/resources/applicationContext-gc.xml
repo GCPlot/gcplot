@@ -9,8 +9,9 @@
     <import resource="applicationContext-metrics.xml"/>
     <import resource="applicationContext-config.xml"/>
 
-    <bean id="logsParser" class="com.gcplot.log_processor.parser.adapter.GCViewerLogsParser">
-        <property name="batchSize" value="${logs.parser.batch.size:128}"/>
+    <bean id="logsParser" class="com.gcplot.log_processor.parser.adapter.GCViewerLogsParser"
+          init-method="init" destroy-method="destroy">
+        <property name="batchSize" value="${logs.parser.batch.size:512}"/>
         <property name="configurationManager" ref="config"/>
         <property name="eventFactory">
             <bean class="com.gcplot.parser.DefaultGCEventFactory"/>

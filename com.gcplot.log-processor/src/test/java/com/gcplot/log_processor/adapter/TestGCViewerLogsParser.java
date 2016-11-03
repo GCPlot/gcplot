@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -26,12 +27,17 @@ public class TestGCViewerLogsParser {
     @Test
     public void test() {
         InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_full_gc_log_2.log");
-        List<GCEvent> events = new ArrayList<>();
+        List<GCEvent> events = new CopyOnWriteArrayList<>();
         GCViewerLogsParser p = new GCViewerLogsParser();
+        p.init();
         p.setEventFactory(new TestGCEventFactory());
-        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, "chcksm",
+        GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
+        ParseResult pr = p.parse(log, e -> first[0] = e, e -> last[0] = e, events::add, new ParserContext(LOG, "chcksm",
                 GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
+        p.destroy();
 
+        Assert.assertEquals(first[0].timestamp(), 170240.954, 0.001);
+        Assert.assertEquals(last[0].timestamp(), 170291.419, 0.001);
         Assert.assertEquals(1, events.stream().filter(GCEvent::isFull).count());
         GCEvent fullGcEvent = events.stream().filter(GCEvent::isFull).findFirst().get();
         Assert.assertEquals(5_072_694, fullGcEvent.pauseMu());
@@ -48,13 +54,18 @@ public class TestGCViewerLogsParser {
     @Test
     public void testStreaming() {
         InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_long_log_young_only.log");
-        List<GCEvent> events = new ArrayList<>();
+        List<GCEvent> events = new CopyOnWriteArrayList<>();
         GCViewerLogsParser p = new GCViewerLogsParser();
+        p.init();
         p.setEventFactory(new TestGCEventFactory());
         p.setBatchSize(64);
-        ParseResult pr = p.parse(log, events::add, new ParserContext(LOG, "chcksm",
+        GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
+        ParseResult pr = p.parse(log, e -> first[0] = e, e -> last[0] = e, events::add, new ParserContext(LOG, "chcksm",
                 GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
+        p.destroy();
 
+        Assert.assertEquals(first[0].timestamp(), 39996.730, 0.001);
+        Assert.assertEquals(last[0].timestamp(), 40149.971, 0.001);
         Assert.assertNotNull(pr);
         Assert.assertEquals(0, events.stream().filter(GCEvent::isFull).count());
         Assert.assertEquals(81, events.size());

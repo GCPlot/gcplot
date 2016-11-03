@@ -9,6 +9,7 @@ import com.tagtraum.perf.gcviewer.model.GCResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -16,21 +17,21 @@ import java.util.function.Consumer;
  *         8/7/16
  */
 public class HotSpotDataReader extends DataReaderSun1_6_0 implements StreamDataReader {
-    private final Consumer<AbstractGCEvent<?>> eventConsumer;
+    private final Consumer<List<AbstractGCEvent<?>>> eventsConsumer;
     private final int batchSize;
 
-    public HotSpotDataReader(Consumer<AbstractGCEvent<?>> eventConsumer, int batchSize,
+    public HotSpotDataReader(Consumer<List<AbstractGCEvent<?>>> eventsConsumer, int batchSize,
                              GCResource gcResource, InputStream in, GcLogType gcLogType)
             throws UnsupportedEncodingException {
         super(gcResource, in, gcLogType);
-        this.eventConsumer = eventConsumer;
+        this.eventsConsumer = eventsConsumer;
         this.batchSize = batchSize;
     }
 
     @Override
     protected GCModel createGCModel() {
         StreamGCModel model = new StreamGCModel();
-        model.setEventsConsumer(l -> l.forEach(eventConsumer));
+        model.setEventsConsumer(eventsConsumer);
         if (batchSize > 0) {
             model.setBatchSize(batchSize);
         }

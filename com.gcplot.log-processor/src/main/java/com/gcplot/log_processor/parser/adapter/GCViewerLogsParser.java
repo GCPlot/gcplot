@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
@@ -28,21 +29,49 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
     protected ConfigurationManager configurationManager;
     protected GCEventFactory eventFactory;
     protected int batchSize = -1;
+    protected int threadPoolSize = Runtime.getRuntime().availableProcessors() * 8;
+    protected ExecutorService executor;
+
+    public void init() {
+        executor = Executors.newFixedThreadPool(threadPoolSize);
+    }
+
+    public void destroy() {
+        executor.shutdownNow();
+        try {
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {}
+    }
 
     @Override
-    public ParseResult parse(InputStream reader, Consumer<GCEvent> eventsConsumer, ParserContext ctx) {
+    public ParseResult parse(InputStream reader, Consumer<GCEvent> firstEventListener,
+                             Consumer<GCEvent> lastEventListener, Consumer<GCEvent> eventsConsumer,
+                             ParserContext ctx) {
         SurvivorAgesInfoProducer agesInfoProducer = new SurvivorAgesInfoProducer();
         MetadataInfoProducer metadataInfoProducer = new MetadataInfoProducer();
         GCResource gcResource = new GCResource("default");
         gcResource.setLogger(ctx.logger());
         StreamDataReader dr;
+        Boolean[] firstEvent = { false };
+        AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
+        List<Future> fs = new ArrayList<>();
+        Consumer<List<AbstractGCEvent<?>>> c = l -> {
+            if (!firstEvent[0]) {
+                firstEvent[0] = true;
+                firstEventListener.accept(map(ctx, l.get(0)).get(0));
+            }
+            lastEvent[0] = l.get(l.size() - 1);
+            fs.add(executor.submit(() -> { try {
+                l.forEach(e -> map(ctx, e).forEach(eventsConsumer));
+            } catch (Throwable t) {
+                ctx.logger().error(t.getMessage(), t);
+            }}));
+        };
         try {
             if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
-                dr = new HotSpotG1DataReader(e -> map(ctx, e).forEach(eventsConsumer), batchSize,
-                        gcResource, reader, fetchLogType(ctx));
+                dr = new HotSpotG1DataReader(c, batchSize, gcResource, reader, fetchLogType(ctx));
             } else {
-                dr = new HotSpotDataReader(e -> map(ctx, e).forEach(eventsConsumer), batchSize,
-                        gcResource, reader, fetchLogType(ctx));
+                dr = new HotSpotDataReader(c, batchSize, gcResource, reader, fetchLogType(ctx));
             }
         } catch (UnsupportedEncodingException e) {
             return ParseResult.failure(e);
@@ -56,6 +85,15 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             return ParseResult.failure(e);
         }
 
+        fs.forEach(f -> {
+            try {
+                f.get();
+            } catch (Throwable ignored) {}
+        });
+        if (lastEvent[0] != null) {
+            List<GCEvent> mapped = map(ctx, lastEvent[0]);
+            lastEventListener.accept(mapped.get(mapped.size() - 1));
+        }
         // temp stuff
         return ParseResult.success(Collections.emptyList(),
                 Collections.singletonList(agesInfoProducer.averageAgesState()),
@@ -218,5 +256,9 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
 
     public void setBatchSize(int batchSize) {
         this.batchSize = batchSize;
+    }
+
+    public void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
     }
 }
