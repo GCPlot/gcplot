@@ -7,14 +7,14 @@ public class UpdateAnalyseRequest {
     public String id;
     @JsonProperty(value = "name", required = true)
     public String name;
-    @JsonProperty(value = "timezone")
+    @JsonProperty(value = "tz")
     public String timezone;
     @JsonProperty("ext")
     public String ext;
 
     public UpdateAnalyseRequest(@JsonProperty(value = "id", required = true) String id,
                                 @JsonProperty(value = "name", required = true) String name,
-                                @JsonProperty(value = "timezone") String timezone,
+                                @JsonProperty(value = "tz") String timezone,
                                 @JsonProperty("ext") String ext) {
         this.id = id;
         this.name = name;
