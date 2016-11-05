@@ -13,6 +13,7 @@ import com.gcplot.model.gc.MemoryDetails;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.operations.analyse.*;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -69,6 +70,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         Statement insert = QueryBuilder.insertInto(TABLE_NAME).value("id", newId)
                 .value("account_id", analyse.accountId().toString())
                 .value("analyse_name", analyse.name())
+                .value("timezone", analyse.timezone())
                 .value("is_continuous", analyse.isContinuous())
                 .value("start", analyse.start().toDateTime(DateTimeZone.UTC).toDate())
                 .value("last_event", analyse.lastEvent() != null ? analyse.lastEvent().toDateTime(DateTimeZone.UTC).toDate() :
@@ -103,7 +105,8 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
             switch (op.type()) {
                 case UPDATE_ANALYSE: {
                     UpdateAnalyseOperation uao = (UpdateAnalyseOperation) op;
-                    statements.add(updateAnalyse(uao.accountId(), uao.analyseId(), uao.getName(), uao.getExt()));
+                    statements.add(updateAnalyse(uao.accountId(), uao.analyseId(), uao.getName(),
+                            uao.getTimezone(), uao.getExt()));
                     break;
                 }
                 case ADD_JVM: {
@@ -147,10 +150,14 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         }
     }
 
-    private RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String ext) {
+    private RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String timezone,
+                                           String ext) {
         Preconditions.checkNotNull(name, "Analyse name can't be null.");
         UUID uuid = UUID.fromString(analyseId);
         Update.Assignments query = updateTable(accountId, uuid).with(set("analyse_name", name));
+        if (!Strings.isNullOrEmpty(timezone)) {
+            query = query.and(set("timezone", timezone));
+        }
         if (ext != null) {
             query = query.and(set("ext", ext));
         }

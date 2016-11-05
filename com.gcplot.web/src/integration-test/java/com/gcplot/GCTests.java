@@ -48,13 +48,14 @@ public class GCTests extends IntegrationTest {
         Assert.assertEquals(analyseId, ar.id);
         Assert.assertEquals("analyse1", ar.name);
         Assert.assertEquals(false, ar.continuous);
+        Assert.assertEquals("Africa/Harare", ar.timezone);
         Assert.assertTrue(ar.jvmIds.isEmpty());
         Assert.assertTrue(ar.jvmHeaders.isEmpty());
         Assert.assertTrue(ar.jvmVersions.isEmpty());
         Assert.assertTrue(ar.jvmGCTypes.isEmpty());
         Assert.assertTrue(ar.memory.isEmpty());
 
-        post("/analyse/update", new UpdateAnalyseRequest(analyseId, "anan", ""), token, success());
+        post("/analyse/update", new UpdateAnalyseRequest(analyseId, "anan", "Europe/Moscow", ""), token, success());
 
         get("/analyse/get?id=123", token, ErrorMessages.INTERNAL_ERROR);
         get("/analyse/get?id=" + UUID.randomUUID().toString(), token, ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE);
@@ -68,6 +69,7 @@ public class GCTests extends IntegrationTest {
         ar = getAnalyse(token, analyseId);
         Assert.assertEquals(analyseId, ar.id);
         Assert.assertEquals("anan", ar.name);
+        Assert.assertEquals("Europe/Moscow", ar.timezone);
         Assert.assertEquals(Sets.newHashSet("jvm1", "jvm2"), ar.jvmIds);
         Assert.assertEquals("JVM 1", ar.jvmNames.get("jvm1"));
         Assert.assertEquals("JVM 2", ar.jvmNames.get("jvm2"));
@@ -203,7 +205,7 @@ public class GCTests extends IntegrationTest {
     }
 
     private String createAnalyse(String token) throws Exception {
-        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, Collections.emptyList(), "");
+        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "Africa/Harare", Collections.emptyList(), "");
         return r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");
     }
 

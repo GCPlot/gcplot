@@ -32,6 +32,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
                 .start(DateTime.now().minusDays(5))
                 .lastEvent(DateTime.now().minusDays(1))
                 .name("Analyse 1")
+                .timezone("Africa/Harare")
                 .jvmVersions(map("jvm1", VMVersion.HOTSPOT_1_7, "jvm2", VMVersion.HOTSPOT_1_8))
                 .jvmGCTypes(map("jvm1", GarbageCollectorType.ORACLE_CMS, "jvm2", GarbageCollectorType.ORACLE_G1))
                 .jvmIds(Sets.newHashSet("jvm1", "jvm2"))
@@ -49,6 +50,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(gcAnalyse.start().toDateTime(DateTimeZone.UTC), rawAnalyse.start());
         Assert.assertEquals(gcAnalyse.lastEvent().toDateTime(DateTimeZone.UTC), rawAnalyse.lastEvent());
         Assert.assertEquals(gcAnalyse.name(), rawAnalyse.name());
+        Assert.assertEquals(gcAnalyse.timezone(), rawAnalyse.timezone());
         Assert.assertEquals(gcAnalyse.jvmVersions(), rawAnalyse.jvmVersions());
         Assert.assertEquals(gcAnalyse.jvmGCTypes(), rawAnalyse.jvmGCTypes());
         Assert.assertEquals(0, Sets.difference(gcAnalyse.jvmIds(), rawAnalyse.jvmIds()).size());

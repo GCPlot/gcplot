@@ -97,7 +97,8 @@ public class AnalyseController extends Controller {
      * Responds: SUCCESS or ERROR
      */
     public void updateAnalyse(UpdateAnalyseRequest req, RequestContext ctx) {
-        analyseRepository.perform(new UpdateAnalyseOperation(account(ctx).id(), req.id, req.name, req.ext));
+        analyseRepository.perform(new UpdateAnalyseOperation(account(ctx).id(), req.id, req.name,
+                req.timezone, req.ext));
         ctx.response(SUCCESS);
     }
 
@@ -222,7 +223,7 @@ public class AnalyseController extends Controller {
         Identifier userId = account(ctx).id();
         GCAnalyseImpl analyse = new GCAnalyseImpl().name(req.name).isContinuous(req.isContinuous).accountId(userId)
                 .start(DateTime.now(DateTimeZone.UTC)).ext(req.ext).jvmHeaders(Collections.emptyMap())
-                .jvmMemoryDetails(Collections.emptyMap());
+                .jvmMemoryDetails(Collections.emptyMap()).timezone(req.timezone);
         if (req.jvms == null || req.jvms.size() == 0) {
             analyse.jvmGCTypes(Collections.emptyMap()).jvmVersions(Collections.emptyMap())
                     .jvmIds(Collections.emptySet()).jvmNames(Collections.emptyMap());

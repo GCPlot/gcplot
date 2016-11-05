@@ -7,6 +7,7 @@ import com.gcplot.commons.enums.EnumSetUtils;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
+import com.google.common.base.Strings;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public abstract class Mapper {
                 .jvmVersions(transformValue(row.getMap("jvm_versions", String.class, Integer.class), VMVersion::get))
                 .jvmGCTypes(transformValue(row.getMap("jvm_gc_types", String.class, Integer.class), GarbageCollectorType::get))
                 .jvmIds(row.getSet("jvm_ids", String.class))
+                .timezone(op(row, "timezone", r -> r.getString("timezone")))
                 .jvmNames(row.getMap("jvm_names", String.class, String.class))
                 .jvmHeaders(row.getMap("jvm_headers", String.class, String.class))
                 .ext(op(row, "ext", r -> r.getString("ext")));

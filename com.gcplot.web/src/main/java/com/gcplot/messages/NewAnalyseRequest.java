@@ -13,6 +13,8 @@ public class NewAnalyseRequest {
     public String name;
     @JsonProperty(value = "cnts")
     public boolean isContinuous;
+    @JsonProperty(value = "tz")
+    public String timezone;
     @JsonProperty(value = "jvms")
     public List<AddJvmRequest> jvms;
     @JsonProperty(value = "ext")
@@ -20,10 +22,12 @@ public class NewAnalyseRequest {
 
     public NewAnalyseRequest(@JsonProperty(value = "name", required = true) String name,
                              @JsonProperty(value = "cnts", required = true) boolean isContinuous,
+                             @JsonProperty(value = "tz") String timezone,
                              @JsonProperty(value = "jvms") List<AddJvmRequest> jvms,
                              @JsonProperty(value = "ext", required = true) String ext) {
         this.name = name;
         this.isContinuous = isContinuous;
+        this.timezone = timezone;
         this.jvms = jvms;
         this.ext = ext;
     }

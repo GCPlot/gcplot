@@ -39,6 +39,15 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
+    public String timezone() {
+        return timezone;
+    }
+    public GCAnalyseImpl timezone(String timezone) {
+        this.timezone = timezone;
+        return this;
+    }
+
+    @Override
     public boolean isContinuous() {
         return isContinuous;
     }
@@ -150,6 +159,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected String id;
     protected Identifier accountId;
     protected String name;
+    protected String timezone;
     protected boolean isContinuous;
     protected DateTime start;
     protected DateTime lastEvent;
@@ -172,8 +182,18 @@ public class GCAnalyseImpl implements GCAnalyse {
         if (id != null ? !id.equals(gcAnalyse.id) : gcAnalyse.id != null) return false;
         if (accountId != null ? !accountId.equals(gcAnalyse.accountId) : gcAnalyse.accountId != null) return false;
         if (name != null ? !name.equals(gcAnalyse.name) : gcAnalyse.name != null) return false;
+        if (timezone != null ? !timezone.equals(gcAnalyse.timezone) : gcAnalyse.timezone != null) return false;
         if (start != null ? !start.equals(gcAnalyse.start) : gcAnalyse.start != null) return false;
-        return lastEvent != null ? lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent == null;
+        if (lastEvent != null ? !lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent != null) return false;
+        if (jvmHeaders != null ? !jvmHeaders.equals(gcAnalyse.jvmHeaders) : gcAnalyse.jvmHeaders != null) return false;
+        if (jvmIds != null ? !jvmIds.equals(gcAnalyse.jvmIds) : gcAnalyse.jvmIds != null) return false;
+        if (jvmNames != null ? !jvmNames.equals(gcAnalyse.jvmNames) : gcAnalyse.jvmNames != null) return false;
+        if (jvmVersions != null ? !jvmVersions.equals(gcAnalyse.jvmVersions) : gcAnalyse.jvmVersions != null)
+            return false;
+        if (jvmGCTypes != null ? !jvmGCTypes.equals(gcAnalyse.jvmGCTypes) : gcAnalyse.jvmGCTypes != null) return false;
+        if (jvmMemoryDetails != null ? !jvmMemoryDetails.equals(gcAnalyse.jvmMemoryDetails) : gcAnalyse.jvmMemoryDetails != null)
+            return false;
+        return ext != null ? ext.equals(gcAnalyse.ext) : gcAnalyse.ext == null;
 
     }
 
@@ -182,27 +202,38 @@ public class GCAnalyseImpl implements GCAnalyse {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
         result = 31 * result + (isContinuous ? 1 : 0);
         result = 31 * result + (start != null ? start.hashCode() : 0);
         result = 31 * result + (lastEvent != null ? lastEvent.hashCode() : 0);
+        result = 31 * result + (jvmHeaders != null ? jvmHeaders.hashCode() : 0);
+        result = 31 * result + (jvmIds != null ? jvmIds.hashCode() : 0);
+        result = 31 * result + (jvmNames != null ? jvmNames.hashCode() : 0);
+        result = 31 * result + (jvmVersions != null ? jvmVersions.hashCode() : 0);
+        result = 31 * result + (jvmGCTypes != null ? jvmGCTypes.hashCode() : 0);
+        result = 31 * result + (jvmMemoryDetails != null ? jvmMemoryDetails.hashCode() : 0);
+        result = 31 * result + (ext != null ? ext.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("accountId", accountId)
-                .add("name", name)
-                .add("isContinuous", isContinuous)
-                .add("start", start)
-                .add("lastEvent", lastEvent)
-                .add("jvmHeaders", jvmHeaders)
-                .add("jvmIds", jvmIds)
-                .add("jvmVersions", jvmVersions)
-                .add("jvmGCTypes", jvmGCTypes)
-                .add("jvmMemoryDetails", jvmMemoryDetails)
-                .add("ext", ext)
-                .toString();
+        final StringBuffer sb = new StringBuffer("GCAnalyseImpl{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", accountId=").append(accountId);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", timezone='").append(timezone).append('\'');
+        sb.append(", isContinuous=").append(isContinuous);
+        sb.append(", start=").append(start);
+        sb.append(", lastEvent=").append(lastEvent);
+        sb.append(", jvmHeaders=").append(jvmHeaders);
+        sb.append(", jvmIds=").append(jvmIds);
+        sb.append(", jvmNames=").append(jvmNames);
+        sb.append(", jvmVersions=").append(jvmVersions);
+        sb.append(", jvmGCTypes=").append(jvmGCTypes);
+        sb.append(", jvmMemoryDetails=").append(jvmMemoryDetails);
+        sb.append(", ext='").append(ext).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

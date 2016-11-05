@@ -15,6 +15,8 @@ public interface GCAnalyse {
 
     String name();
 
+    String timezone();
+
     boolean isContinuous();
 
     DateTime start();

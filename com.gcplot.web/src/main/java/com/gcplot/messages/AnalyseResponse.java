@@ -21,6 +21,8 @@ public class AnalyseResponse {
     public String id;
     @JsonProperty("name")
     public String name;
+    @JsonProperty("tz")
+    public String timezone;
     @JsonProperty("cnts")
     public boolean continuous;
     @JsonProperty("start_utc")
@@ -44,6 +46,7 @@ public class AnalyseResponse {
 
     public AnalyseResponse(@JsonProperty("id") String id,
                            @JsonProperty("name") String name,
+                           @JsonProperty("tz") String timezone,
                            @JsonProperty("cnts") boolean continuous,
                            @JsonProperty("start_utc") long startUTC,
                            @JsonProperty("last_utc") long lastEventUTC,
@@ -56,6 +59,7 @@ public class AnalyseResponse {
                            @JsonProperty("ext") String ext) {
         this.id = id;
         this.name = name;
+        this.timezone = timezone;
         this.continuous = continuous;
         this.startUTC = startUTC;
         this.lastEventUTC = lastEventUTC;
@@ -71,6 +75,7 @@ public class AnalyseResponse {
     public AnalyseResponse(GCAnalyse analyse) {
         this.id = analyse.id();
         this.name = analyse.name();
+        this.timezone = analyse.timezone();
         this.continuous = analyse.isContinuous();
         this.startUTC = analyse.start().toDateTime(DateTimeZone.UTC).getMillis();
         this.lastEventUTC = analyse.lastEvent() != null ? analyse.lastEvent().toDateTime(DateTimeZone.UTC).getMillis() : 0;
