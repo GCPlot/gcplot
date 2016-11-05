@@ -3,6 +3,7 @@ package com.gcplot.messages;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.enums.TypedEnum;
+import com.gcplot.model.gc.EventConcurrency;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.Phase;
 import com.google.common.base.Preconditions;
@@ -24,7 +25,8 @@ public class GCEventResponse {
     public long dateTime;
     @JsonProperty("g")
     public int[] generations;
-    @JsonProperty("c")
+    @JsonProperty(value = "c", defaultValue = "2")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public int concurrency;
     @JsonProperty(value = "ph", defaultValue = "0")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -81,11 +83,13 @@ public class GCEventResponse {
                 sb.append(",");
             }
          }
-        sb.append("],");
+        sb.append("]");
         if (event.phase() != Phase.OTHER) {
-            sb.append("\"ph\":").append(event.phase().type()).append(",");
+            sb.append(",").append("\"ph\":").append(event.phase().type());
         }
-        sb.append("\"c\":").append(event.concurrency().type());
+        if (event.concurrency() != EventConcurrency.SERIAL) {
+            sb.append(",").append("\"c\":").append(event.concurrency().type());
+        }
         if (event.capacity() != null) {
             sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));
         }
