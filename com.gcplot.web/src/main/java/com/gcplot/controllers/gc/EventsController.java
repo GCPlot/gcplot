@@ -52,6 +52,7 @@ import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
  *         8/13/16
  */
 public class EventsController extends Controller {
+    public static final String DEFAULT_CHUNK_DELIMETER = "$d";
     public static final String ANONYMOUS_ANALYSE_NAME = "Default";
     public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
     private static final int ERASE_ALL_PERIOD_YEARS = 10;
@@ -226,6 +227,9 @@ public class EventsController extends Controller {
                 GCEvent event = eventIterator.next();
                 if (event != null) {
                     ctx.write(GCEventResponse.toJson(event, pp.getTimeZone()));
+                    if (pp.delimit) {
+                        ctx.write(DEFAULT_CHUNK_DELIMETER);
+                    }
                 }
             }
             ctx.finish();
@@ -246,6 +250,9 @@ public class EventsController extends Controller {
                 GCEvent event = eventIterator.next();
                 if (event != null) {
                     ctx.write(GCEventResponse.toJson(event, pp.getTimeZone()));
+                    if (pp.delimit) {
+                        ctx.write(DEFAULT_CHUNK_DELIMETER);
+                    }
                 }
             }
             ctx.finish();
@@ -519,6 +526,7 @@ public class EventsController extends Controller {
         private final DateTime from;
         private final DateTime to;
         private final DateTimeZone timeZone;
+        private final boolean delimit;
 
         public String getAnalyseId() {
             return analyseId;
@@ -535,6 +543,9 @@ public class EventsController extends Controller {
         public DateTimeZone getTimeZone() {
             return timeZone;
         }
+        public boolean isDelimit() {
+            return delimit;
+        }
 
         public PeriodParams(RequestContext ctx) {
             DateTimeZone tz;
@@ -549,6 +560,7 @@ public class EventsController extends Controller {
             this.jvmId = ctx.param("jvm_id");
             this.from = new DateTime(Long.parseLong(ctx.param("from")), tz);
             this.to = new DateTime(Long.parseLong(ctx.param("to")), tz);
+            this.delimit = Boolean.parseBoolean(ctx.param("delimit", "false"));
         }
     }
 }
