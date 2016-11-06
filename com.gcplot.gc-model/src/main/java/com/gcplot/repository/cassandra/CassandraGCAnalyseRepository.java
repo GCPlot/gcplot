@@ -72,9 +72,9 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("analyse_name", analyse.name())
                 .value("timezone", analyse.timezone())
                 .value("is_continuous", analyse.isContinuous())
-                .value("start", analyse.start().toDateTime(DateTimeZone.UTC).toDate())
-                .value("last_event", analyse.lastEvent() != null ? analyse.lastEvent().toDateTime(DateTimeZone.UTC).toDate() :
-                        analyse.start().toDateTime(DateTimeZone.UTC).toDate())
+                .value("start", analyse.start().toDateTime(DateTimeZone.UTC).getMillis())
+                .value("last_event", analyse.lastEvent() != null ? transformValue(analyse.lastEvent(),
+                        v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap())
                 .value("jvm_versions", analyse.jvmVersions() != null ?
                         transformValue(analyse.jvmVersions(), VMVersion::type) : Collections.emptyMap())
                 .value("jvm_gc_types", analyse.jvmGCTypes() != null ?
@@ -138,7 +138,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 }
                 case UPDATE_LAST_EVENT: {
                     UpdateLastEventOperation ule = (UpdateLastEventOperation) op;
-                    statements.add(updateLastEvent(ule.accountId(), ule.analyseId(), ule.getLastEvent()));
+                    statements.add(updateLastEvent(ule.accountId(), ule.analyseId(), ule.getJvmId(), ule.getLastEvent()));
                     break;
                 }
             }
@@ -218,6 +218,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         UUID uuid = UUID.fromString(analyseId);
         return Arrays.asList(delete(accId, uuid, "jvm_ids", jvmId),
                 delete(accId, uuid, "jvm_names", jvmId),
+                delete(accId, uuid, "last_event", jvmId),
                 delete(accId, uuid, "jvm_headers", jvmId),
                 delete(accId, uuid, "jvm_versions", jvmId),
                 delete(accId, uuid, "jvm_gc_types", jvmId),
@@ -233,10 +234,11 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .where(eq("id", UUID.fromString(analyseId))).and(eq("account_id", accId.toString()));
     }
 
-    private Update.Assignments updateLastEvent(Identifier accId, String analyseId, DateTime lastEvent) {
+    private Update.Assignments updateLastEvent(Identifier accId, String analyseId, String jvmId,
+                                               DateTime lastEvent) {
         return QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(analyseId)))
                 .and(eq("account_id", accId.toString()))
-                .with(set("last_event", lastEvent.toDateTime(DateTimeZone.UTC).toDate()));
+                .with(put("last_event", jvmId, lastEvent.toDateTime(DateTimeZone.UTC).getMillis()));
     }
 
     private void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, List<RegularStatement> batch) {

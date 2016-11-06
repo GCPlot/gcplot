@@ -21,11 +21,11 @@ public interface GCAnalyse {
 
     DateTime start();
 
-    DateTime lastEvent();
+    Set<String> jvmIds();
+
+    Map<String, DateTime> lastEvent();
 
     Map<String, String> jvmHeaders();
-
-    Set<String> jvmIds();
 
     Map<String, String> jvmNames();
 

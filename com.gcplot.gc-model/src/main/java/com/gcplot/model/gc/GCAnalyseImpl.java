@@ -66,10 +66,10 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
-    public DateTime lastEvent() {
+    public Map<String, DateTime> lastEvent() {
         return lastEvent;
     }
-    public GCAnalyseImpl lastEvent(DateTime lastEvent) {
+    public GCAnalyseImpl lastEvent(Map<String, DateTime> lastEvent) {
         this.lastEvent = lastEvent;
         return this;
     }
@@ -162,7 +162,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected String timezone;
     protected boolean isContinuous;
     protected DateTime start;
-    protected DateTime lastEvent;
+    protected Map<String, DateTime> lastEvent;
     protected Map<String, String> jvmHeaders = Collections.emptyMap();
     protected Set<String> jvmIds = Collections.emptySet();
     protected Map<String, String> jvmNames = Collections.emptyMap();

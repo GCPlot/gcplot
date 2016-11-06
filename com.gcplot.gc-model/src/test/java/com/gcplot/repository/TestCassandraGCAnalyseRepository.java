@@ -14,6 +14,7 @@ import org.joda.time.DateTimeZone;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.OptionalLong;
 
 public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
@@ -30,7 +31,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         gcAnalyse.accountId(accId)
                 .isContinuous(true)
                 .start(DateTime.now().minusDays(5))
-                .lastEvent(DateTime.now().minusDays(1))
+                .lastEvent(Collections.singletonMap("jvm1", DateTime.now().minusDays(1)))
                 .name("Analyse 1")
                 .timezone("Africa/Harare")
                 .jvmVersions(map("jvm1", VMVersion.HOTSPOT_1_7, "jvm2", VMVersion.HOTSPOT_1_8))
@@ -48,7 +49,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(2, rawAnalyse.jvmMemoryDetails().size());
         Assert.assertEquals(true, rawAnalyse.isContinuous());
         Assert.assertEquals(gcAnalyse.start().toDateTime(DateTimeZone.UTC), rawAnalyse.start());
-        Assert.assertEquals(gcAnalyse.lastEvent().toDateTime(DateTimeZone.UTC), rawAnalyse.lastEvent());
+        Assert.assertEquals(gcAnalyse.lastEvent().get("jvm1").toDateTime(DateTimeZone.UTC), rawAnalyse.lastEvent().get("jvm1"));
         Assert.assertEquals(gcAnalyse.name(), rawAnalyse.name());
         Assert.assertEquals(gcAnalyse.timezone(), rawAnalyse.timezone());
         Assert.assertEquals(gcAnalyse.jvmVersions(), rawAnalyse.jvmVersions());
@@ -64,9 +65,9 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(1, r.analysesFor(Identifier.fromStr("user1")).size());
 
         DateTime newLastTime = DateTime.now(DateTimeZone.UTC).plusDays(1);
-        r.perform(new UpdateLastEventOperation(rawAnalyse.accountId(), rawAnalyse.id(), newLastTime));
+        r.perform(new UpdateLastEventOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm1", newLastTime));
         rawAnalyse = r.analyse(accId, rawAnalyse.id()).get();
-        Assert.assertEquals(rawAnalyse.lastEvent(), newLastTime);
+        Assert.assertEquals(rawAnalyse.lastEvent().get("jvm1"), newLastTime);
 
         MemoryDetails newMd = md(918, 3 * 1024, 2 * 1024, 17 * 1024, 9 * 1024);
         r.perform(new AddJvmOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm3", "JVM 3", VMVersion.HOTSPOT_1_8,

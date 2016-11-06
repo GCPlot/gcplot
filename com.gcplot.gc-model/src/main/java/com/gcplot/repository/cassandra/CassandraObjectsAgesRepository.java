@@ -80,11 +80,10 @@ public class CassandraObjectsAgesRepository extends AbstractVMEventsCassandraRep
 
     protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
         return connector.session().execute(QueryBuilder.select(fields).from(TABLE_NAME)
-                .allowFiltering()
                 .where(eq("analyse_id", UUID.fromString(analyseId)))
                 .and(eq("jvm_id", jvmId))
-                .and(gte("occurred", range.from.toDate()))
-                .and(lte("occurred", range.to.toDate())).setFetchSize(fetchSize));
+                .and(gte("written_at", QueryBuilder.fcall("minTimeuuid", range.from.getMillis())))
+                .and(lte("written_at", QueryBuilder.fcall("maxTimeuuid", range.to.getMillis()))).setFetchSize(fetchSize));
     }
 
     protected RegularStatement addStatement(ObjectsAges oa) {

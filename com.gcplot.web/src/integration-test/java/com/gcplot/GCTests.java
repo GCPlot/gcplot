@@ -132,9 +132,10 @@ public class GCTests extends IntegrationTest {
         Assert.assertTrue(success().test(resp));
 
         AnalyseResponse ar = getAnalyse(token, analyseId);
-        Assert.assertTrue(ar.lastEventUTC > 0);
+        Assert.assertTrue(ar.lastEventUTC.get(jvmId) > 0);
 
-        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC - TimeUnit.DAYS.toMillis(30), ar.lastEventUTC);
+        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - TimeUnit.DAYS.toMillis(30),
+                ar.lastEventUTC.get(jvmId));
         Assert.assertEquals(19, events.size());
 
         // check that processing this file again won't make any effect
@@ -143,19 +144,19 @@ public class GCTests extends IntegrationTest {
         AnalyseResponse ar2 = getAnalyse(token, analyseId);
         Assert.assertEquals(ar.lastEventUTC, ar2.lastEventUTC);
 
-        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - DAYS_BACK, ar.lastEventUTC.get(jvmId));
         Assert.assertEquals(19, events.size());
 
         // test chunked response
         List<GCEventResponse> streamEvents =
-                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - DAYS_BACK, ar.lastEventUTC.get(jvmId));
         Assert.assertEquals(19, streamEvents.size());
 
         get("/gc/jvm/events/erase/all" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, success());
-        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - DAYS_BACK, ar.lastEventUTC.get(jvmId));
         Assert.assertEquals(0, events.size());
         streamEvents =
-                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+                getEventsStream(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - DAYS_BACK, ar.lastEventUTC.get(jvmId));
         Assert.assertEquals(0, streamEvents.size());
 
         JsonObject oaj = get("/jvm/gc/ages/last" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token);
@@ -175,17 +176,19 @@ public class GCTests extends IntegrationTest {
         ar = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
 
         events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, ar.jvmIds.iterator().next(),
-                ar.lastEventUTC - TimeUnit.DAYS.toMillis(30), ar.lastEventUTC);
+                ar.lastEventUTC.get(ar.jvmIds.iterator().next()) - TimeUnit.DAYS.toMillis(30),
+                ar.lastEventUTC.get(ar.jvmIds.iterator().next()));
         Assert.assertEquals(19, events.size());
 
         resp = processGCLogFile(token, "", "", "hs18_log_cms.log");
         Assert.assertTrue(success().test(resp));
         ar2 = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
-        Assert.assertEquals(ar.lastEventUTC, ar2.lastEventUTC);
+        Assert.assertEquals(ar2.lastEventUTC.size(), 2);
+        Assert.assertEquals(ar.lastEventUTC.values().iterator().next(), ar2.lastEventUTC.values().iterator().next());
 
         Assert.assertEquals(ar2.jvmIds.size(), 2);
         for (String jvm : ar2.jvmIds) {
-            events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, ar.lastEventUTC - DAYS_BACK, ar.lastEventUTC);
+            events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, ar2.lastEventUTC.get(jvm) - DAYS_BACK, ar2.lastEventUTC.get(jvm));
             Assert.assertEquals(19, events.size());
         }
     }

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   analyse_name varchar,
   is_continuous boolean,
   start timestamp,
-  last_event timestamp,
+  last_event map<varchar, timestamp>,
   timezone varchar,
   jvm_ids set<varchar>,
   jvm_names map<varchar, varchar>,

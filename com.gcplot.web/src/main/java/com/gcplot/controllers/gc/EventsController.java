@@ -154,7 +154,7 @@ public class EventsController extends Controller {
                     } else {
                         List<AnalyseOperation> ops = new ArrayList<>(2);
                         if (lastEventTime.get() != null) {
-                            ops.add(new UpdateLastEventOperation(userId, analyseId, lastEventTime.get()));
+                            ops.add(new UpdateLastEventOperation(userId, analyseId, jvmId, lastEventTime.get()));
                         }
                         if (pr.getLogMetadata().isPresent()) {
                             updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);
@@ -298,7 +298,7 @@ public class EventsController extends Controller {
 
         Optional<GCAnalyse> analyse = analyseRepository.analyse(account(ctx).id(), analyseId);
         if (analyse.isPresent()) {
-            DateTime lastEvent = analyse.get().lastEvent();
+            DateTime lastEvent = analyse.get().lastEvent().get(jvmId);
 
             if (lastEvent != null) {
                 eventRepository.erase(analyseId, jvmId, Range.of(lastEvent.minusYears(ERASE_ALL_PERIOD_YEARS), lastEvent.plusDays(1)));

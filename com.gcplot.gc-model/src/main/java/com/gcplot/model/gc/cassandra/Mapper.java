@@ -13,10 +13,7 @@ import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
@@ -44,7 +41,8 @@ public abstract class Mapper {
                 .name(row.getString("analyse_name"))
                 .isContinuous(row.getBool("is_continuous"))
                 .start(new DateTime(row.getTimestamp("start"), DateTimeZone.UTC))
-                .lastEvent(new DateTime(row.getTimestamp("last_event"), DateTimeZone.UTC))
+                .lastEvent(transformValue(row.getMap("last_event", String.class, Date.class),
+                        v -> new DateTime(v, DateTimeZone.UTC)))
                 .jvmVersions(transformValue(row.getMap("jvm_versions", String.class, Integer.class), VMVersion::get))
                 .jvmGCTypes(transformValue(row.getMap("jvm_gc_types", String.class, Integer.class), GarbageCollectorType::get))
                 .jvmIds(row.getSet("jvm_ids", String.class))

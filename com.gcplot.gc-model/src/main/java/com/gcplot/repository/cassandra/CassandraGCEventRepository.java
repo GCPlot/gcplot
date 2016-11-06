@@ -163,7 +163,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("description", event.description())
                 .value("tmstm", event.timestamp())
                 .value("written_at", UUIDGen.getTimeUUID(event.occurred().getMillis()))
-                .value("occurred", event.occurred().toDate())
+                .value("occurred", event.occurred().getMillis())
                 .value("vm_event_type", event.vmEventType().type())
                 .value("capacity", Lists.newArrayList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))
                 .value("total_capacity", Lists.newArrayList(event.totalCapacity().usedBefore(), event.totalCapacity().usedAfter(), event.totalCapacity().total()))
