@@ -41,7 +41,8 @@ public class TestGCViewerLogsParser {
         Assert.assertEquals(1, events.stream().filter(GCEvent::isFull).count());
         GCEvent fullGcEvent = events.stream().filter(GCEvent::isFull).findFirst().get();
         Assert.assertEquals(5_072_694, fullGcEvent.pauseMu());
-        Assert.assertEquals(1, events.stream().filter(GCEvent::isMetaspace).count());
+        // this metaspace event was part of the full gc event, so didn't counted here
+        Assert.assertEquals(0, events.stream().filter(GCEvent::isMetaspace).count());
         Assert.assertEquals(0, events.stream().filter(GCEvent::isPerm).count());
         Assert.assertEquals("chcksm", events.get(0).bucketId());
 

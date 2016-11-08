@@ -7,10 +7,9 @@ import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
 import com.gcplot.model.gc.*;
+import com.gcplot.model.gc.GCEvent;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
-import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
-import com.tagtraum.perf.gcviewer.model.ConcurrentGCEvent;
-import com.tagtraum.perf.gcviewer.model.GCResource;
+import com.tagtraum.perf.gcviewer.model.*;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -163,11 +162,21 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                     capacity = of(gcEvent.getYoung());
                 }
                 generations.add(Generation.YOUNG);
-            } else if (event.getGeneration() == AbstractGCEvent.Generation.TENURED ||
-                    event.getGeneration() == AbstractGCEvent.Generation.ALL) {
+            } else if (event.getGeneration() == AbstractGCEvent.Generation.TENURED) {
                 generations.add(Generation.TENURED);
                 if (gcEvent.getTenured() != null) {
                     capacity = of(gcEvent.getTenured());
+                }
+            } else if (event.getGeneration() == AbstractGCEvent.Generation.ALL) {
+                capacity = of(gcEvent);
+                if (gcEvent.getYoung() != null) {
+                    generations.add(Generation.YOUNG);
+                }
+                if (gcEvent.getTenured() != null) {
+                    generations.add(Generation.TENURED);
+                }
+                if (gcEvent.getPerm() != null) {
+                    generations.add(metaspaceGeneration(gcEvent.getPerm().getTypeAsString()));
                 }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.PERM) {
                 generations.add(metaspaceGeneration(gcEvent.getPerm().getTypeAsString()));
@@ -177,23 +186,17 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             } else if (event.getGeneration() == AbstractGCEvent.Generation.OTHER) {
                 ctx.logger().warn("Strangely, an event is considered OTHER: {}", event);
             }
-            if (gcEvent.getGeneration() == AbstractGCEvent.Generation.ALL) {
-                generations.add(Generation.YOUNG);
-                if (gcEvent.getPerm() != null) {
-                    generations.add(metaspaceGeneration(gcEvent.getPerm().getTypeAsString()));
-                }
-            }
             totalCapacity = of(gcEvent);
         }
         Phase phase = detectPhase(ctx, event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
                 event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, concurrency, ""));
-        if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
+        /*if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
             com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
             events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,
                     of(perm), totalCapacity, event.getTimestamp(), 0, EnumSet.of(metaspaceGeneration(perm.getTypeAsString())),
                     Phase.OTHER, EventConcurrency.SERIAL, ""));
-        }
+        }*/
 
         return events;
     }
