@@ -55,7 +55,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
         List<Future> fs = new ArrayList<>();
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
-            if (firstEvent[0] != null) {
+            if (firstEvent[0] == null) {
                 firstEvent[0] = map(ctx, l.get(0)).get(0);
                 firstEventListener.accept(firstEvent[0]);
             }
