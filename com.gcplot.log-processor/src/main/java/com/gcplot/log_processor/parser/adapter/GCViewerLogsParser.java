@@ -51,13 +51,13 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         GCResource gcResource = new GCResource("default");
         gcResource.setLogger(ctx.logger());
         StreamDataReader dr;
-        Boolean[] firstEvent = { false };
+        GCEvent[] firstEvent = new GCEvent[1];
         AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
         List<Future> fs = new ArrayList<>();
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
-            if (!firstEvent[0]) {
-                firstEvent[0] = true;
-                firstEventListener.accept(map(ctx, l.get(0)).get(0));
+            if (firstEvent[0] != null) {
+                firstEvent[0] = map(ctx, l.get(0)).get(0);
+                firstEventListener.accept(firstEvent[0]);
             }
             lastEvent[0] = l.get(l.size() - 1);
             fs.add(executor.submit(() -> { try {
@@ -96,7 +96,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         // temp stuff
         return ParseResult.success(Collections.emptyList(),
                 Collections.singletonList(agesInfoProducer.averageAgesState()),
-                metadataInfoProducer.getLogMetadata());
+                metadataInfoProducer.getLogMetadata(), firstEvent[0]);
     }
 
     private GcLogType fetchLogType(ParserContext ctx) {

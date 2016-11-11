@@ -25,6 +25,8 @@ public interface GCAnalyse {
 
     Map<String, DateTime> lastEvent();
 
+    Map<String, DateTime> firstEvent();
+
     Map<String, String> jvmHeaders();
 
     Map<String, String> jvmNames();

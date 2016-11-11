@@ -66,6 +66,15 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
+    public Map<String, DateTime> firstEvent() {
+        return firstEvent;
+    }
+    public GCAnalyseImpl firstEvent(Map<String, DateTime> firstEvent) {
+        this.firstEvent = firstEvent;
+        return this;
+    }
+
+    @Override
     public Map<String, DateTime> lastEvent() {
         return lastEvent;
     }
@@ -162,6 +171,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected String timezone;
     protected boolean isContinuous;
     protected DateTime start;
+    protected Map<String, DateTime> firstEvent;
     protected Map<String, DateTime> lastEvent;
     protected Map<String, String> jvmHeaders = Collections.emptyMap();
     protected Set<String> jvmIds = Collections.emptySet();
@@ -184,6 +194,7 @@ public class GCAnalyseImpl implements GCAnalyse {
         if (name != null ? !name.equals(gcAnalyse.name) : gcAnalyse.name != null) return false;
         if (timezone != null ? !timezone.equals(gcAnalyse.timezone) : gcAnalyse.timezone != null) return false;
         if (start != null ? !start.equals(gcAnalyse.start) : gcAnalyse.start != null) return false;
+        if (firstEvent != null ? !firstEvent.equals(gcAnalyse.firstEvent) : gcAnalyse.firstEvent != null) return false;
         if (lastEvent != null ? !lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent != null) return false;
         if (jvmHeaders != null ? !jvmHeaders.equals(gcAnalyse.jvmHeaders) : gcAnalyse.jvmHeaders != null) return false;
         if (jvmIds != null ? !jvmIds.equals(gcAnalyse.jvmIds) : gcAnalyse.jvmIds != null) return false;
@@ -205,6 +216,7 @@ public class GCAnalyseImpl implements GCAnalyse {
         result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
         result = 31 * result + (isContinuous ? 1 : 0);
         result = 31 * result + (start != null ? start.hashCode() : 0);
+        result = 31 * result + (firstEvent != null ? firstEvent.hashCode() : 0);
         result = 31 * result + (lastEvent != null ? lastEvent.hashCode() : 0);
         result = 31 * result + (jvmHeaders != null ? jvmHeaders.hashCode() : 0);
         result = 31 * result + (jvmIds != null ? jvmIds.hashCode() : 0);
@@ -225,6 +237,7 @@ public class GCAnalyseImpl implements GCAnalyse {
         sb.append(", timezone='").append(timezone).append('\'');
         sb.append(", isContinuous=").append(isContinuous);
         sb.append(", start=").append(start);
+        sb.append(", firstEvent=").append(firstEvent);
         sb.append(", lastEvent=").append(lastEvent);
         sb.append(", jvmHeaders=").append(jvmHeaders);
         sb.append(", jvmIds=").append(jvmIds);

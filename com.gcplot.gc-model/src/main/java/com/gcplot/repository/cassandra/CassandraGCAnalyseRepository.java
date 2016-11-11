@@ -1,7 +1,6 @@
 package com.gcplot.repository.cassandra;
 
 import com.datastax.driver.core.*;
-import com.datastax.driver.core.querybuilder.Batch;
 import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
@@ -73,6 +72,8 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("timezone", analyse.timezone())
                 .value("is_continuous", analyse.isContinuous())
                 .value("start", analyse.start().toDateTime(DateTimeZone.UTC).getMillis())
+                .value("first_event", analyse.firstEvent() != null ? transformValue(analyse.firstEvent(),
+                        v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap())
                 .value("last_event", analyse.lastEvent() != null ? transformValue(analyse.lastEvent(),
                         v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap())
                 .value("jvm_versions", analyse.jvmVersions() != null ?
@@ -136,9 +137,10 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                     statements.add(removeAnalyse(rao.accountId(), rao.analyseId()));
                     break;
                 }
-                case UPDATE_LAST_EVENT: {
-                    UpdateLastEventOperation ule = (UpdateLastEventOperation) op;
-                    statements.add(updateLastEvent(ule.accountId(), ule.analyseId(), ule.getJvmId(), ule.getLastEvent()));
+                case UPDATE_CORNER_EVENTS: {
+                    UpdateCornerEventsOperation ule = (UpdateCornerEventsOperation) op;
+                    statements.add(updateCornerEvents(ule.accountId(), ule.analyseId(), ule.getJvmId(),
+                            ule.getFirstEvent(), ule.getLastEvent()));
                     break;
                 }
             }
@@ -219,6 +221,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         return Arrays.asList(delete(accId, uuid, "jvm_ids", jvmId),
                 delete(accId, uuid, "jvm_names", jvmId),
                 delete(accId, uuid, "last_event", jvmId),
+                delete(accId, uuid, "first_event", jvmId),
                 delete(accId, uuid, "jvm_headers", jvmId),
                 delete(accId, uuid, "jvm_versions", jvmId),
                 delete(accId, uuid, "jvm_gc_types", jvmId),
@@ -234,11 +237,18 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .where(eq("id", UUID.fromString(analyseId))).and(eq("account_id", accId.toString()));
     }
 
-    private Update.Assignments updateLastEvent(Identifier accId, String analyseId, String jvmId,
-                                               DateTime lastEvent) {
-        return QueryBuilder.update(TABLE_NAME).where(eq("id", UUID.fromString(analyseId)))
-                .and(eq("account_id", accId.toString()))
+    private RegularStatement updateCornerEvents(Identifier accId, String analyseId, String jvmId,
+                                               DateTime firstEvent, DateTime lastEvent) {
+        RegularStatement ule = updateTable(accId, analyseId)
                 .with(put("last_event", jvmId, lastEvent.toDateTime(DateTimeZone.UTC).getMillis()));
+        if (firstEvent != null) {
+            Update.Where firstEventQuery = updateTable(accId, analyseId);
+            firstEventQuery
+                    .with(put("first_event", jvmId, firstEvent.toDateTime(DateTimeZone.UTC).getMillis()));
+            firstEventQuery.onlyIf(eq("first_event['" + jvmId + "']", null));
+            connector.session().execute(firstEventQuery);
+        }
+        return ule;
     }
 
     private void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, List<RegularStatement> batch) {
@@ -247,6 +257,10 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         batch.add(updateTable(accId, uuid).with(put("jvm_md_phys_free", jvmId, memoryDetails.physicalFree())));
         batch.add(updateTable(accId, uuid).with(put("jvm_md_swap_total", jvmId, memoryDetails.swapTotal())));
         batch.add(updateTable(accId, uuid).with(put("jvm_md_swap_free", jvmId, memoryDetails.swapFree())));
+    }
+
+    private Update.Where updateTable(Identifier accId, String uuid) {
+        return updateTable(accId, UUID.fromString(uuid));
     }
 
     private Update.Where updateTable(Identifier accId, UUID uuid) {

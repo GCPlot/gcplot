@@ -22,7 +22,7 @@ import com.gcplot.repository.VMEventsRepository;
 import com.gcplot.repository.operations.analyse.AddJvmOperation;
 import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
-import com.gcplot.repository.operations.analyse.UpdateLastEventOperation;
+import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.resources.ResourceManager;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
@@ -155,7 +155,9 @@ public class EventsController extends Controller {
                     } else {
                         List<AnalyseOperation> ops = new ArrayList<>(2);
                         if (lastEventTime.get() != null) {
-                            ops.add(new UpdateLastEventOperation(userId, analyseId, jvmId, lastEventTime.get()));
+                            ops.add(new UpdateCornerEventsOperation(userId, analyseId, jvmId,
+                                    pr.getFirstEvent() != null ? pr.getFirstEvent().occurred() : null,
+                                    lastEventTime.get()));
                         }
                         if (pr.getLogMetadata().isPresent()) {
                             updateAnalyseMetadata(analyseId, jvmId, userId, pr, ops);

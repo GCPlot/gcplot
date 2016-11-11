@@ -2,6 +2,7 @@ package com.gcplot.log_processor.parser;
 
 import com.gcplot.log_processor.LogMetadata;
 import com.gcplot.log_processor.survivor.AgesState;
+import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.notifications.GCNotification;
 
 import java.util.Collections;
@@ -38,26 +39,34 @@ public class ParseResult {
         return Optional.ofNullable(logMetadata);
     }
 
-    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState, LogMetadata logMetadata) {
-        this(true, null, notifications, agesState, logMetadata);
+    private final GCEvent firstEvent;
+    public GCEvent getFirstEvent() {
+        return firstEvent;
+    }
+
+    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState, LogMetadata logMetadata,
+                        GCEvent firstEvent) {
+        this(true, null, notifications, agesState, logMetadata, firstEvent);
     }
 
     private ParseResult(boolean isSuccessful, Throwable exception,
-                        List<GCNotification> notifications, List<AgesState> agesStates, LogMetadata logMetadata) {
+                        List<GCNotification> notifications, List<AgesState> agesStates, LogMetadata logMetadata,
+                        GCEvent firstEvent) {
         this.isSuccessful = isSuccessful;
         this.notifications = notifications;
         this.agesStates = agesStates;
         this.exception = exception;
         this.logMetadata = logMetadata;
+        this.firstEvent = firstEvent;
     }
 
     public static ParseResult success(List<GCNotification> notifications, List<AgesState> agesStates,
-                                      LogMetadata logMetadata) {
-        return new ParseResult(notifications, agesStates, logMetadata);
+                                      LogMetadata logMetadata, GCEvent firstEvent) {
+        return new ParseResult(notifications, agesStates, logMetadata, firstEvent);
     }
 
     public static ParseResult failure(Throwable t) {
-        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList(), null);
+        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList(), null, null);
     }
 
 }

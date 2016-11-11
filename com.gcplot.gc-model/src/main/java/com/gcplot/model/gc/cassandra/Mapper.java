@@ -41,6 +41,8 @@ public abstract class Mapper {
                 .name(row.getString("analyse_name"))
                 .isContinuous(row.getBool("is_continuous"))
                 .start(new DateTime(row.getTimestamp("start"), DateTimeZone.UTC))
+                .firstEvent(transformValue(row.getMap("first_event", String.class, Date.class),
+                        v -> new DateTime(v, DateTimeZone.UTC)))
                 .lastEvent(transformValue(row.getMap("last_event", String.class, Date.class),
                         v -> new DateTime(v, DateTimeZone.UTC)))
                 .jvmVersions(transformValue(row.getMap("jvm_versions", String.class, Integer.class), VMVersion::get))

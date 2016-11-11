@@ -7,6 +7,6 @@ package com.gcplot.repository.operations;
 public enum OperationType {
 
     UPDATE_ANALYSE, ADD_JVM, UPDATE_JVM_INFO, UPDATE_JVM_VERSION,
-    REMOVE_JVM, REMOVE_ANALYSE, UPDATE_LAST_EVENT
+    REMOVE_JVM, REMOVE_ANALYSE, UPDATE_CORNER_EVENTS
 
 }

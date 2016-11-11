@@ -7,7 +7,7 @@ import com.gcplot.repository.cassandra.CassandraGCAnalyseRepository;
 import com.gcplot.repository.operations.analyse.AddJvmOperation;
 import com.gcplot.repository.operations.analyse.RemoveAnalyseOperation;
 import com.gcplot.repository.operations.analyse.RemoveJvmOperation;
-import com.gcplot.repository.operations.analyse.UpdateLastEventOperation;
+import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.google.common.collect.Sets;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -64,9 +64,20 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertTrue(r.analyse(accId, rawAnalyse.id()).isPresent());
         Assert.assertEquals(1, r.analysesFor(Identifier.fromStr("user1")).size());
 
+        DateTime firstTime = DateTime.now(DateTimeZone.UTC).minusDays(1);
         DateTime newLastTime = DateTime.now(DateTimeZone.UTC).plusDays(1);
-        r.perform(new UpdateLastEventOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm1", newLastTime));
+        r.perform(new UpdateCornerEventsOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm1", firstTime,
+                newLastTime));
         rawAnalyse = r.analyse(accId, rawAnalyse.id()).get();
+        Assert.assertEquals(rawAnalyse.firstEvent().get("jvm1"), firstTime);
+        Assert.assertEquals(rawAnalyse.lastEvent().get("jvm1"), newLastTime);
+
+        DateTime newFirstTime = DateTime.now(DateTimeZone.UTC).minusDays(2);
+        newLastTime = DateTime.now(DateTimeZone.UTC).plusDays(2);
+        r.perform(new UpdateCornerEventsOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm1", newFirstTime,
+                newLastTime));
+        rawAnalyse = r.analyse(accId, rawAnalyse.id()).get();
+        Assert.assertEquals(rawAnalyse.firstEvent().get("jvm1"), firstTime);
         Assert.assertEquals(rawAnalyse.lastEvent().get("jvm1"), newLastTime);
 
         MemoryDetails newMd = md(918, 3 * 1024, 2 * 1024, 17 * 1024, 9 * 1024);
