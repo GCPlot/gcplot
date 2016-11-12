@@ -27,6 +27,8 @@ public class AnalyseResponse {
     public boolean continuous;
     @JsonProperty("start_utc")
     public long startUTC;
+    @JsonProperty("first_utc")
+    public Map<String, Long> firstEventUTC;
     @JsonProperty("last_utc")
     public Map<String, Long> lastEventUTC;
     @JsonProperty("jvm_hdrs")
@@ -49,6 +51,7 @@ public class AnalyseResponse {
                            @JsonProperty("tz") String timezone,
                            @JsonProperty("cnts") boolean continuous,
                            @JsonProperty("start_utc") long startUTC,
+                           @JsonProperty("first_utc") Map<String, Long> firstEventUTC,
                            @JsonProperty("last_utc") Map<String, Long> lastEventUTC,
                            @JsonProperty("jvm_hdrs") Map<String, String> jvmHeaders,
                            @JsonProperty("jvm_vers") Map<String, Integer> jvmVersions,
@@ -62,6 +65,7 @@ public class AnalyseResponse {
         this.timezone = timezone;
         this.continuous = continuous;
         this.startUTC = startUTC;
+        this.firstEventUTC = firstEventUTC;
         this.lastEventUTC = lastEventUTC;
         this.jvmHeaders = jvmHeaders;
         this.jvmVersions = jvmVersions;
@@ -78,6 +82,8 @@ public class AnalyseResponse {
         this.timezone = analyse.timezone();
         this.continuous = analyse.isContinuous();
         this.startUTC = analyse.start().toDateTime(DateTimeZone.UTC).getMillis();
+        this.firstEventUTC = analyse.firstEvent() != null ? transformValue(analyse.firstEvent(),
+                v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap();
         this.lastEventUTC = analyse.lastEvent() != null ? transformValue(analyse.lastEvent(),
                 v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap();
         this.jvmVersions = analyse.jvmVersions() != null ?
