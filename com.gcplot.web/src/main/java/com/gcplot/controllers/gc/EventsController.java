@@ -303,6 +303,8 @@ public class EventsController extends Controller {
                                 youngSampler.process(event, write);
                             } else if (tenuredAcc.isApplicable(event)) {
                                 tenuredAcc.process(event, write);
+                            } else {
+                                write.accept(event);
                             }
                         }
                     }
