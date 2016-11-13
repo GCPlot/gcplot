@@ -26,7 +26,7 @@ public enum ConfigProperty {
 
     USER_ANALYSE_COUNT_CACHE_SIZE("user.analyse.cache.size", 5_000L),
     USER_ANALYSE_COUNT_CACHE_SECONDS("user.analyse.cache.min", 120L),
-    GC_EVENTS_MAX_INTERVAL_DAYS("user.gc.events.max.interval.days", 365),
+    GC_EVENTS_MAX_INTERVAL_DAYS("user.gc.events.max.interval.days", 90),
     SURVIVOR_AGES_AVG_THRESHOLD("survivor.ages.avg.threshold", 100),
 
     REDIRECT_URL_AFTER_CONFIRMATION("url.redirect.after.confirmation", "http://gcplot.com");

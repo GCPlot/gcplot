@@ -9,6 +9,7 @@ import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.configuration.ConfigurationManager;
+import com.gcplot.controllers.gc.EventsController;
 import com.gcplot.messages.RegisterRequest;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -40,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public abstract class IntegrationTest {
-    protected static final int WAIT_SECONDS = 3;
+    protected static final int WAIT_SECONDS = 20;
     protected static final String LOCALHOST = "127.0.0.1";
     protected static final Logger LOG = LoggerFactory.getLogger(IntegrationTest.class);
     protected HttpClient client;
@@ -254,16 +255,12 @@ public abstract class IntegrationTest {
         Assert.assertTrue(l.await(WAIT_SECONDS, TimeUnit.SECONDS));
         String json = sb.toString();
         LOG.info("Complete chunked response: {}", json);
-        String[] split = json.split("\\}\\{");
+        String[] split = json.split("\\" + EventsController.DEFAULT_CHUNK_DELIMETER);
         for (String s : split) {
-            if (!s.startsWith("{")) {
-                s = "{" + s;
+            if (!Strings.isNullOrEmpty(s.trim())) {
+                JsonObject jo = new JsonObject(s);
+                result.add(jo);
             }
-            if (!s.endsWith("}")) {
-                s += "}";
-            }
-            JsonObject jo = new JsonObject(s);
-            result.add(jo);
         }
         if (expectedError != -1) {
             if (result.size() == 1 && result.get(0).containsKey("error")) {
@@ -325,7 +322,6 @@ public abstract class IntegrationTest {
 
     protected void handleChunkedResponse(StringBuilder sb, Buffer b) {
         String json = new String(b.getBytes());
-        LOG.info("Chunked Response: {}", json);
         sb.append(json);
     }
 

@@ -188,9 +188,29 @@ public class GCTests extends IntegrationTest {
 
         Assert.assertEquals(ar2.jvmIds.size(), 2);
         for (String jvm : ar2.jvmIds) {
-            events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, ar2.lastEventUTC.get(jvm) - DAYS_BACK, ar2.lastEventUTC.get(jvm));
+            events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, ar2.lastEventUTC.get(jvm) - DAYS_BACK,
+                    ar2.lastEventUTC.get(jvm));
             Assert.assertEquals(19, events.size());
         }
+    }
+
+    @Test
+    public void sampleLogParseTest() throws Exception {
+        String token = login();
+
+        JsonObject resp = processGCLogFile(token, "", "", "real_log_cms.log");
+        Assert.assertTrue(success().test(resp));
+
+        AnalyseResponse ar = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
+        Long to = ar.lastEventUTC.get(ar.jvmIds.iterator().next());
+        long from = to - TimeUnit.DAYS.toMillis(30);
+        List<GCEventResponse> events = getEventsStream(token, EventsController.ANONYMOUS_ANALYSE_ID, ar.jvmIds.iterator().next(),
+                from, to, "/gc/jvm/events/full/sample/stream");
+        List<GCEventResponse> eventsFull = getEventsStream(token, EventsController.ANONYMOUS_ANALYSE_ID, ar.jvmIds.iterator().next(),
+                from, to);
+        Assert.assertTrue(events.size() > 1);
+        Assert.assertTrue(eventsFull.size() > 1);
+        Assert.assertTrue(events.size() < eventsFull.size());
     }
 
     private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {
@@ -199,7 +219,7 @@ public class GCTests extends IntegrationTest {
                 .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream(fileName),
                         ContentType.TEXT_PLAIN, fileName).build();
         HttpPost post = new HttpPost("http://" + LOCALHOST + ":" +
-                getPort() + "/gc/jvm/log/process?token=" + token + "&analyse_id=" + analyseId
+                getPort() + "/gc/jvm/log/process" + "?token=" + token + "&analyse_id=" + analyseId
                 + "&jvm_id=" + jvmId + "&sync=true");
         post.setEntity(file);
         HttpResponse response = hc.execute(post);
@@ -219,11 +239,17 @@ public class GCTests extends IntegrationTest {
     }
 
     private List<GCEventResponse> getEventsStream(String token, String analyseId, String jvmId,
-                                            long from, long to) throws Exception {
+                                                  long from, long to) throws Exception {
+        return getEventsStream(token, analyseId, jvmId, from, to, "/gc/jvm/events/stream");
+    }
+
+    private List<GCEventResponse> getEventsStream(String token, String analyseId, String jvmId,
+                                            long from, long to, String url) throws Exception {
         List<JsonObject> ejs;
-        ejs = getChunked("/gc/jvm/events/stream?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to,
+        ejs = getChunked(url + "?analyse_id=" + analyseId + "&jvm_id=" + jvmId + "&from=" + from + "&to=" + to + "&delimit=true",
                 token);
-        return ejs.stream().filter(e -> !e.isEmpty()).map(j -> JsonSerializer.deserialize(j.toString(), GCEventResponse.class)).collect(Collectors.toList());
+        return ejs.stream().filter(e -> !e.isEmpty()).map(j -> JsonSerializer.deserialize(j.toString(), GCEventResponse.class))
+                .collect(Collectors.toList());
     }
 
     private List<GCEventResponse> getEvents(String token, String analyseId, String jvmId,

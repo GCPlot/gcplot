@@ -3,6 +3,7 @@ package com.gcplot.messages;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.enums.TypedEnum;
+import com.gcplot.model.gc.Capacity;
 import com.gcplot.model.gc.EventConcurrency;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.Phase;
@@ -71,11 +72,11 @@ public class GCEventResponse {
                 CapacityResponse.from(event.totalCapacity()), event.ext());
     }
 
-    public static String toJson(GCEvent event, DateTimeZone tz) {
+    public static String toJson(GCEvent event) {
         StringBuilder sb = new StringBuilder(128);
         int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
         sb.append("{").append("\"p\":").append(event.pauseMu()).append(",")
-                .append("\"d\":").append(event.occurred().toDateTime(tz).getMillis()).append(",")
+                .append("\"d\":").append(event.occurred().getMillis()).append(",")
                 .append("\"g\":[");
         for (int i = 0; i < gens.length; i++) {
             sb.append(gens[i]);
@@ -90,10 +91,10 @@ public class GCEventResponse {
         if (event.concurrency() != EventConcurrency.SERIAL) {
             sb.append(",").append("\"c\":").append(event.concurrency().type());
         }
-        if (event.capacity() != null) {
+        if (event.capacity() != null && !event.capacity().equals(Capacity.NONE)) {
             sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));
         }
-        if (event.totalCapacity() != null) {
+        if (event.totalCapacity() != null && !event.totalCapacity().equals(Capacity.NONE)) {
             sb.append(",\"tc\":").append(CapacityResponse.toJson(event.totalCapacity()));
         }
         if (!Strings.isNullOrEmpty(event.ext())) {

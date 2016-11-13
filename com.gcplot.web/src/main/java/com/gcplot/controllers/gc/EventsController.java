@@ -29,6 +29,7 @@ import com.gcplot.web.UploadedFile;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,20 @@ public class EventsController extends Controller {
     public static final String DEFAULT_CHUNK_DELIMETER = "$d";
     public static final String ANONYMOUS_ANALYSE_NAME = "Default";
     public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
+    private static final Map<Long, Long> PERIOD_SAMPLING_BUCKETS = new LinkedHashMap<Long, Long>() {{
+        put(3600L, 15L); /* 1 hours -> 15 seconds */
+        put(7200L, 30L); /* 2 hours -> 30 seconds */
+        put(21600L, 60L); /* 6 hours -> 1 minute */
+        put(43200L, 120L); /* 12 hours -> 2 minutes */
+        put(86400L, 240L); /* 24 hours -> 4 minutes */
+        put(172800L, 600L); /* 2 days -> 10 minutes */
+        put(345600L, 1200L); /* 4 days -> 20 minutes */
+        put(604800L, 1800L); /* 7 days -> 30 minutes */
+        put(1209600L, 3000L); /* 14 days -> 50 minutes */
+        put(2592000L, 7200L); /* 30 days -> 2 hours */
+        put(5184000L, 14400L); /* 60 days -> 4 hours */
+        put(7776000L, 18000L); /* 90 days -> 5 hours */
+    }};
     private static final int ERASE_ALL_PERIOD_YEARS = 10;
     protected static final Logger LOG = LoggerFactory.getLogger(EventsController.class);
     protected static final String LOG_PATTERN = "%d{yyyyMMdd HH:mm:ss.SSS} [[%5p] %c{1} [%t]] %m%n";
@@ -73,6 +88,8 @@ public class EventsController extends Controller {
                 .get("/gc/jvm/events/full", this::fullJvmEvents);
         dispatcher.blocking().requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/full/stream", this::fullJvmEventsStream);
+        dispatcher.blocking().requireAuth().filter(requiredWithPeriod(), periodMessage())
+                .get("/gc/jvm/events/full/sample/stream", this::fullJvmSampleEventsStream);
         dispatcher.requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/erase", this::jvmEventsErase);
         dispatcher.requireAuth().filter(requiredWithoutPeriod(), message())
@@ -194,15 +211,11 @@ public class EventsController extends Controller {
     public void jvmEvents(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
 
-        // FIXME: duplication
-        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
-            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
-                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
-        } else {
+        checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(false);
             List<GCEvent> events = eventRepository.pauseEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
             ctx.response(GCEventResponse.from(events, pp.getTimeZone()));
-        }
+        });
     }
 
     /**
@@ -218,60 +231,134 @@ public class EventsController extends Controller {
     public void jvmEventsStream(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
 
-        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
-            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
-                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
-        } else {
+        checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(true);
             Iterator<GCEvent> eventIterator = eventRepository.lazyPauseEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
-            while (eventIterator.hasNext()) {
-                GCEvent event = eventIterator.next();
-                if (event != null) {
-                    ctx.write(GCEventResponse.toJson(event, pp.getTimeZone()));
-                    if (pp.delimit) {
-                        ctx.write(DEFAULT_CHUNK_DELIMETER);
-                    }
-                }
-            }
+            streamEvents(ctx, pp, eventIterator);
             ctx.finish();
-        }
+        });
     }
 
+    /**
+     * GET /gc/jvm/events/full/stream
+     */
     public void fullJvmEventsStream(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
 
-        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
-            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
-                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
-        } else {
+        checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(true);
             Iterator<GCEvent> eventIterator = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
-            while (eventIterator.hasNext()) {
-                GCEvent event = eventIterator.next();
-                if (event != null) {
-                    ctx.write(GCEventResponse.toJson(event, pp.getTimeZone()));
-                    if (pp.delimit) {
-                        ctx.write(DEFAULT_CHUNK_DELIMETER);
+            streamEvents(ctx, pp, eventIterator);
+            ctx.finish();
+        });
+    }
+
+    /**
+     * GET /gc/jvm/events/full/sample/stream
+     */
+    public void fullJvmSampleEventsStream(RequestContext ctx) {
+        PeriodParams pp = new PeriodParams(ctx);
+        Optional<GCAnalyse> oa = analyseRepository.analyse(account(ctx).id(), pp.getAnalyseId());
+
+        checkPeriodAndExecute(pp, ctx, () -> {
+            if (!oa.isPresent()) {
+                ctx.write(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYSE, "Unknown Analyse " + pp.getAnalyseId()));
+            } else {
+                GCAnalyse analyse = oa.get();
+                DateTime from = pp.getFromUTC();
+                DateTime to = pp.getToUTC();
+                if (!analyse.isContinuous()) {
+                    DateTime firstEvent = analyse.firstEvent().get(pp.getJvmId());
+                    DateTime lastEvent = analyse.lastEvent().get(pp.getJvmId());
+                    if (from.isBefore(firstEvent)) {
+                        from = firstEvent;
+                    }
+                    if (to.isAfter(lastEvent)) {
+                        to = lastEvent;
+                    }
+                }
+                long secondsBetween = new Duration(from, to).getStandardSeconds();
+                int sampleSeconds = pickUpSampling(secondsBetween);
+
+                ctx.setChunked(true);
+                Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(from, to));
+                EnumSet<Generation> youngOnly = EnumSet.of(Generation.YOUNG);
+
+                if (sampleSeconds == 1) {
+                    streamEvents(ctx, pp, i);
+                } else {
+                    GCEvent min = null, max = null, rest = null;
+                    DateTime edge = null;
+                    DateTime edgePlus = null;
+                    while (i.hasNext()) {
+                        GCEvent event = i.next();
+                        if (event != null) {
+                            if (event.generations().equals(youngOnly)) {
+                                if (min == null) {
+                                    min = event;
+                                }
+                                if (max == null) {
+                                    max = event;
+                                }
+                                if (edge == null) {
+                                    edge = event.occurred();
+                                    edgePlus = edge.minusSeconds(sampleSeconds);
+                                }
+                                if (edgePlus.isBefore(event.occurred())) {
+                                    if (event.pauseMu() < min.pauseMu()) {
+                                        min = event;
+                                    } else if (event.pauseMu() > max.pauseMu()) {
+                                        max = event;
+                                    } else if (rest == null) {
+                                        rest = event;
+                                    }
+                                } else {
+                                    if (!min.equals(max)) {
+                                        write(ctx, pp, min);
+                                        write(ctx, pp, max);
+                                    } else {
+                                        write(ctx, pp, min);
+                                    }
+                                    if (rest != null && (!(min.equals(rest) || max.equals(rest)))) {
+                                        write(ctx, pp, rest);
+                                    }
+                                    min = null;
+                                    max = null;
+                                    rest = null;
+                                    edge = null;
+                                }
+                            } else {
+                                write(ctx, pp, event);
+                            }
+                        }
+                    }
+                    if (min != null) {
+                        write(ctx, pp, min);
+                    }
+                    if (max != null) {
+                        write(ctx, pp, max);
+                    }
+                    if (rest != null) {
+                        write(ctx, pp, rest);
                     }
                 }
             }
-            ctx.finish();
-        }
+        });
     }
 
+    /**
+     * GET /gc/jvm/events/full
+     */
     public void fullJvmEvents(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
 
-        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
-            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
-                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
-        } else {
+        checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(false);
             List<GCEvent> events = eventRepository.events(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
             ctx.response(GCEventResponse.from(events, pp.getTimeZone()));
-        }
+        });
     }
 
     /**
@@ -314,6 +401,52 @@ public class EventsController extends Controller {
             }
         }
         ctx.response(SUCCESS);
+    }
+
+    private void streamEvents(RequestContext ctx, PeriodParams pp, Iterator<GCEvent> eventIterator) {
+        while (eventIterator.hasNext()) {
+            GCEvent event = eventIterator.next();
+            if (event != null) {
+                write(ctx, pp, event);
+            }
+        }
+    }
+
+    private void write(RequestContext ctx, PeriodParams pp, GCEvent event) {
+        ctx.write(GCEventResponse.toJson(event));
+        delimit(ctx, pp);
+    }
+
+    private void delimit(RequestContext ctx, PeriodParams pp) {
+        if (pp.delimit) {
+            ctx.write(DEFAULT_CHUNK_DELIMETER);
+        }
+    }
+
+    private void checkPeriodAndExecute(PeriodParams pp, RequestContext ctx, Runnable ex) {
+        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
+                    + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
+        } else {
+            ex.run();
+        }
+    }
+
+    private int pickUpSampling(long seconds) {
+        if (seconds < 3600) {
+            return 1;
+        }
+        long sample = 0;
+        for (Map.Entry<Long, Long> e : PERIOD_SAMPLING_BUCKETS.entrySet()) {
+            if (seconds < e.getKey()) {
+                sample = e.getValue();
+                break;
+            }
+        }
+        if (sample == 0) {
+            return 18000;
+        }
+        return (int) sample;
     }
 
     private String calculateFileChecksum(RequestContext ctx, UploadedFile uf) throws IOException, NoSuchAlgorithmException {
@@ -541,6 +674,12 @@ public class EventsController extends Controller {
         }
         public DateTime getTo() {
             return to;
+        }
+        public DateTime getFromUTC() {
+            return new DateTime(from, DateTimeZone.UTC);
+        }
+        public DateTime getToUTC() {
+            return new DateTime(to, DateTimeZone.UTC);
         }
         public DateTimeZone getTimeZone() {
             return timeZone;
