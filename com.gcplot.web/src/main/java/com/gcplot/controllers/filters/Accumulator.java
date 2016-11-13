@@ -33,7 +33,9 @@ public class Accumulator implements Filter {
 
     @Override
     public void process(GCEvent event, Consumer<GCEvent> write) {
-        edge(event);
+        if (edge == null) {
+            edge(event);
+        }
         if (edgeMinus.isBefore(event.occurred()) || edge == event.occurred()) {
             tenured.add(event);
         } else {
