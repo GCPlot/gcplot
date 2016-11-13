@@ -7,6 +7,8 @@ import com.gcplot.Identifier;
 import com.gcplot.commons.*;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
+import com.gcplot.controllers.filters.Accumulator;
+import com.gcplot.controllers.filters.Sampler;
 import com.gcplot.log_processor.LogMetadata;
 import com.gcplot.log_processor.parser.ParseResult;
 import com.gcplot.log_processor.parser.detect.VMProperties;
@@ -284,65 +286,28 @@ public class EventsController extends Controller {
 
                 ctx.setChunked(true);
                 Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(from, to));
-                EnumSet<Generation> youngOnly = EnumSet.of(Generation.YOUNG);
+                final EnumSet<Generation> tenuredOnly = EnumSet.of(Generation.TENURED);
+
+                Sampler youngSampler = new Sampler(sampleSeconds, EnumSet.of(Generation.YOUNG));
+                Accumulator tenuredAcc = new Accumulator(config.readInt(ConfigProperty.TENURED_ACCUMULATE_SECONDS),
+                        e -> e.generations().equals(tenuredOnly) && e.concurrency() == EventConcurrency.SERIAL);
 
                 if (sampleSeconds == 1) {
                     streamEvents(ctx, pp, i);
                 } else {
-                    GCEvent min = null, max = null, rest = null;
-                    DateTime edge = null;
-                    DateTime edgePlus = null;
+                    final Consumer<GCEvent> write = e -> write(ctx, pp, e);
                     while (i.hasNext()) {
                         GCEvent event = i.next();
                         if (event != null) {
-                            if (event.generations().equals(youngOnly)) {
-                                if (min == null) {
-                                    min = event;
-                                }
-                                if (max == null) {
-                                    max = event;
-                                }
-                                if (edge == null) {
-                                    edge = event.occurred();
-                                    edgePlus = edge.minusSeconds(sampleSeconds);
-                                }
-                                if (edgePlus.isBefore(event.occurred())) {
-                                    if (event.pauseMu() < min.pauseMu()) {
-                                        min = event;
-                                    } else if (event.pauseMu() > max.pauseMu()) {
-                                        max = event;
-                                    } else if (rest == null) {
-                                        rest = event;
-                                    }
-                                } else {
-                                    if (!min.equals(max)) {
-                                        write(ctx, pp, min);
-                                        write(ctx, pp, max);
-                                    } else {
-                                        write(ctx, pp, min);
-                                    }
-                                    if (rest != null && (!(min.equals(rest) || max.equals(rest)))) {
-                                        write(ctx, pp, rest);
-                                    }
-                                    min = null;
-                                    max = null;
-                                    rest = null;
-                                    edge = null;
-                                }
-                            } else {
-                                write(ctx, pp, event);
+                            if (youngSampler.isApplicable(event)) {
+                                youngSampler.process(event, write);
+                            } else if (tenuredAcc.isApplicable(event)) {
+                                tenuredAcc.process(event, write);
                             }
                         }
                     }
-                    if (min != null) {
-                        write(ctx, pp, min);
-                    }
-                    if (max != null) {
-                        write(ctx, pp, max);
-                    }
-                    if (rest != null) {
-                        write(ctx, pp, rest);
-                    }
+                    tenuredAcc.complete(write);
+                    youngSampler.complete(write);
                 }
             }
         });

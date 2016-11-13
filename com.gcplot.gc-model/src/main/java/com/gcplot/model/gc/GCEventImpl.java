@@ -152,6 +152,28 @@ public class GCEventImpl implements GCEvent {
         return this;
     }
 
+    public GCEventImpl() {
+    }
+
+    public GCEventImpl(GCEvent other) {
+        this.id = other.id();
+        this.jvmId = other.jvmId();
+        this.bucketId = other.bucketId();
+        this.parentEvent = other.parentEvent().orElse(null);
+        this.analyseId = other.analyseId();
+        this.description = other.description();
+        this.occurred = other.occurred();
+        this.timestamp = other.timestamp();
+        this.vmEventType = other.vmEventType();
+        this.phase = other.phase();
+        this.capacity = other.capacity();
+        this.totalCapacity = other.totalCapacity();
+        this.pauseMu = other.pauseMu();
+        this.generations = other.generations();
+        this.concurrency = other.concurrency();
+        this.ext = other.ext();
+    }
+
     protected String id;
     protected String jvmId;
     protected String bucketId;
