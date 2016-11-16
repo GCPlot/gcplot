@@ -28,10 +28,7 @@ import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.resources.ResourceManager;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Days;
-import org.joda.time.Duration;
+import org.joda.time.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -394,6 +391,9 @@ public class EventsController extends Controller {
         if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
                     + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
+        } else if (Minutes.minutesBetween(pp.getFrom(), pp.getTo()).getMinutes() < 1) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
+                    "The interval should higher or equal to 1 minute."));
         } else {
             ex.run();
         }
