@@ -8,6 +8,7 @@ import com.gcplot.commons.*;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
 import com.gcplot.controllers.filters.Accumulator;
+import com.gcplot.controllers.filters.PhaseSampler;
 import com.gcplot.controllers.filters.Sampler;
 import com.gcplot.log_processor.LogMetadata;
 import com.gcplot.log_processor.parser.ParseResult;
@@ -286,6 +287,7 @@ public class EventsController extends Controller {
                 final EnumSet<Generation> tenuredOnly = EnumSet.of(Generation.TENURED);
 
                 Sampler youngSampler = new Sampler(sampleSeconds, EnumSet.of(Generation.YOUNG));
+                Sampler concurrentSampler = new PhaseSampler(sampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
                 Accumulator tenuredAcc = new Accumulator(config.readInt(ConfigProperty.TENURED_ACCUMULATE_SECONDS),
                         e -> e.generations().equals(tenuredOnly) && e.concurrency() == EventConcurrency.SERIAL);
 
@@ -300,6 +302,8 @@ public class EventsController extends Controller {
                                 youngSampler.process(event, write);
                             } else if (tenuredAcc.isApplicable(event)) {
                                 tenuredAcc.process(event, write);
+                            } else if (concurrentSampler.isApplicable(event)) {
+                                concurrentSampler.process(event, write);
                             } else {
                                 write.accept(event);
                             }

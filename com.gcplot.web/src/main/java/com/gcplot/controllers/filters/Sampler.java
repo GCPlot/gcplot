@@ -14,13 +14,9 @@ import java.util.function.Consumer;
 public class Sampler implements Filter {
     private final EnumSet<Generation> applyTo;
     private final int sampleSeconds;
-    private GCEvent min = null, max = null, rest = null;
+    private EventsBundle events = new EventsBundle();
     private DateTime edge = null;
     private DateTime edgeMinus = null;
-
-    public Sampler(int sampleSeconds) {
-        this(sampleSeconds, EnumSet.noneOf(Generation.class));
-    }
 
     public Sampler(int sampleSeconds, EnumSet<Generation> applyTo) {
         this.sampleSeconds = sampleSeconds;
@@ -34,55 +30,71 @@ public class Sampler implements Filter {
 
     @Override
     public void process(GCEvent event, Consumer<GCEvent> write) {
-        if (min == null) {
-            min = event;
+        EventsBundle b = events;
+        process(event, write, b);
+    }
+
+    protected void process(GCEvent event, Consumer<GCEvent> write, EventsBundle b) {
+        if (b.getMin() == null) {
+            b.setMin(event);
         }
-        if (max == null) {
-            max = event;
+        if (b.getMax() == null) {
+            b.setMax(event);
         }
         if (edge == null) {
             edge(event);
         }
         if (edgeMinus.isBefore(event.occurred())) {
-            if (event.pauseMu() < min.pauseMu()) {
-                min = event;
-            } else if (event.pauseMu() > max.pauseMu()) {
-                max = event;
-            } else if (rest == null) {
-                rest = event;
+            if (event.pauseMu() < b.getMin().pauseMu()) {
+                b.setMin(event);
+            } else if (event.pauseMu() > b.getMax().pauseMu()) {
+                b.setMax(event);
+            } else if (b.getRest() == null) {
+                b.setRest(event);
             }
         } else {
-            if (!min.equals(max)) {
-                write.accept(min);
-                write.accept(max);
+            if (!b.getMin().equals(b.getMax())) {
+                write.accept(b.getMin());
+                write.accept(b.getMax());
             } else {
-                write.accept(min);
+                write.accept(b.getMin());
             }
-            if (rest != null && (!(min.equals(rest) || max.equals(rest)))) {
-                write.accept(rest);
+            if (b.getRest() != null && (!(b.getMin().equals(b.getRest())
+                    || b.getMax().equals(b.getRest())))) {
+                write.accept(b.getRest());
             }
-            min = null;
-            max = null;
-            rest = null;
+            b.setMin(null);
+            b.setMax(null);
+            b.setRest(null);
             edge(event);
         }
     }
 
     @Override
     public void complete(Consumer<GCEvent> write) {
-        if (min != null) {
-            write.accept(min);
+        EventsBundle b = events;
+        complete(write, b);
+    }
+
+    protected void complete(Consumer<GCEvent> write, EventsBundle b) {
+        if (b.getMin() != null) {
+            write.accept(b.getMin());
         }
-        if (max != null) {
-            write.accept(max);
+        if (b.getMax() != null) {
+            write.accept(b.getMax());
         }
-        if (rest != null) {
-            write.accept(rest);
+        if (b.getRest() != null) {
+            write.accept(b.getRest());
         }
     }
 
-    private void edge(GCEvent event) {
+    protected void edge(GCEvent event) {
         edge = event.occurred();
         edgeMinus = edge.minusSeconds(sampleSeconds);
     }
+
+    protected int getSampleSeconds() {
+        return sampleSeconds;
+    }
+
 }
