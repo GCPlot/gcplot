@@ -127,6 +127,7 @@ public abstract class Mapper {
         ObjectsAgesImpl objectsAge = new ObjectsAgesImpl();
         objectsAge.analyseId(sop(r, "analyse_id", d -> d.getUUID("analyse_id")))
                 .ext(op(r, "ext", d -> d.getString("ext")))
+                .desiredSurvivorSize(lop(r, "desired_sv_size", d -> d.getLong("desired_sv_size")))
                 .jvmId(op(r, "jvm_id", d -> d.getString("jvm_id")))
                 .occupied(r.getList("occupied", Long.class))
                 .total(r.getList("total", Long.class))

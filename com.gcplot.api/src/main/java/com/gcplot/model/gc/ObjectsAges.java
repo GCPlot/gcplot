@@ -11,6 +11,8 @@ import java.util.List;
  */
 public interface ObjectsAges extends VMEvent, DatedEvent {
 
+    long desiredSurvivorSize();
+
     List<Long> occupied();
 
     List<Long> total();

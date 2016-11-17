@@ -442,6 +442,7 @@ public class EventsController extends Controller {
             ObjectsAgesImpl oa = new ObjectsAgesImpl();
             oa.analyseId(analyseId);
             oa.jvmId(jvmId);
+            oa.desiredSurvivorSize(as.getDesiredSurvivorSize());
             oa.occurred(DateTime.now(DateTimeZone.UTC));
             oa.occupied(as.getOccupied());
             oa.total(as.getTotal());

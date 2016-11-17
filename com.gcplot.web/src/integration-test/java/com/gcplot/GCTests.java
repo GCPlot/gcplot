@@ -163,6 +163,7 @@ public class GCTests extends IntegrationTest {
         ObjectsAgesResponse oa = JsonSerializer.deserialize(r(oaj).toString(), ObjectsAgesResponse.class);
         Assert.assertEquals(5, oa.occupied.size());
         Assert.assertEquals(5, oa.total.size());
+        Assert.assertEquals(67108864L, (long) oa.desiredSurvivorSize);
         Assert.assertTrue(oa.time > 0);
 
         get("/jvm/gc/ages/erase" + "?" + "analyse_id=" + analyseId + "&jvm_id=" + jvmId, token, success());

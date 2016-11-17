@@ -24,7 +24,7 @@ import static com.gcplot.model.gc.cassandra.Mapper.objectsAgesFrom;
  */
 public class CassandraObjectsAgesRepository extends AbstractVMEventsCassandraRepository<ObjectsAges> {
     protected static final String TABLE_NAME = "objects_ages";
-    protected static final String[] FIELDS = new String[] { "occurred", "occupied", "total", "ext"};
+    protected static final String[] FIELDS = new String[] { "occurred", "desired_sv_size", "occupied", "total", "ext"};
 
     @Override
     public Optional<ObjectsAges> lastEvent(String analyseId, String jvmId, DateTime start) {
@@ -92,6 +92,7 @@ public class CassandraObjectsAgesRepository extends AbstractVMEventsCassandraRep
                 .value("occurred", oa.occurred().toDate())
                 .value("written_at", UUIDGen.getTimeUUID(oa.occurred().getMillis()))
                 .value("jvm_id", oa.jvmId())
+                .value("desired_sv_size", oa.desiredSurvivorSize())
                 .value("occupied", oa.occupied())
                 .value("total", oa.total())
                 .value("ext", oa.ext());

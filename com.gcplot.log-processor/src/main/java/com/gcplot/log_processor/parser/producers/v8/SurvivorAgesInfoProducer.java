@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
  *         8/1/16
  */
 public class SurvivorAgesInfoProducer {
+    private static final String DESIRED_PREFIX = "Desired";
+    private static final Pattern DESIRED_SIZE_PATTERN = Pattern.compile(DESIRED_PREFIX + " survivor size (?<sz>[0-9]+) bytes");
     private static final String AGE_NUM_GROUP = "agenum";
     private static final String AGE_OCCUPIED_GROUP = "occupied";
     private static final String AGE_TOTAL_GROUP = "total";
@@ -23,6 +25,8 @@ public class SurvivorAgesInfoProducer {
     protected List<AgesState> agesStates = new ArrayList<>();
     protected List<Long> occupied = new ArrayList<>();
     protected List<Long> total = new ArrayList<>();
+    protected long desiredSurvivorSize;
+    protected long desiredSurvivorCount;
     protected int lastAge = -1;
     protected int maxAge = 0;
     protected Runnable onFinished = () -> {};
@@ -41,12 +45,18 @@ public class SurvivorAgesInfoProducer {
                 total.add(ttl);
                 lastAge = age;
             }
+        } else if (s.startsWith(DESIRED_PREFIX)) {
+            Matcher m = DESIRED_SIZE_PATTERN.matcher(s);
+            if (m.find()) {
+                desiredSurvivorSize += Long.parseLong(m.group("sz"));
+                desiredSurvivorCount++;
+            }
         }
     }
 
     public void finish() {
         onFinished.run();
-        agesStates.add(new AgesState(new ArrayList<>(occupied), new ArrayList<>(total)));
+        agesStates.add(new AgesState(0L, new ArrayList<>(occupied), new ArrayList<>(total)));
         occupied.clear();
         total.clear();
         if (lastAge > maxAge) {
@@ -85,7 +95,7 @@ public class SurvivorAgesInfoProducer {
             total[i] /= count[i];
         }
 
-        return new AgesState(Arrays.asList(ArrayUtils.toObject(occupied)),
+        return new AgesState(desiredSurvivorSize / desiredSurvivorCount, Arrays.asList(ArrayUtils.toObject(occupied)),
                 Arrays.asList(ArrayUtils.toObject(total)));
     }
 

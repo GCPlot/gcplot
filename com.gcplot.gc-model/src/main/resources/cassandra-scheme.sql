@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS objects_ages (
   occurred timestamp,
   written_at timeuuid,
   jvm_id varchar,
+  desired_sv_size bigint,
   occupied list<bigint>,
   total list<bigint>,
   ext varchar,

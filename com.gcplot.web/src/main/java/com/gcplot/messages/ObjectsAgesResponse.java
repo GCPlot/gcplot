@@ -13,6 +13,8 @@ import java.util.List;
 public class ObjectsAgesResponse {
     @JsonProperty("time")
     public long time;
+    @JsonProperty("dss")
+    public Long desiredSurvivorSize;
     @JsonProperty("occupied")
     public List<Long> occupied;
     @JsonProperty("total")
@@ -21,10 +23,12 @@ public class ObjectsAgesResponse {
     public String ext;
 
     public ObjectsAgesResponse(@JsonProperty("time") long time,
+                               @JsonProperty("dss") Long desiredSurvivorSize,
                                @JsonProperty("occupied") List<Long> occupied,
                                @JsonProperty("total") List<Long> total,
                                @JsonProperty("ext") String ext) {
         this.time = time;
+        this.desiredSurvivorSize = desiredSurvivorSize;
         this.occupied = occupied;
         this.total = total;
         this.ext = ext;
@@ -32,6 +36,6 @@ public class ObjectsAgesResponse {
 
     public static ObjectsAgesResponse from(ObjectsAges oa) {
         return new ObjectsAgesResponse(oa.occurred().toDateTime(DateTimeZone.UTC).getMillis(),
-                oa.occupied(), oa.total(), oa.ext());
+                oa.desiredSurvivorSize(), oa.occupied(), oa.total(), oa.ext());
     }
 }

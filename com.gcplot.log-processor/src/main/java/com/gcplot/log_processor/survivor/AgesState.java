@@ -10,6 +10,10 @@ import java.util.List;
  *         7/30/16
  */
 public class AgesState {
+    private final long desiredSurvivorSize;
+    public long getDesiredSurvivorSize() {
+        return desiredSurvivorSize;
+    }
 
     private final int ages;
     public int getAges() {
@@ -26,21 +30,24 @@ public class AgesState {
         return total;
     }
 
-    public AgesState(List<Long> occupied, List<Long> total) {
+    public AgesState(long desiredSurvivorSize, List<Long> occupied, List<Long> total) {
         Preconditions.checkState(occupied.size() == total.size(), "Unknown situation where occupied.lenght != total.length");
+        this.desiredSurvivorSize = desiredSurvivorSize;
         this.ages = occupied.size();
         this.occupied = Collections.unmodifiableList(occupied);
         this.total = Collections.unmodifiableList(total);
     }
 
-    public static final AgesState NONE = new AgesState(Collections.emptyList(), Collections.emptyList());
+    public static final AgesState NONE = new AgesState(0L, Collections.emptyList(), Collections.emptyList());
 
     @Override
     public String toString() {
-        return "AgesState{" +
-                "ages=" + ages +
-                ", occupied=" + occupied +
-                ", total=" + total +
-                '}';
+        final StringBuffer sb = new StringBuffer("AgesState{");
+        sb.append("desiredSurvivorSize=").append(desiredSurvivorSize);
+        sb.append(", ages=").append(ages);
+        sb.append(", occupied=").append(occupied);
+        sb.append(", total=").append(total);
+        sb.append('}');
+        return sb.toString();
     }
 }
