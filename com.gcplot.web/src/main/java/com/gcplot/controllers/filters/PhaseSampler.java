@@ -35,4 +35,9 @@ public class PhaseSampler extends Sampler {
     public void complete(Consumer<GCEvent> write) {
         events.forEach((p, b) -> complete(write, b));
     }
+
+    @Override
+    protected void writeAndReset(Consumer<GCEvent> write, EventsBundle b) {
+        events.forEach((p, bb) -> super.writeAndReset(write, bb));
+    }
 }

@@ -34,6 +34,12 @@ public class Sampler implements Filter {
         process(event, write, b);
     }
 
+    @Override
+    public void complete(Consumer<GCEvent> write) {
+        EventsBundle b = events;
+        complete(write, b);
+    }
+
     protected void process(GCEvent event, Consumer<GCEvent> write, EventsBundle b) {
         if (b.getMin() == null) {
             b.setMin(event);
@@ -53,27 +59,25 @@ public class Sampler implements Filter {
                 b.setRest(event);
             }
         } else {
-            if (!b.getMin().equals(b.getMax())) {
-                write.accept(b.getMin());
-                write.accept(b.getMax());
-            } else {
-                write.accept(b.getMin());
-            }
-            if (b.getRest() != null && (!(b.getMin().equals(b.getRest())
-                    || b.getMax().equals(b.getRest())))) {
-                write.accept(b.getRest());
-            }
-            b.setMin(null);
-            b.setMax(null);
-            b.setRest(null);
+            writeAndReset(write, b);
             edge(event);
         }
     }
 
-    @Override
-    public void complete(Consumer<GCEvent> write) {
-        EventsBundle b = events;
-        complete(write, b);
+    protected void writeAndReset(Consumer<GCEvent> write, EventsBundle b) {
+        if (!b.getMin().equals(b.getMax())) {
+            write.accept(b.getMin());
+            write.accept(b.getMax());
+        } else {
+            write.accept(b.getMin());
+        }
+        if (b.getRest() != null && (!(b.getMin().equals(b.getRest())
+                || b.getMax().equals(b.getRest())))) {
+            write.accept(b.getRest());
+        }
+        b.setMin(null);
+        b.setMax(null);
+        b.setRest(null);
     }
 
     protected void complete(Consumer<GCEvent> write, EventsBundle b) {
@@ -91,10 +95,6 @@ public class Sampler implements Filter {
     protected void edge(GCEvent event) {
         edge = event.occurred();
         edgeMinus = edge.minusSeconds(sampleSeconds);
-    }
-
-    protected int getSampleSeconds() {
-        return sampleSeconds;
     }
 
 }
