@@ -31,4 +31,8 @@ public class EventsBundle {
     public void setRest(GCEvent rest) {
         this.rest = rest;
     }
+
+    public boolean isEmpty() {
+        return min == null && max == null && rest == null;
+    }
 }

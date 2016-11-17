@@ -65,6 +65,7 @@ public class Sampler implements Filter {
     }
 
     protected void writeAndReset(Consumer<GCEvent> write, EventsBundle b) {
+        if (b.isEmpty()) return;
         if (!b.getMin().equals(b.getMax())) {
             write.accept(b.getMin());
             write.accept(b.getMax());
