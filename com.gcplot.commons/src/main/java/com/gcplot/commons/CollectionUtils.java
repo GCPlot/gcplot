@@ -1,22 +1,9 @@
 package com.gcplot.commons;
 
-import gnu.trove.impl.unmodifiable.TUnmodifiableIntList;
-import gnu.trove.impl.unmodifiable.TUnmodifiableIntSet;
-import gnu.trove.impl.unmodifiable.TUnmodifiableLongList;
-import gnu.trove.impl.unmodifiable.TUnmodifiableLongSet;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TIntHashSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.ints.*;
+import it.unimi.dsi.fastutil.longs.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,45 +12,51 @@ import java.util.stream.Collectors;
  *         7/31/16
  */
 public abstract class CollectionUtils {
-    private static final TIntList EMPTY_INT_LIST = new TUnmodifiableIntList(new TIntArrayList());
-    private static final TIntSet EMPTY_INT_SET = new TUnmodifiableIntSet(new TIntHashSet());
-    private static final TLongList EMPTY_LONG_LIST = new TUnmodifiableLongList(new TLongArrayList());
-    private static final TLongSet EMPTY_LONG_SET = new TUnmodifiableLongSet(new TLongHashSet());
+    private static final IntList EMPTY_INT_LIST = IntLists.unmodifiable(new IntArrayList());
+    private static final IntSet EMPTY_INT_SET = IntSets.unmodifiable(new IntOpenHashSet());
+    private static final LongList EMPTY_LONG_LIST = LongLists.unmodifiable(new LongArrayList());
+    private static final LongSet EMPTY_LONG_SET = LongSets.unmodifiable(new LongOpenHashSet());
 
-    public static TIntList emptyIntList() {
+    public static IntList emptyIntList() {
         return EMPTY_INT_LIST;
     }
 
-    public static TIntSet emptyIntSet() {
+    public static IntSet emptyIntSet() {
         return EMPTY_INT_SET;
     }
 
-    public static TLongList emptyLongList() {
+    public static LongList emptyLongList() {
         return EMPTY_LONG_LIST;
     }
 
-    public static TLongSet emptyLogSet() {
+    public static LongSet emptyLogSet() {
         return EMPTY_LONG_SET;
     }
 
-    public static TIntList copy(TIntList list) {
+    public static IntList copy(IntList list) {
         return list.subList(0, list.size());
     }
 
-    public static TIntSet copy(TIntSet set) {
-        return new TIntHashSet(set);
+    public static IntSet copy(IntSet set) {
+        return new IntOpenHashSet(set);
     }
 
-    public static TLongList copy(TLongList list) {
+    public static LongList copy(LongList list) {
         return list.subList(0, list.size());
     }
 
-    public static TLongSet copy(TLongSet set) {
-        return new TLongHashSet(set);
+    public static LongSet copy(LongSet set) {
+        return new LongOpenHashSet(set);
     }
 
     public static <K, V1, V2> Map<K, V2> transformValue(Map<K, V1> map, Function<V1, V2> valueMapper) {
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                e -> valueMapper.apply(e.getValue())));
+    }
+
+    public static <K1, K2, V1, V2> Map<K2, V2> transformKeyValue(Map<K1, V1> map, Function<K1, K2> keyMapper,
+                                                                 Function<V1, V2> valueMapper) {
+        return map.entrySet().stream().collect(Collectors.toMap(e -> keyMapper.apply(e.getKey()),
                 e -> valueMapper.apply(e.getValue())));
     }
 
@@ -77,6 +70,16 @@ public abstract class CollectionUtils {
         Map<K, V> map = new HashMap<>(old);
         map.put(key, value);
         return map;
+    }
+
+    public static <K, V1, V2> Map<K, V2> processMap(Map<K, V1> map, Function<? super V1, ? extends V2> valueMapper) {
+        return map != null && map.size() > 0 ? transformValue(map, valueMapper::apply) : Collections.emptyMap();
+    }
+
+    public static <K1, K2, V1, V2> Map<K2, V2> processKeyMap(Map<K1, V1> map,
+                                                             Function<K1, K2> keyMapper,
+                                                             Function<? super V1, ? extends V2> valueMapper) {
+        return map != null && map.size() > 0 ? transformKeyValue(map, keyMapper, valueMapper::apply) : Collections.emptyMap();
     }
 
 }

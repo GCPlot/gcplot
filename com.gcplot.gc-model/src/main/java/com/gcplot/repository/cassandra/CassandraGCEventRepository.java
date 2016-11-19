@@ -6,7 +6,9 @@ import com.datastax.driver.core.querybuilder.Select;
 import com.gcplot.commons.Range;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.enums.EnumSetUtils;
+import com.gcplot.model.gc.Capacity;
 import com.gcplot.model.gc.GCEvent;
+import com.gcplot.model.gc.Generation;
 import com.gcplot.repository.GCEventRepository;
 import com.google.common.collect.Lists;
 import org.apache.cassandra.utils.UUIDGen;
@@ -23,6 +25,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.gcplot.commons.CollectionUtils.processKeyMap;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 import static com.gcplot.model.gc.cassandra.Mapper.eventFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
@@ -31,10 +34,10 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
     private static final Logger LOG = LoggerFactory.getLogger(CassandraGCEventRepository.class);
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
-    public static final String[] NON_KEY_FIELDS = new String[] { /*"id", "parent_id", "description",
-            "occurred", "vm_event_type", "capacity", "total_capacity", "tmstm",
-            "pause_mu", "generations", "concurrency", "ext"*/
-            "occurred", "vm_event_type", "pause_mu", "tmstm", "generations", "concurrency", "phase", "capacity", "total_capacity", "ext"};
+    public static final String[] NON_KEY_FIELDS = new String[] {
+            "occurred", "vm_event_type", "pause_mu", "tmstm", "generations",
+            "concurrency", "phase", "capacity", "total_capacity", "ext",
+            "gen_cap_before", "gen_cap_after", "gen_cap_total"};
     public static final String[] LAST_EVENT_FIELDS = Utils.concat(NON_KEY_FIELDS, new String[] { "bucket_id" });
     public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "tmstm", "phase", "generations", "concurrency" };
 
@@ -171,6 +174,9 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("phase", event.phase().type())
                 .value("generations", EnumSetUtils.encode(event.generations()))
                 .value("concurrency", event.concurrency().type())
+                .value("gen_cap_before", processKeyMap(event.capacityByGeneration(), Generation::type, Capacity::usedBefore))
+                .value("gen_cap_after", processKeyMap(event.capacityByGeneration(), Generation::type, Capacity::usedAfter))
+                .value("gen_cap_total", processKeyMap(event.capacityByGeneration(), Generation::type, Capacity::total))
                 .value("ext", event.ext()).setConsistencyLevel(ConsistencyLevel.ONE);
     }
 

@@ -2,8 +2,8 @@ package com.gcplot.commons;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 public class ErrorMessages {
     public static final long UNDEFINED_ERROR = 0x1;
@@ -41,7 +41,7 @@ public class ErrorMessages {
         return node.toString();
     }
 
-    private static final TLongObjectMap<String> errorMessages = new TLongObjectHashMap<>();
+    private static final Long2ObjectMap<String> errorMessages = new Long2ObjectOpenHashMap<>();
 
     static {
         errorMessages.put(NOT_AUTHORISED, "Not authorised in the system.");

@@ -19,8 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.Function;
 
+import static com.gcplot.commons.CollectionUtils.processMap;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 import static com.gcplot.commons.CollectionUtils.transformValue;
 import static com.gcplot.model.gc.cassandra.Mapper.analyseFrom;
@@ -83,11 +83,11 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("jvm_ids", analyse.jvmIds() != null ? analyse.jvmIds() : Collections.emptySet())
                 .value("jvm_names", analyse.jvmNames() != null ? analyse.jvmNames() : Collections.emptyMap())
                 .value("jvm_headers", analyse.jvmHeaders() != null ? analyse.jvmHeaders() : Collections.emptyMap())
-                .value("jvm_md_page_size", memoryMap(analyse, MemoryDetails::pageSize))
-                .value("jvm_md_phys_total", memoryMap(analyse, MemoryDetails::physicalTotal))
-                .value("jvm_md_phys_free", memoryMap(analyse, MemoryDetails::physicalFree))
-                .value("jvm_md_swap_total", memoryMap(analyse, MemoryDetails::swapTotal))
-                .value("jvm_md_swap_free", memoryMap(analyse, MemoryDetails::swapFree))
+                .value("jvm_md_page_size", processMap(analyse.jvmMemoryDetails(), MemoryDetails::pageSize))
+                .value("jvm_md_phys_total", processMap(analyse.jvmMemoryDetails(), MemoryDetails::physicalTotal))
+                .value("jvm_md_phys_free", processMap(analyse.jvmMemoryDetails(), MemoryDetails::physicalFree))
+                .value("jvm_md_swap_total", processMap(analyse.jvmMemoryDetails(), MemoryDetails::swapTotal))
+                .value("jvm_md_swap_free", processMap(analyse.jvmMemoryDetails(), MemoryDetails::swapFree))
                 .value("ext", analyse.ext())
                 .setConsistencyLevel(ConsistencyLevel.ALL);
         connector.session().execute(insert);
@@ -269,9 +269,5 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
 
     protected Delete.Where delete(Identifier accId, UUID uuid, String column, Object key) {
         return QueryBuilder.delete().mapElt(column, key).from(TABLE_NAME).where(eq("id", uuid)).and(eq("account_id", accId.toString()));
-    }
-
-    private Object memoryMap(GCAnalyse analyse, Function<? super MemoryDetails, ? extends Long> valueMapper) {
-        return analyse.jvmMemoryDetails() != null ? transformValue(analyse.jvmMemoryDetails(), valueMapper::apply) : Collections.emptyMap();
     }
 }

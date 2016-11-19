@@ -4,7 +4,9 @@ import com.gcplot.model.gc.*;
 import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
 
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -16,7 +18,7 @@ public class TestGCEventFactory implements GCEventFactory {
     @Override
     public GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description, VMEventType vmEventType,
                           Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, EnumSet<Generation> generations,
-                          Phase phase, EventConcurrency concurrency, String ext) {
+                          Phase phase, EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap, String ext) {
         return new GCEvent() {
             @Override
             public String id() {
@@ -81,6 +83,11 @@ public class TestGCEventFactory implements GCEventFactory {
             @Override
             public String ext() {
                 return ext;
+            }
+
+            @Override
+            public Map<Generation, Capacity> capacityByGeneration() {
+                return generationCapacityMap;
             }
 
             @Override

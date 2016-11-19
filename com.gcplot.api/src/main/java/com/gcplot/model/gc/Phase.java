@@ -1,8 +1,8 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.commons.enums.TypedEnum;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -73,7 +73,7 @@ public enum Phase implements TypedEnum {
     OTHER(0);
 
     private int type;
-    private static TIntObjectMap<Phase> types = new TIntObjectHashMap<>();
+    private static Int2ObjectMap<Phase> types = new Int2ObjectOpenHashMap<>();
 
     @Override
     public int type() {
@@ -84,7 +84,7 @@ public enum Phase implements TypedEnum {
         return types.get(type);
     }
 
-    public static TIntObjectMap<Phase> types() {
+    public static Int2ObjectMap<Phase> types() {
         return types;
     }
 

@@ -1,8 +1,8 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.commons.enums.TypedEnum;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public enum VMEventType implements TypedEnum {
 
@@ -10,7 +10,7 @@ public enum VMEventType implements TypedEnum {
     STW_NON_GC(2);
 
     private int type;
-    private static TIntObjectMap<VMEventType> types = new TIntObjectHashMap<>();
+    private static Int2ObjectMap<VMEventType> types = new Int2ObjectOpenHashMap<>();
 
     VMEventType(int type) {
         this.type = type;
@@ -25,7 +25,7 @@ public enum VMEventType implements TypedEnum {
         return types.get(type);
     }
 
-    public static TIntObjectMap<VMEventType> types() {
+    public static Int2ObjectMap<VMEventType> types() {
         return types;
     }
 

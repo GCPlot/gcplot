@@ -1,8 +1,8 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.commons.enums.TypedEnum;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public enum EventConcurrency implements TypedEnum {
 
@@ -10,7 +10,7 @@ public enum EventConcurrency implements TypedEnum {
     SERIAL(2);
 
     private int type;
-    private static TIntObjectMap<EventConcurrency> types = new TIntObjectHashMap<>();
+    private static Int2ObjectMap<EventConcurrency> types = new Int2ObjectOpenHashMap<>();
 
     EventConcurrency(int type) {
         this.type = type;
@@ -25,7 +25,7 @@ public enum EventConcurrency implements TypedEnum {
         return types.get(type);
     }
 
-    public static TIntObjectMap<EventConcurrency> types() {
+    public static Int2ObjectMap<EventConcurrency> types() {
         return types;
     }
 

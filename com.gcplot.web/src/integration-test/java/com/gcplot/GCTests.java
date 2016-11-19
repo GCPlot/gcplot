@@ -134,8 +134,9 @@ public class GCTests extends IntegrationTest {
         AnalyseResponse ar = getAnalyse(token, analyseId);
         Assert.assertTrue(ar.lastEventUTC.get(jvmId) > 0);
 
-        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - TimeUnit.DAYS.toMillis(30),
-                ar.lastEventUTC.get(jvmId));
+        long fromInitial = ar.lastEventUTC.get(jvmId) - TimeUnit.DAYS.toMillis(30);
+        Long toInitial = ar.lastEventUTC.get(jvmId);
+        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, fromInitial, toInitial);
         Assert.assertEquals(19, events.size());
 
         // check that processing this file again won't make any effect
@@ -212,6 +213,10 @@ public class GCTests extends IntegrationTest {
         Assert.assertTrue(events.size() > 1);
         Assert.assertTrue(eventsFull.size() > 1);
         Assert.assertTrue(events.size() < eventsFull.size());
+
+        JsonObject stats = get("/gc/jvm/events/stats?analyse_id=" + EventsController.ANONYMOUS_ANALYSE_ID + "&jvm_id=" +
+                ar.jvmIds.iterator().next() + "&from=" + from + "&to=" + to, token, -1);
+        LOG.info(stats.toString());
     }
 
     private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {

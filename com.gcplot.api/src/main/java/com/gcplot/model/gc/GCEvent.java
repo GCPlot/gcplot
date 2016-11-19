@@ -4,6 +4,7 @@ import com.gcplot.model.DatedEvent;
 import com.gcplot.model.VMEvent;
 
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
 
 public interface GCEvent extends VMEvent, DatedEvent {
@@ -41,9 +42,15 @@ public interface GCEvent extends VMEvent, DatedEvent {
 
     String ext();
 
+    Map<Generation, Capacity> capacityByGeneration();
+
     default boolean isFull() {
         return generations().size() > 1 && generations().contains(Generation.YOUNG) &&
                 generations().contains(Generation.TENURED);
+    }
+
+    default boolean isYoung() {
+        return generations().size() == 1 && generations().contains(Generation.YOUNG);
     }
 
     default boolean isMetaspace() {

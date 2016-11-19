@@ -137,6 +137,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         EventConcurrency concurrency = event.isConcurrent() ? EventConcurrency.CONCURRENT : EventConcurrency.SERIAL;
         EnumSet<Generation> generations = EnumSet.noneOf(Generation.class);
         DateTime datestamp;
+        Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
         if (event.getDatestamp() == null) {
             datestamp = DateTime.now(DateTimeZone.UTC).plusMillis((int)(event.getTimestamp() * 1000));
         } else {
@@ -168,15 +169,23 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                     capacity = of(gcEvent.getTenured());
                 }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.ALL) {
+                if (capacityByGeneration.equals(Collections.emptyMap())) {
+                    capacityByGeneration = new HashMap<>();
+                }
                 capacity = of(gcEvent);
+
                 if (gcEvent.getYoung() != null) {
+                    capacityByGeneration.put(Generation.YOUNG, of(gcEvent.getYoung()));
                     generations.add(Generation.YOUNG);
                 }
                 if (gcEvent.getTenured() != null) {
+                    capacityByGeneration.put(Generation.TENURED, of(gcEvent.getTenured()));
                     generations.add(Generation.TENURED);
                 }
                 if (gcEvent.getPerm() != null) {
-                    generations.add(metaspaceGeneration(gcEvent.getPerm().getTypeAsString()));
+                    Generation g = metaspaceGeneration(gcEvent.getPerm().getTypeAsString());
+                    capacityByGeneration.put(g, of(gcEvent.getPerm()));
+                    generations.add(g);
                 }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.PERM) {
                 generations.add(metaspaceGeneration(gcEvent.getPerm().getTypeAsString()));
@@ -190,7 +199,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         }
         Phase phase = detectPhase(ctx, event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
-                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, concurrency, ""));
+                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, concurrency, capacityByGeneration, ""));
         /*if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
             com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
             events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,

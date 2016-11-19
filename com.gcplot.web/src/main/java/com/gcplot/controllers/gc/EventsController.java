@@ -7,9 +7,10 @@ import com.gcplot.Identifier;
 import com.gcplot.commons.*;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
-import com.gcplot.controllers.filters.Accumulator;
-import com.gcplot.controllers.filters.PhaseSampler;
-import com.gcplot.controllers.filters.Sampler;
+import com.gcplot.interceptors.StatisticAggregateInterceptor;
+import com.gcplot.interceptors.filters.Accumulator;
+import com.gcplot.interceptors.filters.PhaseSampler;
+import com.gcplot.interceptors.filters.Sampler;
 import com.gcplot.log_processor.LogMetadata;
 import com.gcplot.log_processor.parser.ParseResult;
 import com.gcplot.log_processor.parser.detect.VMProperties;
@@ -94,6 +95,8 @@ public class EventsController extends Controller {
                 .get("/gc/jvm/events/erase", this::jvmEventsErase);
         dispatcher.requireAuth().filter(requiredWithoutPeriod(), message())
                 .get("/gc/jvm/events/erase/all", this::jvmEventsEraseAll);
+        dispatcher.requireAuth().filter(requiredWithPeriod(), message())
+                .get("/gc/jvm/events/stats", this::jvmStats);
     }
 
     @Override
@@ -290,6 +293,7 @@ public class EventsController extends Controller {
                 Sampler concurrentSampler = new PhaseSampler(sampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
                 Accumulator tenuredAcc = new Accumulator(config.readInt(ConfigProperty.TENURED_ACCUMULATE_SECONDS),
                         e -> e.generations().equals(tenuredOnly) && e.concurrency() == EventConcurrency.SERIAL);
+                StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor();
 
                 if (sampleSeconds == 1) {
                     streamEvents(ctx, pp, i);
@@ -307,10 +311,18 @@ public class EventsController extends Controller {
                             } else {
                                 write.accept(event);
                             }
+                            if (pp.isStats()) {
+                                stats.process(event, ctx);
+                            }
                         }
                     }
                     tenuredAcc.complete(write);
                     youngSampler.complete(write);
+
+                    if (pp.isStats()) {
+                        delimit(ctx, pp);
+                        stats.complete(ctx);
+                    }
                 }
             }
         });
@@ -371,6 +383,21 @@ public class EventsController extends Controller {
         ctx.response(SUCCESS);
     }
 
+    /**
+     * GET /gc/jvm/events/stats
+     */
+    public void jvmStats(RequestContext ctx) {
+        PeriodParams pp = new PeriodParams(ctx);
+
+        checkPeriodAndExecute(pp, ctx, () -> {
+            Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
+                    Range.of(pp.getFrom(), pp.getTo()));
+            StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor();
+            i.forEachRemaining(e -> stats.process(e, ctx));
+            stats.complete(ctx);
+        });
+    }
+
     private void streamEvents(RequestContext ctx, PeriodParams pp, Iterator<GCEvent> eventIterator) {
         while (eventIterator.hasNext()) {
             GCEvent event = eventIterator.next();
@@ -386,7 +413,7 @@ public class EventsController extends Controller {
     }
 
     private void delimit(RequestContext ctx, PeriodParams pp) {
-        if (pp.delimit) {
+        if (pp.isDelimit()) {
             ctx.write(DEFAULT_CHUNK_DELIMETER);
         }
     }
@@ -634,6 +661,7 @@ public class EventsController extends Controller {
         private final DateTime to;
         private final DateTimeZone timeZone;
         private final boolean delimit;
+        private final boolean stats;
 
         public String getAnalyseId() {
             return analyseId;
@@ -659,6 +687,9 @@ public class EventsController extends Controller {
         public boolean isDelimit() {
             return delimit;
         }
+        public boolean isStats() {
+            return stats;
+        }
 
         public PeriodParams(RequestContext ctx) {
             DateTimeZone tz;
@@ -674,6 +705,7 @@ public class EventsController extends Controller {
             this.from = new DateTime(Long.parseLong(ctx.param("from")), tz);
             this.to = new DateTime(Long.parseLong(ctx.param("to")), tz);
             this.delimit = Boolean.parseBoolean(ctx.param("delimit", "false"));
+            this.stats = Boolean.parseBoolean(ctx.param("stats", "false"));
         }
     }
 }

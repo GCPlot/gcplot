@@ -105,6 +105,21 @@ public abstract class Mapper {
                     .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
                     .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
                     .ext(op(row, "ext", r -> r.getString("ext")));
+
+            Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
+            if (gcEvent.generations().size() > 1) {
+                capacityByGeneration = new HashMap<>();
+                Map<Integer, Long> before = row.getMap("gen_cap_before", Integer.class, Long.class);
+                Map<Integer, Long> after = row.getMap("gen_cap_after", Integer.class, Long.class);
+                Map<Integer, Long> total = row.getMap("gen_cap_total", Integer.class, Long.class);
+
+                for (Generation g : gcEvent.generations()) {
+                    capacityByGeneration.put(g, Capacity.of(
+                            before.get(g.type()), after.get(g.type()), total.get(g.type())));
+                }
+            }
+
+            gcEvent.capacityByGeneration(capacityByGeneration);
         } catch (Throwable t) {
             LOG.error(t.getMessage() + " | " + row.toString());
             return null;

@@ -1,6 +1,7 @@
 package com.gcplot.commons.enums;
 
-import gnu.trove.map.TIntObjectMap;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 public interface TypedEnum {
 
@@ -13,7 +14,7 @@ public interface TypedEnum {
     /**
      * Must be overlapped with concrete implementation.
      */
-    static <D extends Enum> TIntObjectMap<D> types() {
+    static <D extends Enum> Int2ObjectMap<D> types() {
         return null;
     }
 

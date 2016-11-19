@@ -1,7 +1,7 @@
 package com.gcplot.commons.enums;
 
 import com.gcplot.commons.exceptions.Exceptions;
-import gnu.trove.map.TIntObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -28,10 +28,10 @@ public class EnumSetUtils {
     public static <E extends Enum<E> & TypedEnum> EnumSet<E> decode(long code,
                                                          final Class<E> enumType) {
         try {
-            TIntObjectMap<E> types = cachedTypes.computeIfAbsent(enumType,
+            Int2ObjectMap<E> types = cachedTypes.computeIfAbsent(enumType,
                     k -> {
                         try {
-                            return (TIntObjectMap<E>) enumType.getMethod("types").invoke(null);
+                            return (Int2ObjectMap<E>) enumType.getMethod("types").invoke(null);
                         } catch (Exception e) {
                             throw Exceptions.runtime(e);
                         }
@@ -48,5 +48,5 @@ public class EnumSetUtils {
         }
     }
 
-    private static final Map<Class, TIntObjectMap> cachedTypes = new ConcurrentHashMap<>();
+    private static final Map<Class, Int2ObjectMap> cachedTypes = new ConcurrentHashMap<>();
 }

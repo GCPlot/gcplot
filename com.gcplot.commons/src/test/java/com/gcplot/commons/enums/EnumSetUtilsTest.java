@@ -1,7 +1,7 @@
 package com.gcplot.commons.enums;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,13 +24,13 @@ public class EnumSetUtilsTest {
         ONE(1), TWO(2), THREE(3);
 
         private int type;
-        private static TIntObjectMap<Enum> types = new TIntObjectHashMap<>();
+        private static Int2ObjectMap<Enum> types = new Int2ObjectOpenHashMap<>();
         @Override
         public int type() {
             return type;
         }
 
-        public static TIntObjectMap<Enum> types() {
+        public static Int2ObjectMap<Enum> types() {
             return types;
         }
 

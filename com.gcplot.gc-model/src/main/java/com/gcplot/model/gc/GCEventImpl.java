@@ -1,9 +1,10 @@
 package com.gcplot.model.gc;
 
-import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
 
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
 
 public class GCEventImpl implements GCEvent {
@@ -152,6 +153,15 @@ public class GCEventImpl implements GCEvent {
         return this;
     }
 
+    @Override
+    public Map<Generation, Capacity> capacityByGeneration() {
+        return Collections.unmodifiableMap(capacityByGeneration);
+    }
+    public GCEventImpl capacityByGeneration(Map<Generation, Capacity> capacityByGeneration) {
+        this.capacityByGeneration = capacityByGeneration;
+        return this;
+    }
+
     public GCEventImpl() {
     }
 
@@ -171,6 +181,7 @@ public class GCEventImpl implements GCEvent {
         this.pauseMu = other.pauseMu();
         this.generations = other.generations();
         this.concurrency = other.concurrency();
+        this.capacityByGeneration = other.capacityByGeneration();
         this.ext = other.ext();
     }
 
@@ -190,6 +201,7 @@ public class GCEventImpl implements GCEvent {
     protected EnumSet<Generation> generations;
     protected EventConcurrency concurrency;
     protected String ext;
+    protected Map<Generation, Capacity> capacityByGeneration;
 
     @Override
     public boolean equals(Object o) {

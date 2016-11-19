@@ -1,8 +1,8 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.commons.enums.TypedEnum;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public enum GarbageCollectorType implements TypedEnum {
 
@@ -13,7 +13,7 @@ public enum GarbageCollectorType implements TypedEnum {
     ORACLE_G1(5);
 
     private int type;
-    private static TIntObjectMap<GarbageCollectorType> types = new TIntObjectHashMap<>();
+    private static Int2ObjectMap<GarbageCollectorType> types = new Int2ObjectOpenHashMap<>();
 
     @Override
     public int type() {
@@ -24,7 +24,7 @@ public enum GarbageCollectorType implements TypedEnum {
         return types.get(type);
     }
 
-    public static TIntObjectMap<GarbageCollectorType> types() {
+    public static Int2ObjectMap<GarbageCollectorType> types() {
         return types;
     }
 
