@@ -115,7 +115,9 @@ public abstract class Mapper {
 
                 for (Generation g : gcEvent.generations()) {
                     capacityByGeneration.put(g, Capacity.of(
-                            before.get(g.type()), after.get(g.type()), total.get(g.type())));
+                            before.getOrDefault(g.type(), 0L),
+                            after.getOrDefault(g.type(), 0L),
+                            total.getOrDefault(g.type(), 0L)));
                 }
             }
 

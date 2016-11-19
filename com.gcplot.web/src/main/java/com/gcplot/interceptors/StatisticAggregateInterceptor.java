@@ -130,7 +130,7 @@ public class StatisticAggregateInterceptor implements Interceptor {
             for (Generation gg : event.generations()) {
                 if (gg != Generation.YOUNG && gg != Generation.TENURED) {
                     Capacity c = event.capacityByGeneration().get(gg);
-                    if (c != null && c != Capacity.NONE) {
+                    if (c != null && c.equals(Capacity.NONE)) {
                         generationsUsageSizes.computeIfAbsent(gg.type(), factory).next(c.usedBefore());
                         generationsTotalSizes.computeIfAbsent(gg.type(), factory).next(c.total());
                     }
