@@ -216,7 +216,8 @@ public class GCTests extends IntegrationTest {
 
         JsonObject stats = get("/gc/jvm/events/stats?analyse_id=" + EventsController.ANONYMOUS_ANALYSE_ID + "&jvm_id=" +
                 ar.jvmIds.iterator().next() + "&from=" + from + "&to=" + to, token, -1);
-        LOG.info(stats.toString());
+        // FIXME: more sophisticated test here!
+        Assert.assertFalse(stats.isEmpty());
     }
 
     private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {
