@@ -126,6 +126,9 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
 
     protected void fillEvent(String analyseId, String jvmId, String bucketId,
                              double seconds, GCEventImpl event) {
+        Map<Generation, Capacity> generationCapacityMap = new HashMap<>();
+        generationCapacityMap.put(Generation.YOUNG, Capacity.NONE);
+        generationCapacityMap.put(Generation.TENURED, Capacity.NONE);
         event.jvmId(jvmId).analyseId(analyseId).description("descr1")
                 .bucketId(bucketId)
                 .occurred(DateTime.now(DateTimeZone.UTC).minusDays(1).plusSeconds((int) seconds))
@@ -136,7 +139,7 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
                 .pauseMu(51321)
                 .phase(Phase.OTHER)
                 .generations(EnumSet.of(Generation.YOUNG, Generation.TENURED))
-                .capacityByGeneration(Collections.emptyMap())
+                .capacityByGeneration(generationCapacityMap)
                 .concurrency(EventConcurrency.SERIAL);
     }
 
