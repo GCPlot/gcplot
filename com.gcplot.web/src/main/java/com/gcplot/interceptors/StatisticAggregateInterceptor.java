@@ -95,7 +95,7 @@ public class StatisticAggregateInterceptor implements Interceptor {
 
     protected void calcGCStats(GCEvent event, Generation g) {
         if (event.concurrency() != EventConcurrency.CONCURRENT) {
-            if (event.generations().size() == 1) {
+            if (event.isSingle()) {
                 byGeneration.computeIfAbsent(g.type(), k -> new GCStats()).next(event, genPrevEvent.get(g));
                 stats.next(event, statsPreviousEvent);
 
@@ -112,9 +112,8 @@ public class StatisticAggregateInterceptor implements Interceptor {
                 fullStats.next(event, fullStatsPreviousEvent);
                 fullStatsPreviousEvent = event;
             }
-
         }
-        if (event.generations().size() == 1) {
+        if (event.isSingle()) {
             byPhase.computeIfAbsent(event.phase().type(), k -> new GCStats()).next(event.capacity(), null, event,
                     phasePrevEvent.get(event.phase()));
             phasePrevEvent.put(event.phase(), event);
@@ -123,7 +122,7 @@ public class StatisticAggregateInterceptor implements Interceptor {
 
     protected void calcMemoryFootprint(GCEvent event, Generation g) {
         Function<Integer, MinMaxAvg> factory = k -> new MinMaxAvg();
-        if (event.generations().size() == 1) {
+        if (event.isSingle()) {
             generationsUsageSizes.computeIfAbsent(g.type(), factory).next(event.capacity().usedBefore());
             generationsTotalSizes.computeIfAbsent(g.type(), factory).next(event.capacity().total());
         } else {

@@ -49,6 +49,10 @@ public interface GCEvent extends VMEvent, DatedEvent {
                 generations().contains(Generation.TENURED);
     }
 
+    default boolean isSingle() {
+        return generations().size() == 1;
+    }
+
     default boolean isYoung() {
         return generations().size() == 1 && generations().contains(Generation.YOUNG);
     }

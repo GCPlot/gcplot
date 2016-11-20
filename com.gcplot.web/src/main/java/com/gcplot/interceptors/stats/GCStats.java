@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.gc.Capacity;
 import com.gcplot.model.gc.EventConcurrency;
 import com.gcplot.model.gc.GCEvent;
-import com.gcplot.model.gc.Generation;
 
 /**
  *  - GC Time and Count
@@ -75,7 +74,11 @@ public class GCStats {
         if (concurrency == null || event.concurrency() == concurrency) {
             totalGCTime += event.pauseMu();
             totalGCCount++;
-            freedMemory += Math.abs(capacity.usedAfter() - capacity.usedBefore());
+            long fm = Math.abs(capacity.usedAfter() - capacity.usedBefore());
+            if (fm == 0) {
+                fm = Math.abs(event.totalCapacity().usedAfter() - event.totalCapacity().usedBefore());
+            }
+            freedMemory += fm;
             pause.next(event.pauseMu());
             if (prevEvent != null) {
                 interval.next(Math.abs(event.occurred().getMillis() - prevEvent.occurred().getMillis()));
