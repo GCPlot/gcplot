@@ -107,7 +107,8 @@ public abstract class Mapper {
                     .ext(op(row, "ext", r -> r.getString("ext")));
 
             Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
-            if (gcEvent.generations().size() > 1) {
+            if (gcEvent.generations().size() > 1 && row.getColumnDefinitions().contains("gen_cap_before") &&
+                    row.getColumnDefinitions().contains("gen_cap_after") && row.getColumnDefinitions().contains("gen_cap_total")) {
                 capacityByGeneration = new HashMap<>();
                 Map<Integer, Long> before = row.getMap("gen_cap_before", Integer.class, Long.class);
                 Map<Integer, Long> after = row.getMap("gen_cap_after", Integer.class, Long.class);
