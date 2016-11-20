@@ -54,12 +54,20 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
 
     @JsonProperty("allocation_rate")
     public long allocationRate() {
-        return allocationRateSum / allocationRateCount;
+        if (allocationRateSum > 0 && allocationRateCount > 0) {
+            return allocationRateSum / allocationRateCount;
+        } else {
+            return 0;
+        }
     }
 
     @JsonProperty("promotion_rate")
     public long promotionRate() {
-        return promotionRateSum / promotionRateCount;
+        if (promotionRateSum > 0 && promotionRateCount > 0) {
+            return promotionRateSum / promotionRateCount;
+        } else {
+            return 0;
+        }
     }
 
     @Override
