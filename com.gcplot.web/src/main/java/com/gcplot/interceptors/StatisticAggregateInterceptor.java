@@ -48,6 +48,10 @@ public class StatisticAggregateInterceptor implements Interceptor {
     private GCStats stats = new GCStats();
     @JsonProperty("full_stats")
     private GCStats fullStats = new GCStats();
+    @JsonProperty("heap_total")
+    private MinMaxAvg heapTotal = new MinMaxAvg();
+    @JsonProperty("heap_usage")
+    private MinMaxAvg heapUsage = new MinMaxAvg();
     private long allocationRateSum;
     private long allocationRateCount;
     private long promotionRateSum;
@@ -85,6 +89,11 @@ public class StatisticAggregateInterceptor implements Interceptor {
                 promotionRateCount++;
             }
             ratePreviousEvent = event;
+        }
+
+        if (!event.totalCapacity().equals(Capacity.NONE)) {
+            heapTotal.next(event.totalCapacity().total());
+            heapUsage.next(event.totalCapacity().usedBefore());
         }
     }
 
