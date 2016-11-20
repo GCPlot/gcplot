@@ -7,6 +7,7 @@ import com.gcplot.Identifier;
 import com.gcplot.commons.*;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.controllers.Controller;
+import com.gcplot.interceptors.RatesInterceptor;
 import com.gcplot.interceptors.StatisticAggregateInterceptor;
 import com.gcplot.interceptors.filters.Accumulator;
 import com.gcplot.interceptors.filters.PhaseSampler;
@@ -288,12 +289,14 @@ public class EventsController extends Controller {
                 ctx.setChunked(true);
                 Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(from, to));
                 final EnumSet<Generation> tenuredOnly = EnumSet.of(Generation.TENURED);
+                final Runnable delimit = () -> delimit(ctx, pp);
 
                 Sampler youngSampler = new Sampler(sampleSeconds, EnumSet.of(Generation.YOUNG));
                 Sampler concurrentSampler = new PhaseSampler(sampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
                 Accumulator tenuredAcc = new Accumulator(config.readInt(ConfigProperty.TENURED_ACCUMULATE_SECONDS),
                         e -> e.generations().equals(tenuredOnly) && e.concurrency() == EventConcurrency.SERIAL);
                 StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor();
+                RatesInterceptor ri = new RatesInterceptor(sampleSeconds);
 
                 if (sampleSeconds == 1) {
                     streamEvents(ctx, pp, i);
@@ -312,7 +315,8 @@ public class EventsController extends Controller {
                                 write.accept(event);
                             }
                             if (pp.isStats()) {
-                                stats.process(event, ctx);
+                                stats.process(event, delimit, ctx);
+                                ri.process(event, delimit, ctx);
                             }
                         }
                     }
@@ -320,8 +324,8 @@ public class EventsController extends Controller {
                     youngSampler.complete(write);
 
                     if (pp.isStats()) {
-                        delimit(ctx, pp);
-                        stats.complete(ctx);
+                        stats.complete(delimit, ctx);
+                        ri.complete(delimit, ctx);
                     }
                 }
             }
@@ -393,8 +397,8 @@ public class EventsController extends Controller {
             Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
             StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor();
-            i.forEachRemaining(e -> stats.process(e, ctx));
-            stats.complete(ctx);
+            i.forEachRemaining(e -> stats.process(e, () -> delimit(ctx, pp), ctx));
+            stats.complete(() -> delimit(ctx, pp), ctx);
         });
     }
 

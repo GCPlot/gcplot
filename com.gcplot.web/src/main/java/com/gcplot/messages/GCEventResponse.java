@@ -12,6 +12,7 @@ import com.google.common.base.Strings;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         9/12/16
  */
+@NotThreadSafe
 public class GCEventResponse {
     @JsonProperty("p")
     public long pauseMu;
@@ -72,35 +74,45 @@ public class GCEventResponse {
                 CapacityResponse.from(event.totalCapacity()), event.ext());
     }
 
+    private static ThreadLocal<StringBuilder> stringBuilder = new ThreadLocal<StringBuilder>() {
+        @Override
+        protected StringBuilder initialValue() {
+            return new StringBuilder(128);
+        }
+    };
     public static String toJson(GCEvent event) {
-        StringBuilder sb = new StringBuilder(128);
-        int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
-        sb.append("{").append("\"p\":").append(event.pauseMu()).append(",")
-                .append("\"d\":").append(event.occurred().getMillis()).append(",")
-                .append("\"g\":[");
-        for (int i = 0; i < gens.length; i++) {
-            sb.append(gens[i]);
-            if (i < gens.length - 1) {
-                sb.append(",");
+        StringBuilder sb = stringBuilder.get();
+        try {
+            int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
+            sb.append("{").append("\"p\":").append(event.pauseMu()).append(",")
+                    .append("\"d\":").append(event.occurred().getMillis()).append(",")
+                    .append("\"g\":[");
+            for (int i = 0; i < gens.length; i++) {
+                sb.append(gens[i]);
+                if (i < gens.length - 1) {
+                    sb.append(",");
+                }
             }
-         }
-        sb.append("]");
-        if (event.phase() != Phase.OTHER) {
-            sb.append(",").append("\"ph\":").append(event.phase().type());
+            sb.append("]");
+            if (event.phase() != Phase.OTHER) {
+                sb.append(",").append("\"ph\":").append(event.phase().type());
+            }
+            if (event.concurrency() != EventConcurrency.SERIAL) {
+                sb.append(",").append("\"c\":").append(event.concurrency().type());
+            }
+            if (event.capacity() != null && !event.capacity().equals(Capacity.NONE)) {
+                sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));
+            }
+            if (event.totalCapacity() != null && !event.totalCapacity().equals(Capacity.NONE)) {
+                sb.append(",\"tc\":").append(CapacityResponse.toJson(event.totalCapacity()));
+            }
+            if (!Strings.isNullOrEmpty(event.ext())) {
+                sb.append(",\"e\":").append("\"").append(event.ext()).append("\"");
+            }
+            return sb.append("}").toString();
+        } finally {
+            sb.setLength(0);
         }
-        if (event.concurrency() != EventConcurrency.SERIAL) {
-            sb.append(",").append("\"c\":").append(event.concurrency().type());
-        }
-        if (event.capacity() != null && !event.capacity().equals(Capacity.NONE)) {
-            sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));
-        }
-        if (event.totalCapacity() != null && !event.totalCapacity().equals(Capacity.NONE)) {
-            sb.append(",\"tc\":").append(CapacityResponse.toJson(event.totalCapacity()));
-        }
-        if (!Strings.isNullOrEmpty(event.ext())) {
-            sb.append(",\"e\":").append("\"").append(event.ext()).append("\"");
-        }
-        return sb.append("}").toString();
     }
 
     public static List<GCEventResponse> from(List<GCEvent> events, DateTimeZone tz) {

@@ -11,8 +11,8 @@ import java.util.function.Consumer;
  */
 public interface Interceptor<T> {
 
-    void process(GCEvent event, RequestContext ctx);
+    void process(GCEvent event, Runnable delimit, RequestContext ctx);
 
-    void complete(RequestContext ctx);
+    void complete(Runnable delimit, RequestContext ctx);
 
 }

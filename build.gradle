@@ -20,6 +20,7 @@ allprojects {
         compile "ch.qos.logback:logback-classic:$logbackVersion"
         compile "com.google.guava:guava:$guavaVersion"
         compile "joda-time:joda-time:$jodaTimeVersion"
+        compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
 
         testCompile "junit:junit:$junitVersion"
         testCompile "org.easymock:easymock:$easymockVersion"

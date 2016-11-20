@@ -30,8 +30,7 @@ import java.util.function.Function;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         11/17/16
  */
-public class StatisticAggregateInterceptor implements Interceptor {
-    private GCEvent ratePreviousEvent;
+public class StatisticAggregateInterceptor extends BaseInterceptor implements Interceptor {
     private GCEvent statsPreviousEvent;
     private GCEvent fullStatsPreviousEvent;
     private Map<Generation, GCEvent> genPrevEvent = new HashMap<>();
@@ -52,10 +51,6 @@ public class StatisticAggregateInterceptor implements Interceptor {
     private MinMaxAvg heapTotal = new MinMaxAvg();
     @JsonProperty("heap_usage")
     private MinMaxAvg heapUsage = new MinMaxAvg();
-    private long allocationRateSum;
-    private long allocationRateCount;
-    private long promotionRateSum;
-    private long promotionRateCount;
 
     @JsonProperty("allocation_rate")
     public long allocationRate() {
@@ -68,7 +63,7 @@ public class StatisticAggregateInterceptor implements Interceptor {
     }
 
     @Override
-    public void process(GCEvent event, RequestContext ctx) {
+    public void process(GCEvent event, Runnable delimit, RequestContext ctx) {
         Generation g = event.generations().iterator().next();
         if (!event.capacity().equals(Capacity.NONE)) {
             calcMemoryFootprint(event, g);
@@ -76,19 +71,7 @@ public class StatisticAggregateInterceptor implements Interceptor {
         calcGCStats(event, g);
 
         if (event.isYoung()) {
-            if (ratePreviousEvent != null) {
-                long period = Math.abs(ratePreviousEvent.occurred().getMillis() - event.occurred().getMillis());
-                long allocated = Math.abs(ratePreviousEvent.capacity().usedBefore() - event.capacity().usedAfter());
-                allocationRateSum += 1000 * allocated / period;
-                allocationRateCount++;
-
-                long youngDecreased = Math.abs(event.capacity().usedBefore() - event.capacity().usedAfter());
-                long totalDecreased = Math.abs(event.totalCapacity().usedBefore() - event.totalCapacity().usedAfter());
-                long promoted = Math.abs(totalDecreased - youngDecreased);
-                promotionRateSum += 1000 * promoted / period;
-                promotionRateCount++;
-            }
-            ratePreviousEvent = event;
+            countRates(event);
         }
 
         if (!event.totalCapacity().equals(Capacity.NONE)) {
@@ -98,8 +81,9 @@ public class StatisticAggregateInterceptor implements Interceptor {
     }
 
     @Override
-    public void complete(RequestContext ctx) {
+    public void complete(Runnable delimit, RequestContext ctx) {
         ctx.write(JsonSerializer.serialize(this));
+        delimit.run();
     }
 
     protected void calcGCStats(GCEvent event, Generation g) {
