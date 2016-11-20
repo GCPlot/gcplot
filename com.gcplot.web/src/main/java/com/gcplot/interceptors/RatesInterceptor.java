@@ -31,21 +31,30 @@ public class RatesInterceptor extends BaseInterceptor implements Interceptor {
         if (event.isYoung()) {
             try {
                 if (ratePreviousEvent != null) {
-                    if (edgeMinus.isBefore(event.occurred())) {
-                        countRates(event);
+                    if (sampleSeconds > 1) {
+                        if (edgeMinus.isBefore(event.occurred())) {
+                            countRates(event);
+                        } else {
+                            flush(event, delimit, ctx);
+                        }
                     } else {
-                        write(event, delimit, ctx);
-                        allocationRateSum = 0;
-                        allocationRateCount = 0;
-                        promotionRateSum = 0;
-                        promotionRateCount = 0;
-                        edge(event);
+                        countRates(event);
+                        flush(event, delimit, ctx);
                     }
                 }
             } finally {
                 ratePreviousEvent = event;
             }
         }
+    }
+
+    protected void flush(GCEvent event, Runnable delimit, RequestContext ctx) {
+        write(event, delimit, ctx);
+        allocationRateSum = 0;
+        allocationRateCount = 0;
+        promotionRateSum = 0;
+        promotionRateCount = 0;
+        edge(event);
     }
 
     private void write(GCEvent event, Runnable delimit, RequestContext ctx) {
