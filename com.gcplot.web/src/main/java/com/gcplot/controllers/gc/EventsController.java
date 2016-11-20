@@ -298,13 +298,11 @@ public class EventsController extends Controller {
                 StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor();
                 RatesInterceptor ri = new RatesInterceptor(sampleSeconds);
 
-                if (sampleSeconds == 1) {
-                    streamEvents(ctx, pp, i);
-                } else {
-                    final Consumer<GCEvent> write = e -> write(ctx, pp, e);
-                    while (i.hasNext()) {
-                        GCEvent event = i.next();
-                        if (event != null) {
+                final Consumer<GCEvent> write = e -> write(ctx, pp, e);
+                while (i.hasNext()) {
+                    GCEvent event = i.next();
+                    if (event != null) {
+                        if (sampleSeconds != 1) {
                             if (youngSampler.isApplicable(event)) {
                                 youngSampler.process(event, write);
                             } else if (tenuredAcc.isApplicable(event)) {
@@ -314,19 +312,23 @@ public class EventsController extends Controller {
                             } else {
                                 write.accept(event);
                             }
-                            if (pp.isStats()) {
-                                stats.process(event, delimit, ctx);
-                                ri.process(event, delimit, ctx);
-                            }
+                        } else {
+                            write.accept(event);
+                        }
+                        if (pp.isStats()) {
+                            stats.process(event, delimit, ctx);
+                            ri.process(event, delimit, ctx);
                         }
                     }
+                }
+                if (sampleSeconds != 1) {
                     tenuredAcc.complete(write);
                     youngSampler.complete(write);
+                }
 
-                    if (pp.isStats()) {
-                        stats.complete(delimit, ctx);
-                        ri.complete(delimit, ctx);
-                    }
+                if (pp.isStats()) {
+                    stats.complete(delimit, ctx);
+                    ri.complete(delimit, ctx);
                 }
             }
         });
