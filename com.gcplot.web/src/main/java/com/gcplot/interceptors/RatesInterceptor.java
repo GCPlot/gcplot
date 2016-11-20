@@ -15,10 +15,6 @@ import java.util.function.Consumer;
  */
 public class RatesInterceptor extends BaseInterceptor implements Interceptor {
     private final int sampleSeconds;
-    private long allocationRateSum;
-    private long allocationRateCount;
-    private long promotionRateSum;
-    private long promotionRateCount;
     private DateTime edge = null;
     private DateTime edgeMinus = null;
     private StringBuilder sb = new StringBuilder(128);
@@ -54,12 +50,15 @@ public class RatesInterceptor extends BaseInterceptor implements Interceptor {
 
     private void write(GCEvent event, Runnable delimit, RequestContext ctx) {
         try {
-            long allRate = allocationRateSum / allocationRateCount;
-            long prRate = promotionRateSum / promotionRateCount;
-            sb.append("{\"alr\":").append(allRate).append(",\"prr\":").append(prRate)
-                    .append(",\"t\":").append(event.occurred().getMillis()).append("}");
-            ctx.write(sb.toString());
-            delimit.run();
+            if (allocationRateCount > 0 && allocationRateSum > 0 && promotionRateSum > 0 &&
+                    promotionRateCount > 0) {
+                long allRate = allocationRateSum / allocationRateCount;
+                long prRate = promotionRateSum / promotionRateCount;
+                sb.append("{\"alr\":").append(allRate).append(",\"prr\":").append(prRate)
+                        .append(",\"t\":").append(event.occurred().getMillis()).append("}");
+                ctx.write(sb.toString());
+                delimit.run();
+            }
         } finally {
             sb.setLength(0);
         }
