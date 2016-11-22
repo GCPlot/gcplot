@@ -1,7 +1,10 @@
 package com.gcplot.log_processor.parser.adapter;
 
 import com.google.common.base.Preconditions;
+import com.tagtraum.perf.gcviewer.imp.GcLogType;
 import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
+import com.tagtraum.perf.gcviewer.model.G1GcEvent;
+import com.tagtraum.perf.gcviewer.model.GCEvent;
 import com.tagtraum.perf.gcviewer.model.GCModel;
 
 import java.util.ArrayList;
@@ -15,6 +18,8 @@ import java.util.function.Consumer;
 public class StreamGCModel extends GCModel {
     private static final int BATCH_SIZE_MIN_THRESHOLD = 1 << 5;
     private static final int DEFAULT_BATCH_SIZE = 1 << 9;
+    private boolean isG1 = false;
+    private com.tagtraum.perf.gcviewer.model.GCEvent lastYoungEvent;
 
     private int batchSize = DEFAULT_BATCH_SIZE;
     public int getBatchSize() {
@@ -32,13 +37,28 @@ public class StreamGCModel extends GCModel {
         this.eventsConsumer = eventsConsumer;
     }
 
+    public boolean isG1() {
+        return isG1;
+    }
+    public void setG1(boolean g1) {
+        isG1 = g1;
+    }
+
     @Override
-    public void add(AbstractGCEvent<?> abstractEvent) {
+    public void add(AbstractGCEvent<?> e) {
+        if (e != null && isG1() && e.isGCEvent()) {
+            GCEvent g1e = (GCEvent)e;
+            if (g1e.getYoung() != null && g1e.getGeneration() == AbstractGCEvent.Generation.YOUNG) {
+                lastYoungEvent = g1e;
+            } else {
+                g1e.setLastYoung(lastYoungEvent);
+            }
+        }
         if (allEvents.size() % batchSize == 0 && allEvents.size() > 0) {
             processNextBatch();
         }
-        if (abstractEvent != null) {
-            super.add(abstractEvent);
+        if (e != null) {
+            super.add(e);
         }
     }
 

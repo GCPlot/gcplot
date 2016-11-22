@@ -158,6 +158,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             generations = EnumSet.of(Generation.OTHER);
         } else {
             com.tagtraum.perf.gcviewer.model.GCEvent gcEvent = (com.tagtraum.perf.gcviewer.model.GCEvent) event;
+            totalCapacity = of(gcEvent);
             if (event.getGeneration() == AbstractGCEvent.Generation.YOUNG) {
                 if (gcEvent.getYoung() != null) {
                     capacity = of(gcEvent.getYoung());
@@ -167,6 +168,19 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                 generations.add(Generation.TENURED);
                 if (gcEvent.getTenured() != null) {
                     capacity = of(gcEvent.getTenured());
+                }
+                if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
+                    if (gcEvent.getLastYoung() != null && capacity.equals(Capacity.NONE)
+                            && !totalCapacity.equals(Capacity.NONE)) {
+                        Capacity yc = of(gcEvent.getLastYoung().getYoung());
+                        Capacity tyc = of(gcEvent.getLastYoung());
+
+                        // the tenured used after last Young GC is the used-start for Tenured GC
+                        long usedBefore = tyc.usedAfter() - yc.usedAfter();
+                        long usedAfter = usedBefore - (totalCapacity.usedBefore() - totalCapacity.usedAfter());
+                        long total = totalCapacity.total() - yc.total();
+                        capacity = Capacity.of(usedBefore, usedAfter, total);
+                    }
                 }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.ALL) {
                 if (capacityByGeneration.equals(Collections.emptyMap())) {
@@ -195,7 +209,6 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             } else if (event.getGeneration() == AbstractGCEvent.Generation.OTHER) {
                 ctx.logger().warn("Strangely, an event is considered OTHER: {}", event);
             }
-            totalCapacity = of(gcEvent);
         }
         Phase phase = detectPhase(ctx, event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,

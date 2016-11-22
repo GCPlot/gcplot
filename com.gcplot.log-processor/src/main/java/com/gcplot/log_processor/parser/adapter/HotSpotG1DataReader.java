@@ -31,6 +31,7 @@ public class HotSpotG1DataReader extends DataReaderSun1_6_0G1 implements StreamD
     @Override
     protected GCModel createGCModel() {
         StreamGCModel model = new StreamGCModel();
+        model.setG1(true);
         model.setEventsConsumer(eventsConsumer);
         if (batchSize > 0) {
             model.setBatchSize(batchSize);
