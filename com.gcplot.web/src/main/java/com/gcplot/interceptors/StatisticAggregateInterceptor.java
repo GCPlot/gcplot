@@ -31,10 +31,6 @@ import java.util.function.Function;
  *         11/17/16
  */
 public class StatisticAggregateInterceptor extends BaseInterceptor implements Interceptor {
-    private GCEvent statsPreviousEvent;
-    private GCEvent fullStatsPreviousEvent;
-    private Map<Generation, GCEvent> genPrevEvent = new HashMap<>();
-    private Map<Phase, GCEvent> phasePrevEvent = new HashMap<>();
     @JsonProperty("generation_total")
     private Map<Integer, MinMaxAvg> generationsTotalSizes = new HashMap<>();
     @JsonProperty("generation_usage")
@@ -44,7 +40,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     @JsonProperty("phase_stats")
     private Map<Integer, GCStats> byPhase = new HashMap<>();
     @JsonProperty("stats")
-    private GCStats stats = new GCStats();
+    private GCStats stats = new GCStats(true);
     @JsonProperty("full_stats")
     private GCStats fullStats = new GCStats();
     @JsonProperty("heap_total")
@@ -97,27 +93,20 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     protected void calcGCStats(GCEvent event, Generation g) {
         if (event.concurrency() != EventConcurrency.CONCURRENT) {
             if (event.isSingle()) {
-                byGeneration.computeIfAbsent(g.type(), k -> new GCStats()).next(event, genPrevEvent.get(g));
-                stats.next(event, statsPreviousEvent);
-
-                statsPreviousEvent = event;
-                genPrevEvent.put(g, event);
+                byGeneration.computeIfAbsent(g.type(), k -> new GCStats(true)).next(event);
+                stats.next(event);
             } else {
                 for (Generation gg : event.generations()) {
                     if (gg != Generation.YOUNG && gg != Generation.TENURED) {
                         byGeneration.computeIfAbsent(gg.type(), k -> new GCStats()).next(
-                                event.capacityByGeneration().get(gg), EventConcurrency.SERIAL, event, genPrevEvent.get(gg));
-                        genPrevEvent.put(gg, event);
+                                event.capacityByGeneration().get(gg), EventConcurrency.SERIAL, event);
                     }
                 }
-                fullStats.next(event, fullStatsPreviousEvent);
-                fullStatsPreviousEvent = event;
+                fullStats.next(event);
             }
         }
         if (event.isSingle()) {
-            byPhase.computeIfAbsent(event.phase().type(), k -> new GCStats()).next(event.capacity(), null, event,
-                    phasePrevEvent.get(event.phase()));
-            phasePrevEvent.put(event.phase(), event);
+            byPhase.computeIfAbsent(event.phase().type(), k -> new GCStats()).next(event.capacity(), null, event);
         }
     }
 

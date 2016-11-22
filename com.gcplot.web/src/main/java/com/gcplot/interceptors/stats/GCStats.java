@@ -15,11 +15,21 @@ import com.gcplot.model.gc.GCEvent;
  *         11/19/16
  */
 public class GCStats {
+    private final boolean intervalNonEmptyCapacity;
     private long totalGCTime;
     private long totalGCCount;
     private long freedMemory;
     private MinMaxAvg pause = new MinMaxAvg();
     private DMinMaxAvg interval = new DMinMaxAvg();
+    private GCEvent prevIntervalEvent;
+
+    public GCStats() {
+        this(false);
+    }
+
+    public GCStats(boolean intervalNonEmptyCapacity) {
+        this.intervalNonEmptyCapacity = intervalNonEmptyCapacity;
+    }
 
     @JsonProperty("total_time")
     public long getTotalGCTime() {
@@ -66,11 +76,11 @@ public class GCStats {
         return interval.getAvg();
     }
 
-    public void next(GCEvent event, GCEvent prevEvent) {
-        this.next(event.capacity(), EventConcurrency.SERIAL, event, prevEvent);
+    public void next(GCEvent event) {
+        this.next(event.capacity(), EventConcurrency.SERIAL, event);
     }
 
-    public void next(Capacity capacity, EventConcurrency concurrency, GCEvent event, GCEvent prevEvent) {
+    public void next(Capacity capacity, EventConcurrency concurrency, GCEvent event) {
         if (concurrency == null || event.concurrency() == concurrency) {
             totalGCTime += event.pauseMu();
             totalGCCount++;
@@ -80,8 +90,11 @@ public class GCStats {
             }
             freedMemory += fm;
             pause.next(event.pauseMu());
-            if (prevEvent != null) {
-                interval.next(Math.abs(event.occurred().getMillis() - prevEvent.occurred().getMillis()));
+            if (!intervalNonEmptyCapacity || !event.totalCapacity().equals(Capacity.NONE)) {
+                if (prevIntervalEvent != null) {
+                    interval.next(Math.abs(event.occurred().getMillis() - prevIntervalEvent.occurred().getMillis()));
+                }
+                prevIntervalEvent = event;
             }
         }
     }
