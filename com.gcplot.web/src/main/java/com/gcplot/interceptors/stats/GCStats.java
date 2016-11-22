@@ -91,7 +91,7 @@ public class GCStats {
             freedMemory += fm;
             pause.next(event.pauseMu());
             if (!isRestrictedInterval || !event.totalCapacity().equals(Capacity.NONE)) {
-                if (prevIntervalEvent != null && 
+                if (prevIntervalEvent != null &&
                         (!isRestrictedInterval || prevIntervalEvent.phase().equals(event.phase()))) {
                     interval.next(Math.abs(event.occurred().getMillis() - prevIntervalEvent.occurred().getMillis()));
                 }
