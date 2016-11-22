@@ -64,7 +64,7 @@ public class RatesInterceptor extends BaseInterceptor implements Interceptor {
                 long allRate = allocationRateSum / allocationRateCount;
                 long prRate = promotionRateSum / promotionRateCount;
                 sb.append("{\"alr\":").append(allRate).append(",\"prr\":").append(prRate)
-                        .append(",\"t\":").append(event.occurred().getMillis()).append("}");
+                        .append(",\"d\":").append(event.occurred().getMillis()).append("}");
                 ctx.write(sb.toString());
                 delimit.run();
             }
