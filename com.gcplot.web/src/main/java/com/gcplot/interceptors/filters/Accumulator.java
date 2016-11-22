@@ -3,6 +3,7 @@ package com.gcplot.interceptors.filters;
 import com.gcplot.model.gc.Capacity;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GCEventImpl;
+import com.gcplot.model.gc.Phase;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
@@ -44,10 +45,12 @@ public class Accumulator implements Filter {
             long pauseSum = 0;
             for (GCEvent e : tenured) {
                 pauseSum += e.pauseMu();
-                if (!e.capacity().equals(capacity)) {
+                if (capacity.equals(Capacity.NONE) && !e.capacity().equals(Capacity.NONE)) {
                     capacity = e.capacity();
+                    totalCapacity = e.totalCapacity();
                 }
-                if (!e.totalCapacity().equals(totalCapacity)) {
+                // still might be NONE
+                if (totalCapacity.equals(Capacity.NONE) && !e.capacity().equals(Capacity.NONE)) {
                     totalCapacity = e.totalCapacity();
                 }
             }
@@ -56,6 +59,7 @@ public class Accumulator implements Filter {
                 e.capacity(capacity);
                 e.totalCapacity(totalCapacity);
                 e.pauseMu(pauseSum);
+                e.phase(Phase.OTHER);
 
                 write.accept(e);
                 tenured.clear();
