@@ -15,7 +15,7 @@ import com.gcplot.model.gc.GCEvent;
  *         11/19/16
  */
 public class GCStats {
-    private final boolean intervalNonEmptyCapacity;
+    private final boolean isRestrictedInterval;
     private long totalGCTime;
     private long totalGCCount;
     private long freedMemory;
@@ -27,8 +27,8 @@ public class GCStats {
         this(false);
     }
 
-    public GCStats(boolean intervalNonEmptyCapacity) {
-        this.intervalNonEmptyCapacity = intervalNonEmptyCapacity;
+    public GCStats(boolean isRestrictedInterval) {
+        this.isRestrictedInterval = isRestrictedInterval;
     }
 
     @JsonProperty("total_time")
@@ -90,8 +90,9 @@ public class GCStats {
             }
             freedMemory += fm;
             pause.next(event.pauseMu());
-            if (!intervalNonEmptyCapacity || !event.totalCapacity().equals(Capacity.NONE)) {
-                if (prevIntervalEvent != null) {
+            if (!isRestrictedInterval || !event.totalCapacity().equals(Capacity.NONE)) {
+                if (prevIntervalEvent != null && 
+                        (!isRestrictedInterval || prevIntervalEvent.phase().equals(event.phase()))) {
                     interval.next(Math.abs(event.occurred().getMillis() - prevIntervalEvent.occurred().getMillis()));
                 }
                 prevIntervalEvent = event;
