@@ -31,6 +31,8 @@ import java.util.function.Function;
  *         11/17/16
  */
 public class StatisticAggregateInterceptor extends BaseInterceptor implements Interceptor {
+    private final boolean isG1;
+    private GCEvent lastYoungEvent;
     @JsonProperty("generation_total")
     private Map<Integer, MinMaxAvg> generationsTotalSizes = new HashMap<>();
     @JsonProperty("generation_usage")
@@ -47,6 +49,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     private MinMaxAvg heapTotal = new MinMaxAvg();
     @JsonProperty("heap_usage")
     private MinMaxAvg heapUsage = new MinMaxAvg();
+
+    public StatisticAggregateInterceptor(boolean isG1) {
+        this.isG1 = isG1;
+    }
 
     @JsonProperty("allocation_rate")
     public long allocationRate() {
@@ -69,7 +75,21 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     @Override
     public void process(GCEvent event, Runnable delimit, RequestContext ctx) {
         Generation g = event.generations().iterator().next();
+        boolean isYoung = event.isYoung();
+        if (!isG1 && isYoung && lastYoungEvent != null) {
+            long tenuredPrev = event.totalCapacity().usedAfter() - event.capacity().usedAfter();
+            long tenuredAfter = lastYoungEvent.totalCapacity().usedAfter() - lastYoungEvent.capacity().usedAfter();
+            long afterPromoted = Math.abs((lastYoungEvent.totalCapacity().usedBefore() - lastYoungEvent.totalCapacity().usedAfter())
+                    - (lastYoungEvent.capacity().usedBefore() - lastYoungEvent.capacity().usedAfter()));
+            if (tenuredAfter - afterPromoted < tenuredPrev) {
+                long freedTenured = tenuredPrev - (tenuredAfter - afterPromoted);
+                GCStats gcs = byGeneration.computeIfAbsent(Generation.TENURED.type(), k -> new GCStats(true));
+                gcs.nextFreedMemory(null, null, freedTenured);
+                stats.nextFreedMemory(null, null, freedTenured);
+            }
+        }
         if (!event.capacity().equals(Capacity.NONE)) {
+            // just min/max/avg usage and total sizes of generations
             calcMemoryFootprint(event, g);
         }
         calcGCStats(event, g);
@@ -82,6 +102,9 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
             heapTotal.next(event.totalCapacity().total());
             heapUsage.next(event.totalCapacity().usedBefore());
         }
+        if (isYoung) {
+            lastYoungEvent = event;
+        }
     }
 
     @Override
@@ -90,23 +113,32 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         delimit.run();
     }
 
-    protected void calcGCStats(GCEvent event, Generation g) {
+    private void calcGCStats(GCEvent event, Generation g) {
         if (event.concurrency() != EventConcurrency.CONCURRENT) {
             if (event.isSingle()) {
-                byGeneration.computeIfAbsent(g.type(), k -> new GCStats(true)).next(event);
-                stats.next(event);
+                GCStats gcs = byGeneration.computeIfAbsent(g.type(), k -> new GCStats(true));
+                if (!event.isTenured() || isG1) {
+                    gcs.nextFreedMemory(event, 0);
+                    stats.nextFreedMemory(event, 0);
+                }
+                gcs.nextInterval(event).nextPause(event).incrementTotal();
+                stats.nextPause(event).incrementTotal();
             } else {
                 for (Generation gg : event.generations()) {
-                    if (gg != Generation.YOUNG && gg != Generation.TENURED) {
-                        byGeneration.computeIfAbsent(gg.type(), k -> new GCStats()).next(
-                                event.capacityByGeneration().get(gg), EventConcurrency.SERIAL, event);
+                    GCStats gcStats = byGeneration.computeIfAbsent(gg.type(), k -> new GCStats(true));
+                    gcStats.incrementTotal();
+                    if (gg != Generation.TENURED || isG1) {
+                        Capacity capacity = event.capacityByGeneration().get(gg);
+                        if (capacity != null && !capacity.equals(Capacity.NONE)) {
+                            gcStats.nextFreedMemory(capacity, event, 0);
+                        }
                     }
                 }
-                fullStats.next(event);
+                fullStats.nextPause(event).incrementTotal();
             }
-        }
-        if (event.isSingle()) {
-            byPhase.computeIfAbsent(event.phase().type(), k -> new GCStats()).next(event.capacity(), null, event);
+        } else if (event.isSingle()) {
+            GCStats gcs = byPhase.computeIfAbsent(event.phase().type(), k -> new GCStats());
+            gcs.nextInterval(event).nextPause(event).incrementTotal();
         }
     }
 

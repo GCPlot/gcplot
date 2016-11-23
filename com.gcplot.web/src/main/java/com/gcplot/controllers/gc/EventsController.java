@@ -295,7 +295,7 @@ public class EventsController extends Controller {
                 Sampler concurrentSampler = new PhaseSampler(sampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
                 Accumulator tenuredAcc = new Accumulator(config.readInt(ConfigProperty.TENURED_ACCUMULATE_SECONDS),
                         e -> e.generations().equals(tenuredOnly) && e.concurrency() == EventConcurrency.SERIAL);
-                StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor();
+                StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(analyse.jvmGCTypes().get(pp.jvmId) == GarbageCollectorType.ORACLE_G1);
                 RatesInterceptor ri = new RatesInterceptor(sampleSeconds);
 
                 final Consumer<GCEvent> write = e -> write(ctx, pp, e);
@@ -394,11 +394,13 @@ public class EventsController extends Controller {
      */
     public void jvmStats(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
+        Optional<GCAnalyse> oa = analyseRepository.analyse(account(ctx).id(), pp.getAnalyseId());
 
         checkPeriodAndExecute(pp, ctx, () -> {
             Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
-            StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor();
+            StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(
+                    oa.get().jvmGCTypes().get(pp.jvmId) == GarbageCollectorType.ORACLE_G1);
             i.forEachRemaining(e -> stats.process(e, () -> delimit(ctx, pp), ctx));
             stats.complete(() -> delimit(ctx, pp), ctx);
         });

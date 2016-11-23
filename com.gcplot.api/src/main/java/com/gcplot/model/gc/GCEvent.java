@@ -57,6 +57,10 @@ public interface GCEvent extends VMEvent, DatedEvent {
         return generations().size() == 1 && generations().contains(Generation.YOUNG);
     }
 
+    default boolean isTenured() {
+        return generations().size() == 1 && generations().contains(Generation.TENURED);
+    }
+
     default boolean isMetaspace() {
         return generations().size() == 1 && generations().contains(Generation.METASPACE);
     }

@@ -16,8 +16,9 @@ import com.gcplot.model.gc.GCEvent;
  */
 public class GCStats {
     private final boolean isRestrictedInterval;
-    private long totalGCTime;
-    private long totalGCCount;
+    private long totalGCSum;
+    private long totalGCCount; // for totalGCSum avg calc only
+    private long totalGCAmount;
     private long freedMemory;
     private MinMaxAvg pause = new MinMaxAvg();
     private DMinMaxAvg interval = new DMinMaxAvg();
@@ -31,14 +32,19 @@ public class GCStats {
         this.isRestrictedInterval = isRestrictedInterval;
     }
 
-    @JsonProperty("total_time")
+    @JsonProperty("pause_time")
     public long getTotalGCTime() {
-        return totalGCTime;
+        return totalGCSum;
     }
 
-    @JsonProperty("total_count")
+    @JsonProperty("pause_count")
     public long getTotalGCCount() {
         return totalGCCount;
+    }
+
+    @JsonProperty("gc_amount")
+    public long getTotalGCAmount() {
+        return totalGCAmount;
     }
 
     @JsonProperty("freed_memory")
@@ -76,28 +82,42 @@ public class GCStats {
         return interval.getAvg();
     }
 
-    public void next(GCEvent event) {
-        this.next(event.capacity(), EventConcurrency.SERIAL, event);
+    public GCStats nextFreedMemory(GCEvent event, long freedMemory) {
+        return this.nextFreedMemory(event.capacity(), event, freedMemory);
     }
 
-    public void next(Capacity capacity, EventConcurrency concurrency, GCEvent event) {
-        if (concurrency == null || event.concurrency() == concurrency) {
-            totalGCTime += event.pauseMu();
-            totalGCCount++;
-            long fm = Math.abs(capacity.usedAfter() - capacity.usedBefore());
-            if (fm == 0) {
-                fm = Math.abs(event.totalCapacity().usedAfter() - event.totalCapacity().usedBefore());
-            }
-            freedMemory += fm;
-            pause.next(event.pauseMu());
-            if (!isRestrictedInterval || !event.totalCapacity().equals(Capacity.NONE)) {
-                if (prevIntervalEvent != null &&
-                        (!isRestrictedInterval || prevIntervalEvent.phase().equals(event.phase()))) {
-                    interval.next(Math.abs(event.occurred().getMillis() - prevIntervalEvent.occurred().getMillis()));
-                }
-                prevIntervalEvent = event;
+    public GCStats nextFreedMemory(Capacity capacity, GCEvent event, long freedMemory) {
+        if (freedMemory <= 0) {
+            freedMemory = Math.abs(capacity.usedAfter() - capacity.usedBefore());
+            if (freedMemory == 0) {
+                freedMemory = Math.abs(event.totalCapacity().usedAfter() - event.totalCapacity().usedBefore());
             }
         }
+        this.freedMemory += freedMemory;
+        return this;
+    }
+
+    public GCStats nextInterval(GCEvent event) {
+        if (prevIntervalEvent != null &&
+                (!isRestrictedInterval || prevIntervalEvent.phase().equals(event.phase()))) {
+            interval.next(Math.abs(event.occurred().getMillis() - prevIntervalEvent.occurred().getMillis()));
+        }
+        if (prevIntervalEvent == null || prevIntervalEvent.phase().equals(event.phase())) {
+            prevIntervalEvent = event;
+        }
+        return this;
+    }
+
+    public GCStats nextPause(GCEvent event) {
+        totalGCSum += event.pauseMu();
+        totalGCCount++;
+        pause.next(event.pauseMu());
+        return this;
+    }
+
+    public GCStats incrementTotal() {
+        totalGCAmount++;
+        return this;
     }
 
 }
