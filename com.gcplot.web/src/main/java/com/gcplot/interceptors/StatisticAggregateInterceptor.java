@@ -122,7 +122,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
                     stats.nextFreedMemory(event, 0);
                 }
                 gcs.nextInterval(event).nextPause(event).incrementTotal();
-                stats.nextPause(event).incrementTotal();
+                stats.nextPause(event).nextInterval(event).incrementTotal();
             } else {
                 for (Generation gg : event.generations()) {
                     GCStats gcStats = byGeneration.computeIfAbsent(gg.type(), k -> new GCStats(true));
@@ -134,7 +134,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
                         }
                     }
                 }
-                fullStats.nextPause(event).incrementTotal();
+                fullStats.nextPause(event).nextInterval(event).nextFreedMemory(event, 0).incrementTotal();
             }
         } else if (event.isSingle()) {
             GCStats gcs = byPhase.computeIfAbsent(event.phase().type(), k -> new GCStats());
@@ -149,12 +149,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
             generationsTotalSizes.computeIfAbsent(g.type(), factory).next(event.capacity().total());
         } else {
             for (Generation gg : event.generations()) {
-                if (gg != Generation.YOUNG && gg != Generation.TENURED) {
-                    Capacity c = event.capacityByGeneration().get(gg);
-                    if (c != null && !c.equals(Capacity.NONE)) {
-                        generationsUsageSizes.computeIfAbsent(gg.type(), factory).next(c.usedBefore());
-                        generationsTotalSizes.computeIfAbsent(gg.type(), factory).next(c.total());
-                    }
+                Capacity c = event.capacityByGeneration().get(gg);
+                if (c != null && !c.equals(Capacity.NONE)) {
+                    generationsUsageSizes.computeIfAbsent(gg.type(), factory).next(c.usedBefore());
+                    generationsTotalSizes.computeIfAbsent(gg.type(), factory).next(c.total());
                 }
             }
         }

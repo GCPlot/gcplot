@@ -55,6 +55,7 @@ import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
  *         8/13/16
  */
 public class EventsController extends Controller {
+    private static final EnumSet<Generation> OTHER_GENERATION = EnumSet.of(Generation.OTHER);
     public static final String DEFAULT_CHUNK_DELIMETER = "$d";
     public static final String ANONYMOUS_ANALYSE_NAME = "Default";
     public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
@@ -416,8 +417,10 @@ public class EventsController extends Controller {
     }
 
     private void write(RequestContext ctx, PeriodParams pp, GCEvent event) {
-        ctx.write(GCEventResponse.toJson(event));
-        delimit(ctx, pp);
+        if (!event.generations().equals(OTHER_GENERATION)) {
+            ctx.write(GCEventResponse.toJson(event));
+            delimit(ctx, pp);
+        }
     }
 
     private void delimit(RequestContext ctx, PeriodParams pp) {
