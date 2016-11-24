@@ -22,9 +22,12 @@ public class BaseInterceptor {
 
             long youngDecreased = Math.abs(event.capacity().usedBefore() - event.capacity().usedAfter());
             long totalDecreased = Math.abs(event.totalCapacity().usedBefore() - event.totalCapacity().usedAfter());
-            long promoted = Math.abs(totalDecreased - youngDecreased);
-            promotionRateSum += ((1000 * promoted) / period);
-            promotionRateCount++;
+            // it's not a promotion when TOTAL heap decreased more than YOUNG
+            if (totalDecreased < youngDecreased) {
+                long promoted = Math.abs(totalDecreased - youngDecreased);
+                promotionRateSum += ((1000 * promoted) / period);
+                promotionRateCount++;
+            }
         }
         ratePreviousEvent = event;
     }
