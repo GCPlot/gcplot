@@ -89,7 +89,7 @@ public class GCStats {
     public GCStats nextFreedMemory(Capacity capacity, GCEvent event, long freedMemory) {
         if (freedMemory <= 0) {
             freedMemory = Math.abs(capacity.usedAfter() - capacity.usedBefore());
-            if (freedMemory == 0) {
+            if (freedMemory == 0 && event.generations().size() == 1) {
                 freedMemory = Math.abs(event.totalCapacity().usedAfter() - event.totalCapacity().usedBefore());
             }
         }
