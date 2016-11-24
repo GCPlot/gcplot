@@ -63,6 +63,11 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         }
     }
 
+    @JsonProperty("allocated_total")
+    public long allocatedTotal() {
+        return allocationRateSum;
+    }
+
     @JsonProperty("promotion_rate")
     public long promotionRate() {
         if (promotionRateSum > 0 && promotionRateCount > 0) {
@@ -70,6 +75,11 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         } else {
             return 0;
         }
+    }
+
+    @JsonProperty("promoted_total")
+    public long promotedTotal() {
+        return promotionRateSum;
     }
 
     @Override
