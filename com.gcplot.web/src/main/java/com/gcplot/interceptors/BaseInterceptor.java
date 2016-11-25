@@ -8,6 +8,8 @@ import com.gcplot.model.gc.GCEvent;
  */
 public class BaseInterceptor {
     protected GCEvent ratePreviousEvent;
+    protected long allocatedSum;
+    protected long promotedSum;
     protected long allocationRateSum;
     protected long allocationRateCount;
     protected long promotionRateSum;
@@ -17,6 +19,7 @@ public class BaseInterceptor {
         if (ratePreviousEvent != null) {
             long period = Math.abs(ratePreviousEvent.occurred().getMillis() - event.occurred().getMillis());
             long allocated = Math.abs(ratePreviousEvent.capacity().usedBefore() - event.capacity().usedAfter());
+            allocatedSum += allocated;
             allocationRateSum += ((1000 * allocated) / period);
             allocationRateCount++;
 
@@ -25,6 +28,7 @@ public class BaseInterceptor {
             // it's not a promotion when TOTAL heap decreased more than YOUNG
             if (totalDecreased < youngDecreased) {
                 long promoted = Math.abs(totalDecreased - youngDecreased);
+                promotedSum += promoted;
                 promotionRateSum += ((1000 * promoted) / period);
                 promotionRateCount++;
             }

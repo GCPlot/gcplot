@@ -65,7 +65,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
 
     @JsonProperty("allocated_total")
     public long allocatedTotal() {
-        return allocationRateSum;
+        return allocatedSum;
     }
 
     @JsonProperty("promotion_rate")
@@ -79,7 +79,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
 
     @JsonProperty("promoted_total")
     public long promotedTotal() {
-        return promotionRateSum;
+        return promotedSum;
     }
 
     @Override
