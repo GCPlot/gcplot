@@ -29,6 +29,7 @@ public enum ConfigProperty {
     GC_EVENTS_MAX_INTERVAL_DAYS("user.gc.events.max.interval.days", 90),
     SURVIVOR_AGES_AVG_THRESHOLD("survivor.ages.avg.threshold", 100),
     TENURED_ACCUMULATE_SECONDS("tenured.accumulate.seconds", 60),
+    FORBID_OTHER_GENERATION("forbid.other.generation", true),
 
     REDIRECT_URL_AFTER_CONFIRMATION("url.redirect.after.confirmation", "http://gcplot.com");
 

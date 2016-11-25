@@ -593,10 +593,13 @@ public class EventsController extends Controller {
     }
 
     private void persist(boolean isSync, GCEvent event) {
-        if (isSync) {
-            eventRepository.add(event);
-        } else {
-            eventRepository.addAsync(event);
+        if (!config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION) ||
+                !event.generations().equals(OTHER_GENERATION)) {
+            if (isSync) {
+                eventRepository.add(event);
+            } else {
+                eventRepository.addAsync(event);
+            }
         }
     }
 

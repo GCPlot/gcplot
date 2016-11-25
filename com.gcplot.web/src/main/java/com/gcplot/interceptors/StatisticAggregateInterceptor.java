@@ -42,7 +42,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     @JsonProperty("phase_stats")
     private Map<Integer, GCStats> byPhase = new HashMap<>();
     @JsonProperty("stats")
-    private GCStats stats = new GCStats(true);
+    private GCStats stats = new GCStats();
     @JsonProperty("full_stats")
     private GCStats fullStats = new GCStats();
     @JsonProperty("heap_total")
