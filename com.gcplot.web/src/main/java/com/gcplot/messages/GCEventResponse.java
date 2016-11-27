@@ -89,15 +89,17 @@ public class GCEventResponse {
         try {
             int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
             sb.append("{").append("\"p\":").append(event.pauseMu()).append(",")
-                    .append("\"d\":").append(event.occurred().getMillis()).append(",")
-                    .append("\"g\":[");
-            for (int i = 0; i < gens.length; i++) {
-                sb.append(gens[i]);
-                if (i < gens.length - 1) {
-                    sb.append(",");
+                    .append("\"d\":").append(event.occurred().getMillis());
+            if (gens.length != 1 || gens[0] != Generation.YOUNG.type()) {
+                sb.append(",").append("\"g\":[");
+                for (int i = 0; i < gens.length; i++) {
+                    sb.append(gens[i]);
+                    if (i < gens.length - 1) {
+                        sb.append(",");
+                    }
                 }
+                sb.append("]");
             }
-            sb.append("]");
             if (event.phase() != Phase.OTHER) {
                 sb.append(",").append("\"ph\":").append(event.phase().type());
             }
