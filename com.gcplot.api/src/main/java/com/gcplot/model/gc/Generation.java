@@ -35,6 +35,11 @@ public enum Generation implements TypedEnum {
         this.type = type;
     }
 
+    @Override
+    public String toString() {
+        return Integer.toString(type);
+    }
+
     static {
         for (Generation g : Generation.values()) {
             types.put(g.type, g);

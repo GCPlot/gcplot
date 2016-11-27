@@ -3,10 +3,7 @@ package com.gcplot.messages;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.enums.TypedEnum;
-import com.gcplot.model.gc.Capacity;
-import com.gcplot.model.gc.EventConcurrency;
-import com.gcplot.model.gc.GCEvent;
-import com.gcplot.model.gc.Phase;
+import com.gcplot.model.gc.*;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.joda.time.DateTime;
@@ -14,6 +11,7 @@ import org.joda.time.DateTimeZone;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +38,9 @@ public class GCEventResponse {
     @JsonProperty("tc")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CapacityResponse totalCapacity;
+    @JsonProperty("ecp")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public Map<Generation, Capacity> capacityByGeneration;
     @JsonProperty("e")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String ext;
@@ -51,6 +52,8 @@ public class GCEventResponse {
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse capacity,
                            @JsonProperty("tc")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse totalCapacity,
+                           @JsonProperty("ecp")
+                           @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<Generation, Capacity> capacityByGeneration,
                            @JsonProperty("e")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) String ext) {
         this.pauseMu = pauseMu;
@@ -60,6 +63,7 @@ public class GCEventResponse {
         this.phase = phase;
         this.capacity = capacity;
         this.totalCapacity = totalCapacity;
+        this.capacityByGeneration = capacityByGeneration;
         this.ext = ext;
     }
 
@@ -71,7 +75,7 @@ public class GCEventResponse {
         int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
         return new GCEventResponse(event.pauseMu(), event.occurred().toDateTime(tz).getMillis(),
                 gens, event.concurrency().type(), event.phase().type(), CapacityResponse.from(event.capacity()),
-                CapacityResponse.from(event.totalCapacity()), event.ext());
+                CapacityResponse.from(event.totalCapacity()), event.capacityByGeneration(), event.ext());
     }
 
     private static ThreadLocal<StringBuilder> stringBuilder = new ThreadLocal<StringBuilder>() {
@@ -105,6 +109,19 @@ public class GCEventResponse {
             }
             if (event.totalCapacity() != null && !event.totalCapacity().equals(Capacity.NONE)) {
                 sb.append(",\"tc\":").append(CapacityResponse.toJson(event.totalCapacity()));
+            }
+            if (event.capacityByGeneration() != null && event.capacityByGeneration().size() > 0) {
+                sb.append(",\"ecp\":{");
+                int c = 0;
+                for (Map.Entry<Generation, Capacity> ec : event.capacityByGeneration().entrySet()) {
+                    sb.append("\"").append(ec.getKey().toString()).append("\":")
+                            .append(CapacityResponse.toJson(ec.getValue()));
+                    if (c < event.capacityByGeneration().size() - 1) {
+                        sb.append(",");
+                    }
+                    c++;
+                }
+                sb.append("}");
             }
             if (!Strings.isNullOrEmpty(event.ext())) {
                 sb.append(",\"e\":").append("\"").append(event.ext()).append("\"");
