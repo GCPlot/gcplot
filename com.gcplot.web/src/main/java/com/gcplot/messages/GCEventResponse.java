@@ -2,6 +2,7 @@ package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gcplot.commons.CollectionUtils;
 import com.gcplot.commons.enums.TypedEnum;
 import com.gcplot.model.gc.*;
 import com.google.common.base.Preconditions;
@@ -10,6 +11,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.annotation.concurrent.NotThreadSafe;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,7 +42,7 @@ public class GCEventResponse {
     public CapacityResponse totalCapacity;
     @JsonProperty("ecp")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public Map<Generation, Capacity> capacityByGeneration;
+    public Map<Integer, Capacity> capacityByGeneration;
     @JsonProperty("e")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String ext;
@@ -53,7 +55,7 @@ public class GCEventResponse {
                            @JsonProperty("tc")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse totalCapacity,
                            @JsonProperty("ecp")
-                           @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<Generation, Capacity> capacityByGeneration,
+                           @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<Integer, Capacity> capacityByGeneration,
                            @JsonProperty("e")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) String ext) {
         this.pauseMu = pauseMu;
@@ -73,9 +75,12 @@ public class GCEventResponse {
             return null;
         }
         int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
+        Map<Integer, Capacity> cbg = event.capacityByGeneration().size() != 0 ?
+                CollectionUtils.processKeyMap(event.capacityByGeneration(), Generation::type, v -> v) :
+                Collections.emptyMap();
         return new GCEventResponse(event.pauseMu(), event.occurred().toDateTime(tz).getMillis(),
                 gens, event.concurrency().type(), event.phase().type(), CapacityResponse.from(event.capacity()),
-                CapacityResponse.from(event.totalCapacity()), event.capacityByGeneration(), event.ext());
+                CapacityResponse.from(event.totalCapacity()), cbg, event.ext());
     }
 
     private static ThreadLocal<StringBuilder> stringBuilder = new ThreadLocal<StringBuilder>() {
