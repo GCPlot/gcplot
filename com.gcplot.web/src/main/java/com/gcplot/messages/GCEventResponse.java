@@ -24,7 +24,7 @@ public class GCEventResponse {
     public long pauseMu;
     @JsonProperty("d")
     public long dateTime;
-    @JsonProperty("g")
+    @JsonProperty(value = "g", defaultValue = "1")
     public int[] generations;
     @JsonProperty(value = "c", defaultValue = "2")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
