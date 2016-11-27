@@ -42,7 +42,7 @@ public class GCEventResponse {
     public CapacityResponse totalCapacity;
     @JsonProperty("ecp")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public Map<Integer, Capacity> capacityByGeneration;
+    public Map<String, Capacity> capacityByGeneration;
     @JsonProperty("e")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String ext;
@@ -55,7 +55,7 @@ public class GCEventResponse {
                            @JsonProperty("tc")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse totalCapacity,
                            @JsonProperty("ecp")
-                           @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<Integer, Capacity> capacityByGeneration,
+                           @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<String, Capacity> capacityByGeneration,
                            @JsonProperty("e")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) String ext) {
         this.pauseMu = pauseMu;
@@ -75,8 +75,8 @@ public class GCEventResponse {
             return null;
         }
         int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
-        Map<Integer, Capacity> cbg = event.capacityByGeneration().size() != 0 ?
-                CollectionUtils.processKeyMap(event.capacityByGeneration(), Generation::type, v -> v) :
+        Map<String, Capacity> cbg = event.capacityByGeneration().size() != 0 ?
+                CollectionUtils.processKeyMap(event.capacityByGeneration(), Generation::toString, v -> v) :
                 Collections.emptyMap();
         return new GCEventResponse(event.pauseMu(), event.occurred().toDateTime(tz).getMillis(),
                 gens, event.concurrency().type(), event.phase().type(), CapacityResponse.from(event.capacity()),
