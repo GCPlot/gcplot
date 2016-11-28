@@ -28,15 +28,13 @@ public class MinMaxAvg {
     }
 
     public void next(long val) {
-        if (val > 0) {
-            if (min == -1 || val < min) {
-                min = val;
-            }
-            if (max == -1 || val > max) {
-                max = val;
-            }
-            sum += val;
-            count++;
+        if (min == -1 || val < min) {
+            min = val;
         }
+        if (max == -1 || val > max) {
+            max = val;
+        }
+        sum += val;
+        count++;
     }
 }
