@@ -31,6 +31,9 @@ import java.util.function.Function;
  *         11/17/16
  */
 public class StatisticAggregateInterceptor extends BaseInterceptor implements Interceptor {
+    private static final Function<Integer, MinMaxAvg> MIN_MAX_FACTORY = k -> new MinMaxAvg();
+    public static final Function<Integer, GCStats> STATS_INTERVAL_FACTORY = k -> new GCStats(true);
+    public static final Function<Integer, GCStats> STATS_FACTORY = k -> new GCStats();
     private final boolean isG1;
     private GCEvent lastYoungEvent;
     @JsonProperty("generation_total")
@@ -88,12 +91,16 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         boolean isYoung = event.isYoung();
         if (!isG1 && isYoung && lastYoungEvent != null) {
             long tenuredPrev = event.totalCapacity().usedAfter() - event.capacity().usedAfter();
+            if (tenuredPrev >= 0) {
+                generationsUsageSizes.computeIfAbsent(Generation.TENURED.type(), MIN_MAX_FACTORY).next(tenuredPrev);
+            }
+
             long tenuredAfter = lastYoungEvent.totalCapacity().usedAfter() - lastYoungEvent.capacity().usedAfter();
             long afterPromoted = Math.abs((lastYoungEvent.totalCapacity().usedBefore() - lastYoungEvent.totalCapacity().usedAfter())
                     - (lastYoungEvent.capacity().usedBefore() - lastYoungEvent.capacity().usedAfter()));
             if (tenuredAfter - afterPromoted < tenuredPrev) {
                 long freedTenured = tenuredPrev - (tenuredAfter - afterPromoted);
-                GCStats gcs = byGeneration.computeIfAbsent(Generation.TENURED.type(), k -> new GCStats(true));
+                GCStats gcs = byGeneration.computeIfAbsent(Generation.TENURED.type(), STATS_INTERVAL_FACTORY);
                 gcs.nextFreedMemory(null, null, freedTenured);
                 stats.nextFreedMemory(null, null, freedTenured);
             }
@@ -126,7 +133,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     private void calcGCStats(GCEvent event, Generation g) {
         if (event.concurrency() != EventConcurrency.CONCURRENT) {
             if (event.isSingle()) {
-                GCStats gcs = byGeneration.computeIfAbsent(g.type(), k -> new GCStats(true));
+                GCStats gcs = byGeneration.computeIfAbsent(g.type(), STATS_INTERVAL_FACTORY);
                 if (!event.isTenured() || isG1) {
                     gcs.nextFreedMemory(event, 0);
                     stats.nextFreedMemory(event, 0);
@@ -135,7 +142,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
                 stats.nextPause(event).nextInterval(event).incrementTotal();
             } else {
                 for (Generation gg : event.generations()) {
-                    GCStats gcStats = byGeneration.computeIfAbsent(gg.type(), k -> new GCStats(true));
+                    GCStats gcStats = byGeneration.computeIfAbsent(gg.type(), STATS_INTERVAL_FACTORY);
                     gcStats.incrementTotal();
                     if (gg != Generation.TENURED || isG1) {
                         Capacity capacity = event.capacityByGeneration().get(gg);
@@ -147,22 +154,21 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
                 fullStats.nextPause(event).nextInterval(event).nextFreedMemory(event, 0).incrementTotal();
             }
         } else if (event.isSingle()) {
-            GCStats gcs = byPhase.computeIfAbsent(event.phase().type(), k -> new GCStats());
+            GCStats gcs = byPhase.computeIfAbsent(event.phase().type(), STATS_FACTORY);
             gcs.nextInterval(event).nextPause(event).incrementTotal();
         }
     }
 
     protected void calcMemoryFootprint(GCEvent event, Generation g) {
-        Function<Integer, MinMaxAvg> factory = k -> new MinMaxAvg();
         if (event.isSingle()) {
-            generationsUsageSizes.computeIfAbsent(g.type(), factory).next(event.capacity().usedBefore());
-            generationsTotalSizes.computeIfAbsent(g.type(), factory).next(event.capacity().total());
+            generationsUsageSizes.computeIfAbsent(g.type(), MIN_MAX_FACTORY).next(event.capacity().usedBefore());
+            generationsTotalSizes.computeIfAbsent(g.type(), MIN_MAX_FACTORY).next(event.capacity().total());
         } else {
             for (Generation gg : event.generations()) {
                 Capacity c = event.capacityByGeneration().get(gg);
                 if (c != null && !c.equals(Capacity.NONE)) {
-                    generationsUsageSizes.computeIfAbsent(gg.type(), factory).next(c.usedBefore());
-                    generationsTotalSizes.computeIfAbsent(gg.type(), factory).next(c.total());
+                    generationsUsageSizes.computeIfAbsent(gg.type(), MIN_MAX_FACTORY).next(c.usedBefore());
+                    generationsTotalSizes.computeIfAbsent(gg.type(), MIN_MAX_FACTORY).next(c.total());
                 }
             }
         }
