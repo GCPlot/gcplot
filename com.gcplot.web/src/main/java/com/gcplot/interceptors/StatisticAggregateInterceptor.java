@@ -6,6 +6,7 @@ import com.gcplot.interceptors.stats.GCStats;
 import com.gcplot.interceptors.stats.MinMaxAvg;
 import com.gcplot.model.gc.*;
 import com.gcplot.web.RequestContext;
+import org.joda.time.DateTime;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +53,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     private MinMaxAvg heapTotal = new MinMaxAvg();
     @JsonProperty("heap_usage")
     private MinMaxAvg heapUsage = new MinMaxAvg();
+    @JsonProperty("first_event")
+    private DateTime firstEvent;
+    @JsonProperty("last_event")
+    private DateTime lastEvent;
 
     public StatisticAggregateInterceptor(boolean isG1) {
         this.isG1 = isG1;
@@ -112,6 +117,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         calcGCStats(event, g);
 
         if (event.isYoung()) {
+            if (firstEvent == null) {
+                firstEvent = event.occurred();
+            }
+            lastEvent = event.occurred();
             countRates(event);
         }
 
