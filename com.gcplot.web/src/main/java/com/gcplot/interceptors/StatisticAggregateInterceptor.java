@@ -54,9 +54,9 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     @JsonProperty("heap_usage")
     private MinMaxAvg heapUsage = new MinMaxAvg();
     @JsonProperty("first_event")
-    private DateTime firstEvent;
+    private long firstEvent;
     @JsonProperty("last_event")
-    private DateTime lastEvent;
+    private long lastEvent;
 
     public StatisticAggregateInterceptor(boolean isG1) {
         this.isG1 = isG1;
@@ -117,10 +117,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         calcGCStats(event, g);
 
         if (event.isYoung()) {
-            if (firstEvent == null) {
-                firstEvent = event.occurred();
+            if (firstEvent == 0) {
+                firstEvent = event.occurred().getMillis();
             }
-            lastEvent = event.occurred();
+            lastEvent = event.occurred().getMillis();
             countRates(event);
         }
 
