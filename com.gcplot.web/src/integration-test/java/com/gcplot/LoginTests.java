@@ -2,6 +2,7 @@ package com.gcplot;
 
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
+import com.gcplot.messages.ChangeUsernameRequest;
 import com.gcplot.messages.RegisterRequest;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;
@@ -52,6 +53,29 @@ public class LoginTests extends IntegrationTest {
         post("/user/register", request, success());
 
         post("/user/register", request, ErrorMessages.NOT_UNIQUE_FIELDS);
+    }
+
+    @Test
+    public void testUsernameNotUnique() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.email = "artem@gcplot.com";
+        request.username = "admin";
+        request.password = "root";
+        post("/user/register", request, success());
+
+        request.email = "artem1@gcplot.com";
+        request.username = "dmart";
+        post("/user/register", request, success());
+
+        JsonObject jo = login(request);
+
+        ChangeUsernameRequest r = new ChangeUsernameRequest("admin");
+        post("/user/change_username?token=" +
+                jo.getString("token"), r, ErrorMessages.USER_ALREADY_EXISTS);
+
+        r = new ChangeUsernameRequest("admin2");
+        post("/user/change_username?token=" +
+                jo.getString("token"), r, success());
     }
 
 }

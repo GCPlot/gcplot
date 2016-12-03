@@ -6,13 +6,14 @@ import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.mail.MailService;
 import com.gcplot.messages.ChangePasswordRequest;
+import com.gcplot.messages.ChangeUsernameRequest;
 import com.gcplot.messages.LoginResult;
 import com.gcplot.messages.RegisterRequest;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
 import com.gcplot.repository.AccountRepository;
-import com.gcplot.repository.RolesRepository;
 import com.gcplot.web.RequestContext;
+import com.google.common.base.Strings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,6 +33,7 @@ public class LoginController extends Controller {
         dispatcher.requireAuth().filter(c -> c.hasParam("salt"),
                 "Salt should be provided!").get("/user/confirm", this::confirm);
         dispatcher.requireAuth().post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
+        dispatcher.requireAuth().post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
     }
 
     /**
@@ -129,6 +131,25 @@ public class LoginController extends Controller {
                 c.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
                         String.format("Can't change password to user [username=%s]", account(c).username())));
             }
+        }
+    }
+
+    /**
+     * POST /user/change_username
+     * Require Auth (token)
+     * Body: ChangeUsernameRequest (JSON)
+     *
+     * @param c
+     */
+    public void changeUsername(ChangeUsernameRequest req, RequestContext c) {
+        if (!Strings.isNullOrEmpty(req.username)) {
+            if (accountRepository.changeUsername(account(c), req.username)) {
+                c.response(SUCCESS);
+            } else {
+                c.write(ErrorMessages.buildJson(ErrorMessages.USER_ALREADY_EXISTS, "This username is already taken!"));
+            }
+        } else {
+            c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Username can't be empty!"));
         }
     }
 
