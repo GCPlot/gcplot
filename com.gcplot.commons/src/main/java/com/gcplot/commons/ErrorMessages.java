@@ -18,6 +18,7 @@ public class ErrorMessages {
     public static final long ACCESS_DENIED = 0x193;
     public static final long NOT_FOUND = 0x194;
     public static final long SAME_PASSWORD = 0x195;
+    public static final long OLD_PASSWORD_MISMATCH = 0x1955;
     public static final long USER_ALREADY_EXISTS = 0x196;
 
     public static final long RESOURCE_NOT_FOUND_RESPONSE = 0x197;
@@ -53,6 +54,7 @@ public class ErrorMessages {
         errorMessages.put(NOT_UNIQUE_FIELDS, "One of the fields are already presented.");
         errorMessages.put(USER_IS_BLOCKED, "User is blocked.");
         errorMessages.put(NOT_FOUND, "The requested path wasn't found.");
+        errorMessages.put(OLD_PASSWORD_MISMATCH, "Incorrect old password.");
         errorMessages.put(SAME_PASSWORD, "Old and new passwords should be different.");
         errorMessages.put(USER_ALREADY_EXISTS, "Username is already taken.");
         errorMessages.put(RESOURCE_NOT_FOUND_RESPONSE, "Requested resource was not found in the system.");

@@ -125,7 +125,9 @@ public class LoginController extends Controller {
         if (req.oldPassword.equals(req.newPassword)) {
             c.write(ErrorMessages.buildJson(ErrorMessages.SAME_PASSWORD));
         } else {
-            if (accountRepository.changePassword(account(c), hashPass(req.newPassword))) {
+            if (!account(c).passHash().equals(hashPass(req.oldPassword))) {
+                c.write(ErrorMessages.buildJson(ErrorMessages.OLD_PASSWORD_MISMATCH));
+            } else if (accountRepository.changePassword(account(c), hashPass(req.newPassword))) {
                 c.response(SUCCESS);
             } else {
                 c.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
