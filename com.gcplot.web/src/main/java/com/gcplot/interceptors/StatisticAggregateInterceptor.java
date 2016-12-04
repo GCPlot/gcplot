@@ -7,6 +7,8 @@ import com.gcplot.interceptors.stats.MinMaxAvg;
 import com.gcplot.model.gc.*;
 import com.gcplot.web.RequestContext;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +34,7 @@ import java.util.function.Function;
  *         11/17/16
  */
 public class StatisticAggregateInterceptor extends BaseInterceptor implements Interceptor {
+    private static final Logger LOG = LoggerFactory.getLogger(StatisticAggregateInterceptor.class);
     private static final Function<Integer, MinMaxAvg> MIN_MAX_FACTORY = k -> new MinMaxAvg();
     public static final Function<Integer, GCStats> STATS_INTERVAL_FACTORY = k -> new GCStats(true);
     public static final Function<Integer, GCStats> STATS_FACTORY = k -> new GCStats();
@@ -92,6 +95,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
 
     @Override
     public void process(GCEvent event, Runnable delimit, RequestContext ctx) {
+        if (event.generations().size() == 0) {
+            LOG.debug("Event with no generation: " + event);
+            return;
+        }
         Generation g = event.generations().iterator().next();
         boolean isYoung = event.isYoung();
         if (!isG1 && isYoung && lastYoungEvent != null) {
