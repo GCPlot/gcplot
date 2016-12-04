@@ -85,6 +85,13 @@ public class DispatcherBase {
         this.accountRepository = userService;
     }
 
+    public ConfigurationManager getConfig() {
+        return config;
+    }
+    public void setConfig(ConfigurationManager config) {
+        this.config = config;
+    }
+
     public int getMaxUploadSize() {
         return maxUploadSize;
     }

@@ -28,6 +28,7 @@
         <property name="host" value="${bootstrap.server.host}"/>
         <property name="port" value="${bootstrap.server.port}"/>
         <property name="maxUploadSize" value="${max.upload.file.size:1073741824}"/>
+        <property name="config" ref="config"/>
         <property name="bodyHandler">
             <bean class="io.vertx.ext.web.handler.impl.BodyHandlerImpl">
                 <constructor-arg index="0" value="${files.upload.dir}"/>

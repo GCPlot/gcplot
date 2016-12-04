@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
+import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
 import com.gcplot.repository.AccountRepository;
@@ -33,12 +34,14 @@ public class VertxDispatcherTest {
         vertx = Vertx.vertx();
         port = Utils.getFreePorts(1)[0];
         accountRepository = createMock(AccountRepository.class);
+        configRepository = createMock(ConfigurationManager.class);
         dispatcher = new VertxDispatcher();
         dispatcher.setBodyHandler(new BodyHandlerImpl());
         dispatcher.setHost(HOST);
         dispatcher.setPort(port.value);
         dispatcher.setVertx(vertx);
         dispatcher.setAccountRepository(accountRepository);
+        dispatcher.setConfig(configRepository);
         dispatcher.setMaxUploadSize(50*1024*1024);
         dispatcher.init();
     }
@@ -100,7 +103,8 @@ public class VertxDispatcherTest {
 
         Account fakeAccount = new AccountImpl();
         expect(accountRepository.account(token)).andReturn(Optional.of(fakeAccount)).anyTimes();
-        replay(accountRepository);
+        expect(configRepository.readBoolean(anyObject())).andReturn(false);
+        replay(accountRepository, configRepository);
 
         CountDownLatch getMe = new CountDownLatch(1);
         client.get(port.value, HOST, "/get/me", c -> {
@@ -126,6 +130,7 @@ public class VertxDispatcherTest {
 
     protected Utils.Port port;
     protected AccountRepository accountRepository;
+    protected ConfigurationManager configRepository;
     protected VertxDispatcher dispatcher;
     protected Vertx vertx;
     protected static final String HOST = "127.0.0.1";
