@@ -20,6 +20,7 @@ public class DispatcherBase {
     protected volatile boolean isOpen = false;
     protected boolean blocking = false;
     protected boolean requireAuth = true;
+    protected boolean allowNotConfirmed = false;
     protected String[] mimeTypes;
     protected BiConsumer<Throwable, RequestContext> exceptionHandler = (r, q) -> {};
     protected Predicate<RequestContext> preHandler = r -> true;
@@ -33,7 +34,7 @@ public class DispatcherBase {
     protected int port;
 
     protected void preHandle(BiConsumer<RoutingContext, RequestContext> handler, boolean auth,
-                             Predicate<RequestContext> filter, Supplier<String> fm,
+                             boolean allowNotConfirmed, Predicate<RequestContext> filter, Supplier<String> fm,
                              RoutingContext rc, RequestContext c) {
         if (preHandler.test(c)) {
             if (c.loginInfo().isPresent() && c.loginInfo().get().getAccount().isBlocked()) {
@@ -42,7 +43,7 @@ public class DispatcherBase {
                 if (auth && !c.loginInfo().isPresent()) {
                     c.finish(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
                 } else {
-                    if (auth && config.readBoolean(ConfigProperty.CONFIRMATION_IS_RESTRICTED)
+                    if (auth && !allowNotConfirmed && config.readBoolean(ConfigProperty.CONFIRMATION_IS_RESTRICTED)
                             && !c.loginInfo().get().getAccount().isConfirmed()) {
                         c.finish(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
                     } else if (filter == null || filter.test(c)) {
@@ -58,6 +59,7 @@ public class DispatcherBase {
 
     protected void reset() {
         blocking = false;
+        allowNotConfirmed = false;
         requireAuth = true;
         filter = null;
         filterMessage = null;

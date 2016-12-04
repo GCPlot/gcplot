@@ -29,11 +29,13 @@ public class LoginController extends Controller {
         dispatcher.noAuth().filter(c -> c.hasParam("login") && c.hasParam("password"),
                 "Username and password are required!").get("/user/login", this::login);
         dispatcher.noAuth().blocking().post("/user/register", RegisterRequest.class, this::register);
-        dispatcher.requireAuth().get("/user/info", this::userInfo);
-        dispatcher.requireAuth().filter(c -> c.hasParam("salt"),
+        dispatcher.requireAuth().allowNotConfirmed().get("/user/info", this::userInfo);
+        dispatcher.requireAuth().allowNotConfirmed().filter(c -> c.hasParam("salt"),
                 "Salt should be provided!").get("/user/confirm", this::confirm);
-        dispatcher.requireAuth().post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
-        dispatcher.requireAuth().post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
+        dispatcher.requireAuth().allowNotConfirmed()
+                .post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
+        dispatcher.requireAuth().allowNotConfirmed()
+                .post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
     }
 
     /**

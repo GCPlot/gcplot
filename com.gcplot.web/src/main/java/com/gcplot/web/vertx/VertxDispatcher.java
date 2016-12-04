@@ -173,6 +173,13 @@ public class VertxDispatcher extends DispatcherBase implements Dispatcher<String
     }
 
     @Override
+    public Dispatcher<String> allowNotConfirmed() {
+        this.requireAuth = true;
+        this.allowNotConfirmed = true;
+        return this;
+    }
+
+    @Override
     public Dispatcher<String> filter(Predicate<RequestContext> filter, String message) {
         this.filter = this.filter == null ? filter : this.filter.and(filter);
         final Supplier<String> fm = this.filterMessage;
@@ -232,12 +239,13 @@ public class VertxDispatcher extends DispatcherBase implements Dispatcher<String
                 }
             }
             final boolean auth = requireAuth;
+            final boolean allowNotConfirmed = this.allowNotConfirmed;
             final Predicate<RequestContext> filter = this.filter;
             final Supplier<String> fm = this.filterMessage;
             final Handler<RoutingContext> r = rc -> {
                 VertxRequestContext c = contexts.get().reset(rc);
                 try {
-                    preHandle(handler, auth, filter, fm, rc, c);
+                    preHandle(handler, auth, allowNotConfirmed, filter, fm, rc, c);
                 } catch (Throwable t) {
                     if (exceptionHandler != null) {
                         exceptionHandler.accept(t, c);
