@@ -3,11 +3,10 @@ package com.gcplot.web.vertx;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.commons.serialization.JsonSerializer;
-import com.gcplot.repository.AccountRepository;
 import com.gcplot.web.Dispatcher;
+import com.gcplot.web.DispatcherBase;
 import com.gcplot.web.HttpMethod;
 import com.gcplot.web.RequestContext;
-import com.google.common.base.Strings;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -26,7 +25,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class VertxDispatcher implements Dispatcher<String> {
+public class VertxDispatcher extends DispatcherBase implements Dispatcher<String> {
 
     public void init() {
         LOG.info("Starting Vert.x Dispatcher at [{}:{}]", host, port);
@@ -174,13 +173,6 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
 
     @Override
-    public Dispatcher<String> requireConfirmed() {
-        this.requireConfirmed = true;
-        this.requireAuth = true;
-        return this;
-    }
-
-    @Override
     public Dispatcher<String> filter(Predicate<RequestContext> filter, String message) {
         this.filter = this.filter == null ? filter : this.filter.and(filter);
         final Supplier<String> fm = this.filterMessage;
@@ -240,30 +232,12 @@ public class VertxDispatcher implements Dispatcher<String> {
                 }
             }
             final boolean auth = requireAuth;
-            final boolean confirmation = requireConfirmed;
             final Predicate<RequestContext> filter = this.filter;
             final Supplier<String> fm = this.filterMessage;
             final Handler<RoutingContext> r = rc -> {
                 VertxRequestContext c = contexts.get().reset(rc);
                 try {
-                    if (preHandler.test(c)) {
-                        if (c.loginInfo().isPresent() && c.loginInfo().get().getAccount().isBlocked()) {
-                            c.finish(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
-                        } else {
-                            if (auth && !c.loginInfo().isPresent()) {
-                                c.finish(ErrorMessages.buildJson(ErrorMessages.NOT_AUTHORISED));
-                            } else {
-                                if (confirmation && !c.loginInfo().get().getAccount().isConfirmed()) {
-                                    c.finish(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
-                                } else if (filter == null || filter.test(c)) {
-                                    handler.accept(rc, c);
-                                } else if (!rc.response().ended()) {
-                                    c.finish(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
-                                            Strings.nullToEmpty(fm != null ? fm.get() : "")));
-                                }
-                            }
-                        }
-                    }
+                    preHandle(handler, auth, filter, fm, rc, c);
                 } catch (Throwable t) {
                     if (exceptionHandler != null) {
                         exceptionHandler.accept(t, c);
@@ -292,35 +266,14 @@ public class VertxDispatcher implements Dispatcher<String> {
         }
     }
 
-    protected void reset() {
-        blocking = false;
-        requireAuth = true;
-        requireConfirmed = false;
-        filter = null;
-        filterMessage = null;
-        mimeTypes = null;
-    }
-
     protected final ThreadLocal<VertxRequestContext> contexts = new ThreadLocal<VertxRequestContext>() {
         @Override
         protected VertxRequestContext initialValue() {
             return new VertxRequestContext().setAccountRepository(getAccountRepository());
         }
     };
-
-    protected volatile boolean isOpen = false;
     protected HttpServer httpServer;
     protected Router router;
-
-    protected boolean blocking = false;
-    protected boolean requireAuth = true;
-    protected boolean requireConfirmed = false;
-    protected String[] mimeTypes;
-    protected BiConsumer<Throwable, RequestContext> exceptionHandler = (r,q) -> {};
-    protected Predicate<RequestContext> preHandler = r -> true;
-    protected Consumer<RequestContext> postHandler = r -> {};
-    protected Predicate<RequestContext> filter;
-    protected Supplier<String> filterMessage;
 
     protected static final Logger LOG = LoggerFactory.getLogger(VertxDispatcher.class);
 
@@ -330,38 +283,6 @@ public class VertxDispatcher implements Dispatcher<String> {
     }
     public void setVertx(Vertx vertx) {
         this.vertx = vertx;
-    }
-
-    private String host;
-    public String getHost() {
-        return host;
-    }
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    private int port;
-    public int getPort() {
-        return port;
-    }
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    private AccountRepository accountRepository;
-    public AccountRepository getAccountRepository() {
-        return accountRepository;
-    }
-    public void setAccountRepository(AccountRepository userService) {
-        this.accountRepository = userService;
-    }
-
-    private int maxUploadSize;
-    public int getMaxUploadSize() {
-        return maxUploadSize;
-    }
-    public void setMaxUploadSize(int maxUploadSize) {
-        this.maxUploadSize = maxUploadSize;
     }
 
     private BodyHandler bodyHandler;

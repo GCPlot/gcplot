@@ -273,6 +273,7 @@ public class GCEventImpl implements GCEvent {
         sb.append(", generations=").append(generations);
         sb.append(", concurrency=").append(concurrency);
         sb.append(", ext='").append(ext).append('\'');
+        sb.append(", capacityByGeneration=").append(capacityByGeneration);
         sb.append('}');
         return sb.toString();
     }

@@ -60,8 +60,6 @@ public interface Dispatcher<Route> extends Closeable {
 
     Dispatcher<Route> requireAuth();
 
-    Dispatcher<Route> requireConfirmed();
-
     Dispatcher<Route> filter(Predicate<RequestContext> filter, String message);
 
     Dispatcher<Route> filter(Predicate<RequestContext> filter, String message, Object... params);
