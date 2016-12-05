@@ -9,12 +9,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ChangePasswordRequest {
     @JsonProperty(value = "old_password")
     public String oldPassword;
-    @JsonProperty(value = "new_password")
+    @JsonProperty(value = "salt")
+    public String salt;
+    @JsonProperty(value = "new_password", required = true)
     public String newPassword;
 
-    public ChangePasswordRequest(@JsonProperty(value = "old_password", required = true) String oldPassword,
+    public ChangePasswordRequest(@JsonProperty(value = "old_password") String oldPassword,
+                                 @JsonProperty(value = "salt") String salt,
                                  @JsonProperty(value = "new_password", required = true) String newPassword) {
         this.oldPassword = oldPassword;
+        this.salt = salt;
         this.newPassword = newPassword;
     }
 

@@ -1,6 +1,5 @@
 package com.gcplot.controllers;
 
-import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
@@ -23,6 +22,11 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class LoginController extends Controller {
+    private AccountRepository accountRepository;
+    private MailService mailService;
+    private String uiProtocol;
+    private String uiHost;
+    private String uiConfirmPath;
 
     @PostConstruct
     public void init() {
@@ -109,7 +113,7 @@ public class LoginController extends Controller {
      */
     public void confirm(RequestContext ctx) {
         if (getAccountRepository().confirm(token(ctx), ctx.param("salt"))) {
-            ctx.redirect(config.readString(ConfigProperty.REDIRECT_URL_AFTER_CONFIRMATION));
+            ctx.redirect(buildConfirmUrl());
         } else {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
                     String.format("Can't confirm user [username=%s]", account(ctx).username())));
@@ -127,9 +131,15 @@ public class LoginController extends Controller {
         if (req.oldPassword.equals(req.newPassword)) {
             c.write(ErrorMessages.buildJson(ErrorMessages.SAME_PASSWORD));
         } else {
-            if (!account(c).passHash().equals(hashPass(req.oldPassword))) {
+            if (!Strings.isNullOrEmpty(req.oldPassword) && !account(c).passHash().equals(hashPass(req.oldPassword))) {
                 c.write(ErrorMessages.buildJson(ErrorMessages.OLD_PASSWORD_MISMATCH));
-            } else if (accountRepository.changePassword(account(c), hashPass(req.newPassword))) {
+            } else if (!Strings.isNullOrEmpty(req.salt) && !account(c).confirmationSalt().equals(req.salt)) {
+                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Invalid salt."));
+            } else if (Strings.isNullOrEmpty(req.oldPassword) && Strings.isNullOrEmpty(req.salt)) {
+                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
+                        "You must provide either salt or an old password."));
+            }
+            if (accountRepository.changePassword(account(c), hashPass(req.newPassword))) {
                 c.response(SUCCESS);
             } else {
                 c.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
@@ -157,16 +167,19 @@ public class LoginController extends Controller {
         }
     }
 
-    protected AccountRepository.LoginType guess(String username) {
+    private String buildConfirmUrl() {
+        return uiProtocol + "://" + uiHost + uiConfirmPath;
+    }
+
+    private AccountRepository.LoginType guess(String username) {
         return EMAIL_PATTERN.matcher(username).matches() ? AccountRepository.LoginType.EMAIL
                 : AccountRepository.LoginType.USERNAME;
     }
 
-    protected String hashPass(String p) {
+    private String hashPass(String p) {
         return DigestUtils.sha1Hex(DigestUtils.md5(p));
     }
 
-    protected AccountRepository accountRepository;
     public AccountRepository getAccountRepository() {
         return accountRepository;
     }
@@ -175,13 +188,24 @@ public class LoginController extends Controller {
         this.accountRepository = accountRepository;
     }
 
-    protected MailService mailService;
     public MailService getMailService() {
         return mailService;
     }
     @Autowired
     public void setMailService(MailService mailService) {
         this.mailService = mailService;
+    }
+
+    public void setUiProtocol(String uiProtocol) {
+        this.uiProtocol = uiProtocol;
+    }
+
+    public void setUiHost(String uiHost) {
+        this.uiHost = uiHost;
+    }
+
+    public void setUiConfirmPath(String uiConfirmPath) {
+        this.uiConfirmPath = uiConfirmPath;
     }
 
     public static final Pattern EMAIL_PATTERN = Pattern.compile("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[" +

@@ -2,6 +2,7 @@ package com.gcplot;
 
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
+import com.gcplot.messages.ChangePasswordRequest;
 import com.gcplot.messages.ChangeUsernameRequest;
 import com.gcplot.messages.RegisterRequest;
 import io.vertx.core.json.JsonObject;
@@ -53,6 +54,19 @@ public class LoginTests extends IntegrationTest {
         post("/user/register", request, success());
 
         post("/user/register", request, ErrorMessages.NOT_UNIQUE_FIELDS);
+    }
+
+    @Test
+    public void testChangePassword() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.email = "artem@gcplot.com";
+        request.username = "admin";
+        request.password = "root";
+        post("/user/register", request, success());
+
+        JsonObject jo = login(request);
+        ChangePasswordRequest r = new ChangePasswordRequest("root", null, "123");
+        post("/user/change_password?token=" + jo.getString("token"), r, success());
     }
 
     @Test
