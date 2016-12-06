@@ -8,6 +8,13 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 
 public class UrlBuilder {
+    public static final String HTTP = "http://";
+    public static final String HTTPS = "https://";
+    protected ConfigurationManager config;
+    private String uiProtocol;
+    private String uiHost;
+    private String uiNewPasswordPath;
+    private String uiConfirmPath;
 
     public String apiUrl(String url, String... params) {
         StringBuilder sb = new StringBuilder();
@@ -43,14 +50,34 @@ public class UrlBuilder {
         return sb.toString();
     }
 
-    protected ConfigurationManager config;
+    public String uiPostConfirmUrl() {
+        return uiProtocol + "://" + uiHost + uiConfirmPath;
+    }
+
+    public String uiNewPasswordPageUrl(String token, String salt) {
+        return uiProtocol + "://" + uiHost + uiNewPasswordPath.replace("{TOKEN}", token).replace("{SALT}", salt);
+    }
+
+    public void setUiProtocol(String uiProtocol) {
+        this.uiProtocol = uiProtocol;
+    }
+
+    public void setUiHost(String uiHost) {
+        this.uiHost = uiHost;
+    }
+
+    public void setUiConfirmPath(String uiConfirmPath) {
+        this.uiConfirmPath = uiConfirmPath;
+    }
+
+    public void setUiNewPasswordPath(String uiNewPasswordPath) {
+        this.uiNewPasswordPath = uiNewPasswordPath;
+    }
+
     public ConfigurationManager getConfig() {
         return config;
     }
     public void setConfig(ConfigurationManager config) {
         this.config = config;
     }
-
-    public static final String HTTP = "http://";
-    public static final String HTTPS = "https://";
 }

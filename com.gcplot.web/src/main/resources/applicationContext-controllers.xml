@@ -8,11 +8,7 @@
 
     <bean class="com.gcplot.controllers.DefaultDispatcherHandlers"/>
 
-    <bean id="loginController" class="com.gcplot.controllers.LoginController">
-        <property name="uiProtocol" value="${ui.host.protocol}"/>
-        <property name="uiHost" value="${ui.host}"/>
-        <property name="uiConfirmPath" value="${ui.host.confirm.path}"/>
-    </bean>
+    <bean id="loginController" class="com.gcplot.controllers.LoginController"/>
     <bean id="analyseController" class="com.gcplot.controllers.gc.AnalyseController"/>
     <bean id="eventsController" class="com.gcplot.controllers.gc.EventsController">
         <property name="eventsBatchSize" value="${events.batch.size:10}"/>

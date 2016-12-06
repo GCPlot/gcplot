@@ -5,6 +5,7 @@ import com.gcplot.commons.Utils;
 import com.gcplot.messages.ChangePasswordRequest;
 import com.gcplot.messages.ChangeUsernameRequest;
 import com.gcplot.messages.RegisterRequest;
+import com.gcplot.messages.SendNewPassRequest;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,10 +25,7 @@ public class LoginTests extends IntegrationTest {
     public void testFullCycle() throws Exception {
         get("/user/register", ErrorMessages.NOT_FOUND);
 
-        RegisterRequest request = new RegisterRequest();
-        request.email = "artem@gcplot.com";
-        request.username = "admin";
-        request.password = "root";
+        RegisterRequest request = register();
         post("/user/register", request, success());
 
         JsonObject jo = login(request);
@@ -47,10 +45,7 @@ public class LoginTests extends IntegrationTest {
 
     @Test
     public void testRegisterNotUnique() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.email = "artem@gcplot.com";
-        request.username = "admin";
-        request.password = "root";
+        RegisterRequest request = register();
         post("/user/register", request, success());
 
         post("/user/register", request, ErrorMessages.NOT_UNIQUE_FIELDS);
@@ -58,10 +53,7 @@ public class LoginTests extends IntegrationTest {
 
     @Test
     public void testChangePassword() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.email = "artem@gcplot.com";
-        request.username = "admin";
-        request.password = "root";
+        RegisterRequest request = register();
         post("/user/register", request, success());
 
         JsonObject jo = login(request);
@@ -71,10 +63,7 @@ public class LoginTests extends IntegrationTest {
 
     @Test
     public void testUsernameNotUnique() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.email = "artem@gcplot.com";
-        request.username = "admin";
-        request.password = "root";
+        RegisterRequest request = register();
         post("/user/register", request, success());
 
         request.email = "artem1@gcplot.com";
@@ -90,6 +79,32 @@ public class LoginTests extends IntegrationTest {
         r = new ChangeUsernameRequest("admin2");
         post("/user/change_username?token=" +
                 jo.getString("token"), r, success());
+    }
+
+    @Test
+    public void testNewPasswordSend() throws Exception {
+        RegisterRequest request = register();
+        post("/user/register", request, success());
+
+        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(10)));
+
+        JsonObject jo = login(request);
+
+        SendNewPassRequest r = new SendNewPassRequest("artem@gcplot.com");
+        post("/user/send/new_password", r, success());
+        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 2, TimeUnit.SECONDS.toNanos(10)));
+        String newPassUrl = smtpServer.getReceivedEmails().get(1).getBody();
+
+        Assert.assertTrue(newPassUrl.startsWith("http://test.com/?cp=true"));
+        Assert.assertTrue(newPassUrl.contains(jo.getString("token")));
+    }
+
+    protected RegisterRequest register() {
+        RegisterRequest request = new RegisterRequest();
+        request.email = "artem@gcplot.com";
+        request.username = "admin";
+        request.password = "root";
+        return request;
     }
 
 }

@@ -174,7 +174,6 @@ public class VertxDispatcher extends DispatcherBase implements Dispatcher<String
 
     @Override
     public Dispatcher<String> allowNotConfirmed() {
-        this.requireAuth = true;
         this.allowNotConfirmed = true;
         return this;
     }

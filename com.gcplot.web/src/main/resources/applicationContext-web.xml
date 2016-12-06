@@ -19,6 +19,10 @@
 
     <bean id="urlBuilder" class="com.gcplot.services.UrlBuilder">
         <property name="config" ref="config"/>
+        <property name="uiProtocol" value="${ui.host.protocol}"/>
+        <property name="uiHost" value="${ui.host}"/>
+        <property name="uiConfirmPath" value="${ui.host.confirm.path}"/>
+        <property name="uiNewPasswordPath" value="${ui.host.new.password.path}"/>
     </bean>
 
     <bean id="dispatcher" class="com.gcplot.web.vertx.VertxDispatcher"

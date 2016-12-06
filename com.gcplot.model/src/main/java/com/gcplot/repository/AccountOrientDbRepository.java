@@ -88,6 +88,12 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
+    public Optional<Account> find(String username, LoginType type) {
+        return singleByQuery(String.format(FIND_ACCOUNT_BY_USERNAME, type == LoginType.USERNAME ? "username" : "email",
+                username));
+    }
+
+    @Override
     public Account insert(Account account) {
         metrics.meter(ACCOUNT_INSERT_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
@@ -201,6 +207,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String ACCOUNT_DOCUMENT_NAME = AccountImpl.class.getSimpleName();
     private static final String ALL_ACCOUNTS_QUERY = "select from " + ACCOUNT_DOCUMENT_NAME;
     private static final String ACCOUNT_BY_TOKEN_QUERY = "select from " + ACCOUNT_DOCUMENT_NAME + " where token = \"%s\"";
+    private static final String FIND_ACCOUNT_BY_USERNAME = "select from " + ACCOUNT_DOCUMENT_NAME +
+            " where %s = \"%s\"";
     private static final String ACCOUNT_BY_USERNAME_QUERY = "select from " + ACCOUNT_DOCUMENT_NAME +
             " where %s = \"%s\" and passHash = \"%s\"";
     private static final String UPDATE_TOKEN_QUERY = "update " + ACCOUNT_DOCUMENT_NAME +

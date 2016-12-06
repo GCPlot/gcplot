@@ -4,13 +4,11 @@ import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.mail.MailService;
-import com.gcplot.messages.ChangePasswordRequest;
-import com.gcplot.messages.ChangeUsernameRequest;
-import com.gcplot.messages.LoginResult;
-import com.gcplot.messages.RegisterRequest;
+import com.gcplot.messages.*;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
 import com.gcplot.repository.AccountRepository;
+import com.gcplot.services.UrlBuilder;
 import com.gcplot.web.RequestContext;
 import com.google.common.base.Strings;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -24,9 +22,7 @@ import java.util.regex.Pattern;
 public class LoginController extends Controller {
     private AccountRepository accountRepository;
     private MailService mailService;
-    private String uiProtocol;
-    private String uiHost;
-    private String uiConfirmPath;
+    private UrlBuilder urlBuilder;
 
     @PostConstruct
     public void init() {
@@ -40,6 +36,7 @@ public class LoginController extends Controller {
                 .post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
+        dispatcher.noAuth().allowNotConfirmed().post("/user/send/new_password", SendNewPassRequest.class, this::sendNewPass);
     }
 
     /**
@@ -113,7 +110,7 @@ public class LoginController extends Controller {
      */
     public void confirm(RequestContext ctx) {
         if (getAccountRepository().confirm(token(ctx), ctx.param("salt"))) {
-            ctx.redirect(buildConfirmUrl());
+            ctx.redirect(urlBuilder.uiPostConfirmUrl());
         } else {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,
                     String.format("Can't confirm user [username=%s]", account(ctx).username())));
@@ -167,8 +164,24 @@ public class LoginController extends Controller {
         }
     }
 
-    private String buildConfirmUrl() {
-        return uiProtocol + "://" + uiHost + uiConfirmPath;
+    /**
+     * POST /user/send/new_password
+     * Require Auth (token)
+     * Body: SendNewPassRequest (JSON)
+     */
+    public void sendNewPass(SendNewPassRequest req, RequestContext c) {
+        if (!Strings.isNullOrEmpty(req.email)) {
+            Optional<Account> ao = accountRepository.find(req.email, AccountRepository.LoginType.EMAIL);
+            if (ao.isPresent()) {
+                mailService.sendNewPassUrl(ao.get());
+                c.response(SUCCESS);
+            } else {
+                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
+                        "User with email '" + req.email + "' not found."));
+            }
+        } else {
+            c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Email can't be empty!"));
+        }
     }
 
     private AccountRepository.LoginType guess(String username) {
@@ -196,16 +209,12 @@ public class LoginController extends Controller {
         this.mailService = mailService;
     }
 
-    public void setUiProtocol(String uiProtocol) {
-        this.uiProtocol = uiProtocol;
+    public UrlBuilder getUrlBuilder() {
+        return urlBuilder;
     }
-
-    public void setUiHost(String uiHost) {
-        this.uiHost = uiHost;
-    }
-
-    public void setUiConfirmPath(String uiConfirmPath) {
-        this.uiConfirmPath = uiConfirmPath;
+    @Autowired
+    public void setUrlBuilder(UrlBuilder urlBuilder) {
+        this.urlBuilder = urlBuilder;
     }
 
     public static final Pattern EMAIL_PATTERN = Pattern.compile("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[" +

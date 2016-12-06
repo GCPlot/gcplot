@@ -17,6 +17,8 @@ public interface AccountRepository {
 
     Optional<Account> account(String username, String passHash, LoginType type);
 
+    Optional<Account> find(String username, LoginType type);
+
     Account insert(Account account);
 
     Account updateInfo(Account account);
