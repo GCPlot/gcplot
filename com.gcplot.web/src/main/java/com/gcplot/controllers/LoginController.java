@@ -125,7 +125,7 @@ public class LoginController extends Controller {
      * @param c
      */
     public void changePassword(ChangePasswordRequest req, RequestContext c) {
-        if (req.oldPassword.equals(req.newPassword)) {
+        if (req.newPassword.equals(req.oldPassword)) {
             c.write(ErrorMessages.buildJson(ErrorMessages.SAME_PASSWORD));
         } else {
             if (!Strings.isNullOrEmpty(req.oldPassword) && !account(c).passHash().equals(hashPass(req.oldPassword))) {
