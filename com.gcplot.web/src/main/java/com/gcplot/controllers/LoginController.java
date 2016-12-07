@@ -171,13 +171,17 @@ public class LoginController extends Controller {
      */
     public void sendNewPass(SendNewPassRequest req, RequestContext c) {
         if (!Strings.isNullOrEmpty(req.email)) {
-            Optional<Account> ao = accountRepository.find(req.email, AccountRepository.LoginType.EMAIL);
-            if (ao.isPresent()) {
-                mailService.sendNewPassUrl(ao.get());
-                c.response(SUCCESS);
+            if (EMAIL_PATTERN.matcher(req.email).matches()) {
+                Optional<Account> ao = accountRepository.find(req.email, AccountRepository.LoginType.EMAIL);
+                if (ao.isPresent()) {
+                    mailService.sendNewPassUrl(ao.get());
+                    c.response(SUCCESS);
+                } else {
+                    c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
+                            "User with email '" + req.email + "' not found."));
+                }
             } else {
-                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
-                        "User with email '" + req.email + "' not found."));
+                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Please enter valid email."));
             }
         } else {
             c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Email can't be empty!"));
