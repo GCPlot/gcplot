@@ -1,5 +1,6 @@
 package com.gcplot.controllers;
 
+import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
@@ -81,23 +82,30 @@ public class LoginController extends Controller {
      * @param c
      */
     public void register(RegisterRequest request, RequestContext c) {
-        Account newAccount = AccountImpl.createNew(request.username, request.firstName, request.lastName,
-                request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
-                hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()), new ArrayList<>());
-        try {
-            getAccountRepository().insert(newAccount);
-        } catch (NotUniqueException e) {
-            c.write(ErrorMessages.buildJson(ErrorMessages.NOT_UNIQUE_FIELDS, "Username/E-mail must be unique."));
-            return;
-        }
-        if (getMailService() != null) {
+        if (Strings.isNullOrEmpty(request.password)) {
+            c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Password can't be empty."));
+        } else if (request.password.length() < config.readInt(ConfigProperty.PASSWORD_MIN_LENGTH)) {
+            c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Password must be longer than " +
+                    config.readInt(ConfigProperty.PASSWORD_MIN_LENGTH) + " symbols."));
+        } else {
+            Account newAccount = AccountImpl.createNew(request.username, request.firstName, request.lastName,
+                    request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
+                    hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()), new ArrayList<>());
             try {
-                getMailService().sendConfirmationFor(newAccount);
-            } catch (Throwable t) {
-                LOG.error(t.getMessage(), t);
+                getAccountRepository().insert(newAccount);
+            } catch (NotUniqueException e) {
+                c.write(ErrorMessages.buildJson(ErrorMessages.NOT_UNIQUE_FIELDS, "Username/E-mail must be unique."));
+                return;
             }
+            if (getMailService() != null) {
+                try {
+                    getMailService().sendConfirmationFor(newAccount);
+                } catch (Throwable t) {
+                    LOG.error(t.getMessage(), t);
+                }
+            }
+            c.response(SUCCESS);
         }
-        c.response(SUCCESS);
     }
 
     /**
@@ -135,8 +143,10 @@ public class LoginController extends Controller {
             } else if (Strings.isNullOrEmpty(req.oldPassword) && Strings.isNullOrEmpty(req.salt)) {
                 c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
                         "You must provide either salt or an old password."));
-            }
-            if (accountRepository.changePassword(account(c), hashPass(req.newPassword))) {
+            } else if (req.newPassword.length() < config.readInt(ConfigProperty.PASSWORD_MIN_LENGTH)) {
+                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Password must be longer than " +
+                        config.readInt(ConfigProperty.PASSWORD_MIN_LENGTH) + " symbols."));
+            } else if (accountRepository.changePassword(account(c), hashPass(req.newPassword))) {
                 c.response(SUCCESS);
             } else {
                 c.write(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR,

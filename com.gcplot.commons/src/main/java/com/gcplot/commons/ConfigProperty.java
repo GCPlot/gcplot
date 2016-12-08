@@ -32,6 +32,8 @@ public enum ConfigProperty {
     TENURED_ACCUMULATE_SECONDS("tenured.accumulate.seconds", 60),
     FORBID_OTHER_GENERATION("forbid.other.generation", true),
 
+    PASSWORD_MIN_LENGTH("password.min.length", 1),
+
     CONFIRMATION_IS_RESTRICTED("confirmation.is.restricted", false);
 
     private static Map<String, ConfigProperty> types = new HashMap<>();
