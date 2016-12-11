@@ -52,7 +52,7 @@ public class AnalyseController extends Controller {
         dispatcher.requireAuth()
                 .filter(Restrictions.apply("/analyse/new", a ->
                         newAnalyses.get(a.id(), k -> analyseRepository.analysesCount(k).orElse(0))),
-                        "You exceeded the amount of GC Analyse Groups per user. Contact us to increase this number.")
+                        "You exceeded the amount of GC Analysis Groups per user. Contact us to increase this number.")
                 .post("/analyse/new", NewAnalyseRequest.class, this::newAnalyse);
     }
 
