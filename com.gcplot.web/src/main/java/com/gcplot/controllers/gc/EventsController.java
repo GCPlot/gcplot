@@ -57,7 +57,7 @@ import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
 public class EventsController extends Controller {
     private static final EnumSet<Generation> OTHER_GENERATION = EnumSet.of(Generation.OTHER);
     public static final String DEFAULT_CHUNK_DELIMETER = "$d";
-    public static final String ANONYMOUS_ANALYSE_NAME = "Default";
+    public static final String ANONYMOUS_ANALYSE_NAME = "Files";
     public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
     private static final Map<Long, Long> PERIOD_SAMPLING_BUCKETS = new LinkedHashMap<Long, Long>() {{
         put(3600L, 15L); /* 1 hours -> 15 seconds */
