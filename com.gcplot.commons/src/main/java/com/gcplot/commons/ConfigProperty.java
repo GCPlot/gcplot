@@ -17,11 +17,11 @@ public enum ConfigProperty {
     EMAIL_SMTP_PORT("email.smtp.port", 465),
     EMAIL_USE_SSL("email.use.ssl", true),
     EMAIL_AUTH("email.auth", true),
-    EMAIL_CONNECTION_TIMEOUT("email.connection.timeout", 5000),
-    EMAIL_SEND_TIMEOUT("email.send.timeout", 2000),
-    EMAIL_DEFAULT_USERNAME("email.confirm.username", "support@gcplot.com"),
-    EMAIL_DEFAULT_FROM("email.confirm.from", "support@gcplot.com"),
-    EMAIL_DEFAULT_PASSWORD("email.confirm.password", "2w72PiKF3Q8hHH"),
+    EMAIL_CONNECTION_TIMEOUT("email.connection.timeout", 10000),
+    EMAIL_SEND_TIMEOUT("email.send.timeout", 5000),
+    EMAIL_DEFAULT_USERNAME("email.confirm.username", "do-not-reply@gcplot.com"),
+    EMAIL_DEFAULT_FROM("email.confirm.from", "do-not-reply@gcplot.com"),
+    EMAIL_DEFAULT_PASSWORD("email.confirm.password", "%*KmX_bh/Z:e7)u\""),
 
     TEST1_CONFIG("test.config.1", "test"),
 
