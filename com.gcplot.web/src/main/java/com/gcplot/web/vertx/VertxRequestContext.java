@@ -80,6 +80,9 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public RequestContext finish(String value) {
+        if (Strings.isNullOrEmpty(mimeType)) {
+            context.response().putHeader("Content-Type", mimeType);
+        }
         if (!isChunked()) {
             sb.append(value);
             byte[] response = new byte[0];
@@ -95,9 +98,6 @@ public class VertxRequestContext implements RequestContext {
             } else {
                 context.response().end(value);
             }
-        }
-        if (Strings.isNullOrEmpty(mimeType)) {
-            context.response().putHeader("Content-Type", mimeType);
         }
         return this;
     }

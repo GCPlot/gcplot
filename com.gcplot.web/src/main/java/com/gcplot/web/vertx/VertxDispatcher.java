@@ -273,12 +273,8 @@ public class VertxDispatcher extends DispatcherBase implements Dispatcher<String
         }
     }
 
-    protected final ThreadLocal<VertxRequestContext> contexts = new ThreadLocal<VertxRequestContext>() {
-        @Override
-        protected VertxRequestContext initialValue() {
-            return new VertxRequestContext().setAccountRepository(getAccountRepository());
-        }
-    };
+    protected final ThreadLocal<VertxRequestContext> contexts = ThreadLocal.withInitial(() ->
+            new VertxRequestContext().setAccountRepository(getAccountRepository()));
     protected HttpServer httpServer;
     protected Router router;
 
