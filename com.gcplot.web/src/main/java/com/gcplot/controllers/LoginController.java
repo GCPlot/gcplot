@@ -37,7 +37,7 @@ public class LoginController extends Controller {
                 .post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
-        dispatcher.requireAuth().get("/user/send/confirmation", this::sendConfirmation);
+        dispatcher.allowNotConfirmed().requireAuth().get("/user/send/confirmation", this::sendConfirmation);
         dispatcher.noAuth().allowNotConfirmed().post("/user/send/new_password", SendNewPassRequest.class,
                 this::sendNewPass);
     }
