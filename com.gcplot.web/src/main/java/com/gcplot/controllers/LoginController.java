@@ -37,6 +37,7 @@ public class LoginController extends Controller {
                 .post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
+        dispatcher.requireAuth().get("/user/send/confirmation", this::sendConfirmation);
         dispatcher.noAuth().allowNotConfirmed().post("/user/send/new_password", SendNewPassRequest.class,
                 this::sendNewPass);
     }
@@ -197,6 +198,15 @@ public class LoginController extends Controller {
         } else {
             c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Email can't be empty!"));
         }
+    }
+
+    /**
+     * GET /user/send/confirmation
+     */
+    public void sendConfirmation(RequestContext ctx) {
+        Account account = account(ctx);
+        mailService.sendConfirmationFor(account);
+        ctx.response(SUCCESS);
     }
 
     private AccountRepository.LoginType guess(String username) {
