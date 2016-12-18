@@ -20,6 +20,15 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
 public abstract class Utils {
+    private static final String hostname;
+
+    static {
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            throw Exceptions.runtime(e);
+        }
+    }
 
     public static Port[] getFreePorts(int portNumber) {
         try {
@@ -64,12 +73,7 @@ public abstract class Utils {
     }
 
     public static String getHostName() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            LOG.error(e.getMessage(), e);
-            return "unknown_host";
-        }
+        return hostname;
     }
 
     public static String getRandomIdentifier() {
