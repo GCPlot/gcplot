@@ -24,7 +24,11 @@ public abstract class Utils {
 
     static {
         try {
-            hostname = InetAddress.getLocalHost().getHostName();
+            String hm = System.getenv("HOSTNAME");
+            if (hm == null) {
+                hm = InetAddress.getLocalHost().getHostName();
+            }
+            hostname = hm;
         } catch (UnknownHostException e) {
             throw Exceptions.runtime(e);
         }
