@@ -26,6 +26,9 @@ public abstract class Utils {
         try {
             String hm = System.getenv("HOSTNAME");
             if (hm == null) {
+                hm = System.getProperty("current.host.name");
+            }
+            if (hm == null) {
                 hm = InetAddress.getLocalHost().getHostName();
             }
             hostname = hm;
