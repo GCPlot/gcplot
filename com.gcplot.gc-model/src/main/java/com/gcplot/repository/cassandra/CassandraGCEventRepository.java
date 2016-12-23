@@ -37,7 +37,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
     public static final String[] NON_KEY_FIELDS = new String[] {
             "occurred", "vm_event_type", "pause_mu", "tmstm", "generations",
             "concurrency", "phase", "capacity", "total_capacity", "ext",
-            "gen_cap_before", "gen_cap_after", "gen_cap_total"};
+            "gen_cap_before", "gen_cap_after", "gen_cap_total", "cause", "properties"};
     public static final String[] LAST_EVENT_FIELDS = Utils.concat(NON_KEY_FIELDS, new String[] { "bucket_id" });
     public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "tmstm", "phase", "generations", "concurrency" };
 
@@ -167,6 +167,8 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("tmstm", event.timestamp())
                 .value("written_at", UUIDGen.getTimeUUID(event.occurred().getMillis()))
                 .value("occurred", event.occurred().getMillis())
+                .value("cause", event.cause().type())
+                .value("properties", event.properties())
                 .value("vm_event_type", event.vmEventType().type())
                 .value("capacity", Lists.newArrayList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))
                 .value("total_capacity", Lists.newArrayList(event.totalCapacity().usedBefore(), event.totalCapacity().usedAfter(), event.totalCapacity().total()))

@@ -91,6 +91,24 @@ public class GCEventImpl implements GCEvent {
     }
 
     @Override
+    public Cause cause() {
+        return cause;
+    }
+    public GCEventImpl cause(Cause cause) {
+        this.cause = cause;
+        return this;
+    }
+
+    @Override
+    public long properties() {
+        return properties;
+    }
+    public GCEventImpl properties(long properties) {
+        this.properties = properties;
+        return this;
+    }
+
+    @Override
     public Capacity capacity() {
         return capacity;
     }
@@ -176,6 +194,8 @@ public class GCEventImpl implements GCEvent {
         this.timestamp = other.timestamp();
         this.vmEventType = other.vmEventType();
         this.phase = other.phase();
+        this.cause = other.cause();
+        this.properties = other.properties();
         this.capacity = other.capacity();
         this.totalCapacity = other.totalCapacity();
         this.pauseMu = other.pauseMu();
@@ -195,6 +215,8 @@ public class GCEventImpl implements GCEvent {
     protected double timestamp;
     protected VMEventType vmEventType;
     protected Phase phase;
+    protected Cause cause;
+    protected long properties;
     protected Capacity capacity;
     protected Capacity totalCapacity;
     protected long pauseMu;
@@ -211,6 +233,7 @@ public class GCEventImpl implements GCEvent {
         GCEventImpl gcEvent = (GCEventImpl) o;
 
         if (Double.compare(gcEvent.timestamp, timestamp) != 0) return false;
+        if (properties != gcEvent.properties) return false;
         if (pauseMu != gcEvent.pauseMu) return false;
         if (id != null ? !id.equals(gcEvent.id) : gcEvent.id != null) return false;
         if (jvmId != null ? !jvmId.equals(gcEvent.jvmId) : gcEvent.jvmId != null) return false;
@@ -221,13 +244,14 @@ public class GCEventImpl implements GCEvent {
         if (occurred != null ? !occurred.equals(gcEvent.occurred) : gcEvent.occurred != null) return false;
         if (vmEventType != gcEvent.vmEventType) return false;
         if (phase != gcEvent.phase) return false;
+        if (cause != gcEvent.cause) return false;
         if (capacity != null ? !capacity.equals(gcEvent.capacity) : gcEvent.capacity != null) return false;
         if (totalCapacity != null ? !totalCapacity.equals(gcEvent.totalCapacity) : gcEvent.totalCapacity != null)
             return false;
         if (generations != null ? !generations.equals(gcEvent.generations) : gcEvent.generations != null) return false;
         if (concurrency != gcEvent.concurrency) return false;
-        return ext != null ? ext.equals(gcEvent.ext) : gcEvent.ext == null;
-
+        if (ext != null ? !ext.equals(gcEvent.ext) : gcEvent.ext != null) return false;
+        return capacityByGeneration != null ? capacityByGeneration.equals(gcEvent.capacityByGeneration) : gcEvent.capacityByGeneration == null;
     }
 
     @Override
@@ -245,12 +269,15 @@ public class GCEventImpl implements GCEvent {
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (vmEventType != null ? vmEventType.hashCode() : 0);
         result = 31 * result + (phase != null ? phase.hashCode() : 0);
+        result = 31 * result + (cause != null ? cause.hashCode() : 0);
+        result = 31 * result + (int) (properties ^ (properties >>> 32));
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         result = 31 * result + (totalCapacity != null ? totalCapacity.hashCode() : 0);
         result = 31 * result + (int) (pauseMu ^ (pauseMu >>> 32));
         result = 31 * result + (generations != null ? generations.hashCode() : 0);
         result = 31 * result + (concurrency != null ? concurrency.hashCode() : 0);
         result = 31 * result + (ext != null ? ext.hashCode() : 0);
+        result = 31 * result + (capacityByGeneration != null ? capacityByGeneration.hashCode() : 0);
         return result;
     }
 
@@ -267,6 +294,8 @@ public class GCEventImpl implements GCEvent {
         sb.append(", timestamp=").append(timestamp);
         sb.append(", vmEventType=").append(vmEventType);
         sb.append(", phase=").append(phase);
+        sb.append(", cause=").append(cause);
+        sb.append(", properties=").append(properties);
         sb.append(", capacity=").append(capacity);
         sb.append(", totalCapacity=").append(totalCapacity);
         sb.append(", pauseMu=").append(pauseMu);

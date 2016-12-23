@@ -21,6 +21,10 @@ public interface GCEvent extends VMEvent, DatedEvent {
 
     Phase phase();
 
+    Cause cause();
+
+    long properties();
+
     Capacity capacity();
 
     Capacity totalCapacity();
@@ -67,6 +71,10 @@ public interface GCEvent extends VMEvent, DatedEvent {
 
     default boolean isPerm() {
         return generations().size() == 1 && generations().contains(Generation.PERM);
+    }
+
+    default boolean hasProperty(long prop) {
+        return (properties() & prop) == prop;
     }
 
 }

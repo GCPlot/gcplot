@@ -16,8 +16,8 @@ public class DefaultGCEventFactory implements GCEventFactory {
     public GCEvent create(String id, String parentId, String bucketId, DateTime occurred,
                           String description, VMEventType vmEventType, Capacity capacity,
                           Capacity totalCapacity, double timestamp, long pauseMu,
-                          EnumSet<Generation> generations, Phase phase, EventConcurrency concurrency,
-                          Map<Generation, Capacity> generationCapacityMap, String ext) {
+                          EnumSet<Generation> generations, Phase phase, Cause cause, long properties,
+                          EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap, String ext) {
         GCEventImpl event = new GCEventImpl();
         event.id(id);
         event.parentEvent(parentId);
@@ -31,6 +31,8 @@ public class DefaultGCEventFactory implements GCEventFactory {
         event.pauseMu(pauseMu);
         event.generations(generations);
         event.phase(phase);
+        event.cause(cause);
+        event.properties(properties);
         event.concurrency(concurrency);
         event.capacityByGeneration(generationCapacityMap);
         event.ext(ext);

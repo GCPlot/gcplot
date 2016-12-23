@@ -102,6 +102,8 @@ public abstract class Mapper {
                     .totalCapacity(op(row, "total_capacity", r -> new Capacity(r.getList("total_capacity", Long.class))))
                     .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
                     .phase(op(row, "phase", r -> Phase.get(r.getInt("phase"))))
+                    .cause(dop(row, "cause", Cause.OTHER, r -> Cause.get(r.getInt("cause"))))
+                    .properties(lop(row, "properties", r -> r.getLong("properties")))
                     .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
                     .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
                     .ext(op(row, "ext", r -> r.getString("ext")));
@@ -158,6 +160,14 @@ public abstract class Mapper {
             return f.apply(row);
         } else {
             return null;
+        }
+    }
+
+    private static <T> T dop(Row row, String name, T def, Function<Row, T> f) {
+        if (row.getColumnDefinitions().contains(name)) {
+            return f.apply(row);
+        } else {
+            return def;
         }
     }
 

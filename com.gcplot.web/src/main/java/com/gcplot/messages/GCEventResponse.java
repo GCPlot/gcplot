@@ -34,6 +34,12 @@ public class GCEventResponse {
     @JsonProperty(value = "ph", defaultValue = "0")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public int phase;
+    @JsonProperty(value = "cs", defaultValue = "0")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public int cause;
+    @JsonProperty(value = "pp", defaultValue = "0")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public long properties;
     @JsonProperty("cp")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CapacityResponse capacity;
@@ -50,6 +56,8 @@ public class GCEventResponse {
     public GCEventResponse(@JsonProperty("p") long pauseMu, @JsonProperty("d") long dateTime,
                            @JsonProperty("g") int[] generations, @JsonProperty("c") int concurrency,
                            @JsonProperty("ph") @JsonInclude(JsonInclude.Include.NON_DEFAULT) int phase,
+                           @JsonProperty(value = "cs", defaultValue = "0") @JsonInclude(JsonInclude.Include.NON_DEFAULT) int cause,
+                           @JsonProperty(value = "pp", defaultValue = "0") @JsonInclude(JsonInclude.Include.NON_DEFAULT) long properties,
                            @JsonProperty("cp")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse capacity,
                            @JsonProperty("tc")
@@ -63,6 +71,8 @@ public class GCEventResponse {
         this.generations = generations;
         this.concurrency = concurrency;
         this.phase = phase;
+        this.cause = cause;
+        this.properties = properties;
         this.capacity = capacity;
         this.totalCapacity = totalCapacity;
         this.capacityByGeneration = capacityByGeneration;
@@ -79,16 +89,13 @@ public class GCEventResponse {
                 CollectionUtils.processKeyMap(event.capacityByGeneration(), Generation::toString, CapacityResponse::from) :
                 Collections.emptyMap();
         return new GCEventResponse(event.pauseMu(), event.occurred().toDateTime(tz).getMillis(),
-                gens, event.concurrency().type(), event.phase().type(), CapacityResponse.from(event.capacity()),
+                gens, event.concurrency().type(), event.phase().type(), event.cause().type(),
+                event.properties(), CapacityResponse.from(event.capacity()),
                 CapacityResponse.from(event.totalCapacity()), cbg, event.ext());
     }
 
-    private static ThreadLocal<StringBuilder> stringBuilder = new ThreadLocal<StringBuilder>() {
-        @Override
-        protected StringBuilder initialValue() {
-            return new StringBuilder(128);
-        }
-    };
+    private static ThreadLocal<StringBuilder> stringBuilder = ThreadLocal.withInitial(
+            () -> new StringBuilder(156));
     public static String toJson(GCEvent event) {
         StringBuilder sb = stringBuilder.get();
         try {
@@ -110,6 +117,12 @@ public class GCEventResponse {
             }
             if (event.concurrency() != EventConcurrency.SERIAL) {
                 sb.append(",").append("\"c\":").append(event.concurrency().type());
+            }
+            if (event.properties() != 0) {
+                sb.append(",").append("\"pp\":").append(event.properties());
+            }
+            if (event.cause() != Cause.OTHER) {
+                sb.append(",").append("\"cs\":").append(event.cause().type());
             }
             if (event.capacity() != null && !event.capacity().equals(Capacity.NONE)) {
                 sb.append(",\"cp\":").append(CapacityResponse.toJson(event.capacity()));

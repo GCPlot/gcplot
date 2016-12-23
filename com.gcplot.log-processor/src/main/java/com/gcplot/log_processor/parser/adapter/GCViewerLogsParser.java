@@ -6,6 +6,7 @@ import com.gcplot.log_processor.parser.producers.v8.MetadataInfoProducer;
 import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
+import com.gcplot.model.Property;
 import com.gcplot.model.gc.*;
 import com.gcplot.model.gc.GCEvent;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
@@ -211,8 +212,11 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             }
         }
         Phase phase = detectPhase(ctx, event);
+        Cause cause = detectCause(event);
+        long properties = detectProperties(event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
-                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, concurrency, capacityByGeneration, ""));
+                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, cause, properties,
+                concurrency, capacityByGeneration, ""));
         /*if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
             com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
             events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,
@@ -223,10 +227,60 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         return events;
     }
 
+    private long detectProperties(AbstractGCEvent<?> event) {
+        String type = event.getTypeAsString().trim();
+        long properties = 0;
+        if (type.endsWith("(mixed)")) {
+            properties |= Property.G1_MIXED;
+        }
+        return properties;
+    }
+
+    private Cause detectCause(AbstractGCEvent<?> event) {
+        String type = event.getTypeAsString();
+        if (type.contains("Allocation Failure")) {
+            return Cause.ALLOCATION_FAILURE;
+        } else if (type.contains("G1 Evacuation Pause")) {
+            return Cause.G1_EVACUATION_PAUSE;
+        } else if (type.contains("GCLocker Initiated GC")) {
+            return Cause.GC_LOCKER;
+        } else if (type.contains("System.gc()")) {
+            return Cause.SYSTEM_GC;
+        } else if (type.contains("Allocation Profiler")) {
+            return Cause.ALLOCATION_PROFILER;
+        } else if (type.contains("Metadata GC Threshold")) {
+            return Cause.METADATA_GC_THRESHOLD;
+        } else if (type.contains("Permanent Generation Full")) {
+            return Cause.PERM_GENERATION_FULL;
+        } else if (type.contains("Heap Inspection Initiated GC")) {
+            return Cause.HEAP_INSPECTION;
+        } else if (type.contains("Heap Dump Initiated GC")) {
+            return Cause.HEAP_DUMP;
+        } else if (type.contains("No GC")) {
+            return Cause.NO_GC;
+        } else if (type.contains("Ergonomics")) {
+            return Cause.ADAPTIVE_SIZE_ERGONOMICS;
+        } else if (type.contains("G1 Humongous Allocation")) {
+            return Cause.G1_HUMONGOUS_ALLOCATION;
+        } else if (type.contains("CMS Initial Mark")) {
+            return Cause.CMS_INITIAL_MARK;
+        } else if (type.contains("CMS Final Remark")) {
+            return Cause.CMS_FINAL_REMARK;
+        } else if (type.contains("Last ditch collection")) {
+            return Cause.LAST_DITCH_COLLECTION;
+        } else if (type.contains("ILLEGAL VALUE - last gc cause - ILLEGAL VALUE")) {
+            return Cause.JVMTI_ENV;
+        } else {
+            return Cause.OTHER;
+        }
+    }
+
     private Phase detectPhase(ParserContext ctx, AbstractGCEvent<?> event) {
         String type = event.getTypeAsString();
         if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
-            if (type.contains("(initial-mark)")) {
+            if (type.contains("GC pause") && (type.contains("(young)") || type.contains("(mixed)"))) {
+                return Phase.G1_COPYING;
+            } else if (type.contains("(initial-mark)")) {
                 return Phase.G1_INITIAL_MARK;
             } else if (event.isConcurrent() && type.contains("root-region-scan")) {
                 return Phase.G1_ROOT_REGION_SCANNING;
@@ -236,8 +290,6 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                 return Phase.G1_REMARK;
             } else if (event.isConcurrent() && type.contains("concurrent-cleanup")) {
                 return Phase.G1_CLEANUP;
-            } else if (type.contains("GC pause") && (type.contains("(young)") || type.contains("(mixed)"))) {
-                return Phase.G1_COPYING;
             }
         } else {
             if (type.contains("CMS-initial-mark")) {

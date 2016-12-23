@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS gc_event (
   pause_mu bigint,
   generations bigint,
   phase int,
+  cause int,
+  properties bigint,
   concurrency int,
   gen_cap_before map<int, bigint>,
   gen_cap_after map<int, bigint>,

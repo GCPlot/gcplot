@@ -18,7 +18,8 @@ public class TestGCEventFactory implements GCEventFactory {
     @Override
     public GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description, VMEventType vmEventType,
                           Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, EnumSet<Generation> generations,
-                          Phase phase, EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap, String ext) {
+                          Phase phase, Cause cause, long properties, EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap,
+                          String ext) {
         return new GCEvent() {
             @Override
             public String id() {
@@ -48,6 +49,16 @@ public class TestGCEventFactory implements GCEventFactory {
             @Override
             public Phase phase() {
                 return phase;
+            }
+
+            @Override
+            public Cause cause() {
+                return cause;
+            }
+
+            @Override
+            public long properties() {
+                return properties;
             }
 
             @Override
@@ -107,23 +118,28 @@ public class TestGCEventFactory implements GCEventFactory {
 
             @Override
             public String toString() {
-                return MoreObjects.toStringHelper(this)
-                        .add("id", id())
-                        .add("parentEvent", parentEvent())
-                        .add("bucketId", bucketId())
-                        .add("description", description())
-                        .add("vmEventType", vmEventType())
-                        .add("capacity", capacity())
-                        .add("totalCapacity", totalCapacity())
-                        .add("tmstm", timestamp())
-                        .add("pauseMu", pauseMu())
-                        .add("generations", generations())
-                        .add("concurrency", concurrency())
-                        .add("ext", ext())
-                        .add("occurred", occurred())
-                        .add("jvmId", jvmId())
-                        .add("analyseId", analyseId())
-                        .toString();
+                final StringBuffer sb = new StringBuffer("GCEvent{");
+                sb.append("id='").append(id()).append('\'');
+                sb.append(", parentEvent=").append(parentEvent());
+                sb.append(", bucketId='").append(bucketId()).append('\'');
+                sb.append(", description='").append(description()).append('\'');
+                sb.append(", vmEventType=").append(vmEventType());
+                sb.append(", phase=").append(phase());
+                sb.append(", cause=").append(cause());
+                sb.append(", properties=").append(properties());
+                sb.append(", capacity=").append(capacity());
+                sb.append(", totalCapacity=").append(totalCapacity());
+                sb.append(", timestamp=").append(timestamp());
+                sb.append(", pauseMu=").append(pauseMu());
+                sb.append(", generations=").append(generations());
+                sb.append(", concurrency=").append(concurrency());
+                sb.append(", ext='").append(ext()).append('\'');
+                sb.append(", capacityByGeneration=").append(capacityByGeneration());
+                sb.append(", occurred=").append(occurred());
+                sb.append(", jvmId='").append(jvmId()).append('\'');
+                sb.append(", analyseId='").append(analyseId()).append('\'');
+                sb.append('}');
+                return sb.toString();
             }
         };
     }
