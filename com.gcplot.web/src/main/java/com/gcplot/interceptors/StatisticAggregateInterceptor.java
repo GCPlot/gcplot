@@ -104,7 +104,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         Generation g = event.generations().iterator().next();
         boolean isYoung = event.isYoung();
         if (isYoung) {
-            youngCauseStats.merge(event.cause().type(), 0, (o, v) -> v + 1);
+            youngCauseStats.merge(event.cause().type(), 1, (o, v) -> o + 1);
         }
         if (!isG1 && isYoung && lastYoungEvent != null) {
             long tenuredPrev = event.totalCapacity().usedAfter() - event.capacity().usedAfter();
