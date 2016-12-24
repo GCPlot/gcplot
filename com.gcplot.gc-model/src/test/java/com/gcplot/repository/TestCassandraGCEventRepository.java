@@ -138,6 +138,8 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
                 .totalCapacity(Capacity.NONE)
                 .pauseMu(51321)
                 .phase(Phase.OTHER)
+                .cause(Cause.OTHER)
+                .properties(0)
                 .generations(EnumSet.of(Generation.YOUNG, Generation.TENURED))
                 .capacityByGeneration(generationCapacityMap)
                 .concurrency(EventConcurrency.SERIAL);
