@@ -1,5 +1,6 @@
 package com.gcplot.interceptors;
 
+import com.gcplot.model.Property;
 import com.gcplot.model.gc.GCEvent;
 
 /**
@@ -26,7 +27,7 @@ public class BaseInterceptor {
             long youngDecreased = Math.abs(event.capacity().usedBefore() - event.capacity().usedAfter());
             long totalDecreased = Math.abs(event.totalCapacity().usedBefore() - event.totalCapacity().usedAfter());
             // it's not a promotion when TOTAL heap decreased more than YOUNG
-            if (totalDecreased < youngDecreased) {
+            if (!event.hasProperty(Property.G1_MIXED) && totalDecreased < youngDecreased) {
                 long promoted = Math.abs(totalDecreased - youngDecreased);
                 promotedSum += promoted;
                 promotionRateSum += ((1000 * promoted) / period);
