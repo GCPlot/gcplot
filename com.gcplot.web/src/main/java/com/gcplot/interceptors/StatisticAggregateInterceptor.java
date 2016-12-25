@@ -48,7 +48,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     private Map<Integer, GCStats> byGeneration = new HashMap<>();
     @JsonProperty("phase_stats")
     private Map<Integer, GCStats> byPhase = new HashMap<>();
-    @JsonProperty("cause_stats_y")
+    @JsonProperty("cause_stats")
     private Map<Integer, Integer> youngCauseStats = new HashMap<>();
     @JsonProperty("stats")
     private GCStats stats = new GCStats();
@@ -103,9 +103,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         }
         Generation g = event.generations().iterator().next();
         boolean isYoung = event.isYoung();
-        if (isYoung) {
-            youngCauseStats.merge(event.cause().type(), 1, (o, v) -> o + 1);
-        }
+        youngCauseStats.merge(event.cause().type(), 1, (o, v) -> o + 1);
         if (!isG1 && isYoung && lastYoungEvent != null) {
             long tenuredPrev = event.totalCapacity().usedAfter() - event.capacity().usedAfter();
             if (tenuredPrev >= 0) {
