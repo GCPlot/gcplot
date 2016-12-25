@@ -215,8 +215,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         Cause cause = detectCause(event);
         long properties = detectProperties(event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
-                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, cause, properties,
-                concurrency, capacityByGeneration, ""));
+                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, cause, properties, concurrency, capacityByGeneration, ""));
         /*if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
             com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
             events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,
@@ -268,7 +267,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             return Cause.CMS_FINAL_REMARK;
         } else if (type.contains("Last ditch collection")) {
             return Cause.LAST_DITCH_COLLECTION;
-        } else if (type.contains("ILLEGAL VALUE - last gc cause - ILLEGAL VALUE")) {
+        } else if (type.contains("JvmtiEnv ForceGarbageCollection")) {
             return Cause.JVMTI_ENV;
         } else {
             return Cause.OTHER;
