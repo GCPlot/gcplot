@@ -1,6 +1,8 @@
 package com.gcplot.interceptors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gcplot.commons.quantile.Quantile;
+import com.gcplot.commons.quantile.QuantileEstimationCKMS;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.interceptors.stats.GCStats;
 import com.gcplot.interceptors.stats.MinMaxAvg;
@@ -35,6 +37,12 @@ import java.util.function.Function;
  */
 public class StatisticAggregateInterceptor extends BaseInterceptor implements Interceptor {
     private static final Logger LOG = LoggerFactory.getLogger(StatisticAggregateInterceptor.class);
+    private static final Quantile[] QUANTILES = {
+            new Quantile(0.50, 0.005),
+            new Quantile(0.90, 0.005),
+            new Quantile(0.95, 0.001),
+            new Quantile(0.99, 0.001),
+            new Quantile(0.999, 0.0005)};
     private static final Function<Integer, MinMaxAvg> MIN_MAX_FACTORY = k -> new MinMaxAvg();
     public static final Function<Integer, GCStats> STATS_INTERVAL_FACTORY = k -> new GCStats(true);
     public static final Function<Integer, GCStats> STATS_FACTORY = k -> new GCStats();
@@ -63,8 +71,19 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     @JsonProperty("last_event")
     private long lastEvent;
 
+    private QuantileEstimationCKMS qes = new QuantileEstimationCKMS(QUANTILES);
+
     public StatisticAggregateInterceptor(boolean isG1) {
         this.isG1 = isG1;
+    }
+
+    @JsonProperty("percentiles")
+    public Map<Double, Long> percentiles() {
+        HashMap<Double, Long> percentiles = new HashMap<>();
+        for (Quantile q : QUANTILES) {
+            percentiles.put(q.quantile, qes.query(q.quantile));
+        }
+        return percentiles;
     }
 
     @JsonProperty("allocation_rate")
@@ -132,6 +151,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
             }
             lastEvent = event.occurred().getMillis();
             countRates(event);
+        }
+
+        if (event.concurrency() == EventConcurrency.SERIAL) {
+            qes.insert(event.pauseMu());
         }
 
         if (!event.totalCapacity().equals(Capacity.NONE)) {
