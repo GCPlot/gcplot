@@ -58,7 +58,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
 
     @Override
     public Iterator<GCEvent> lazyEvents(String analyseId, String jvmId, Range range) {
-        final Iterator<Row> i = events0(analyseId, jvmId, range, NON_KEY_FIELDS).iterator();
+        final Iterator<Row> i = events0(analyseId, jvmId, range, NON_KEY_FIELDS);
         return new Iterator<GCEvent>() {
             @Override
             public boolean hasNext() {
@@ -79,7 +79,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
 
     @Override
     public Iterator<GCEvent> lazyPauseEvents(String analyseId, String jvmId, Range range) {
-        final Iterator<Row> i = events0(analyseId, jvmId, range, PAUSE_EVENT_FIELDS).iterator();
+        final Iterator<Row> i = events0(analyseId, jvmId, range, PAUSE_EVENT_FIELDS);
         return new Iterator<GCEvent>() {
             @Override
             public boolean hasNext() {
@@ -113,12 +113,12 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                                         DateTime start, String[] fields) {
         List<String> dates = dates(Range.of(start.toDateTime(DateTimeZone.UTC),
                 DateTime.now(DateTimeZone.UTC)));
-        for (int i = dates.size() - 1; i >= 0; i--) {
+        for (String date : dates) {
             Select from = QueryBuilder.select(fields).from(TABLE_NAME);
             Select.Where statement = from.limit(1)
                     .where(eq("analyse_id", UUID.fromString(analyseId)))
                     .and(eq("jvm_id", jvmId))
-                    .and(eq("date", dates.get(i)));
+                    .and(eq("date", date));
             if (bucketId != null) {
                 from.allowFiltering();
                 statement.and(eq("bucket_id", bucketId));
@@ -131,15 +131,43 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
         return Optional.empty();
     }
 
-    protected ResultSet events0(String analyseId, String jvmId, Range range, String[] fields) {
-        Statement statement = QueryBuilder.select(fields).from(TABLE_NAME)
-                .where(eq("analyse_id", UUID.fromString(analyseId)))
-                .and(eq("jvm_id", jvmId))
-                .and(in("date", dates(range)))
-                .and(gte("written_at", QueryBuilder.fcall("minTimeuuid", range.from.getMillis())))
-                .and(lte("written_at", QueryBuilder.fcall("maxTimeuuid", range.to.getMillis()))).setFetchSize(fetchSize);
-        LOG.debug("Query: {}", statement);
-        return connector.session().execute(statement);
+    private Iterator<Row> events0(String analyseId, String jvmId, Range range, String[] fields) {
+        final Iterator<String> dates = dates(range).iterator();
+        return new Iterator<Row>() {
+            private Iterator<Row> resultIterator;
+
+            @Override
+            public boolean hasNext() {
+                if (resultIterator == null || !resultIterator.hasNext()) {
+                    if (!selectNext()) {
+                        return false;
+                    }
+                }
+                return resultIterator.hasNext();
+            }
+
+            @Override
+            public Row next() {
+                return resultIterator.next();
+            }
+
+            private boolean selectNext() {
+                if (dates.hasNext()) {
+                    String date = dates.next();
+                    Statement statement = QueryBuilder.select(fields).from(TABLE_NAME)
+                            .where(eq("analyse_id", UUID.fromString(analyseId)))
+                            .and(eq("jvm_id", jvmId))
+                            .and(eq("date", date))
+                            .and(gte("written_at", QueryBuilder.fcall("minTimeuuid", range.from.getMillis())))
+                            .and(lte("written_at", QueryBuilder.fcall("maxTimeuuid", range.to.getMillis()))).setFetchSize(fetchSize);
+                    LOG.debug("Query: {}", statement);
+                    resultIterator = connector.session().execute(statement).iterator();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
     }
 
     /**
@@ -149,11 +177,11 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
      * @return
      */
     protected List<String> dates(Range range) {
-        return IntStream.range(0, Months.monthsBetween(
+        return Lists.reverse(IntStream.range(0, Months.monthsBetween(
                 range.from.monthOfYear().roundFloorCopy(),
                 range.to.monthOfYear().roundCeilingCopy()).getMonths())
                 .mapToObj(i -> range.from.plusMonths(i).toString(DATE_PATTERN))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
     }
 
     protected RegularStatement addStatement(GCEvent event) {

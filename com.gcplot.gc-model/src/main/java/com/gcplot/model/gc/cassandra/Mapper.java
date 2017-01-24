@@ -72,9 +72,11 @@ public abstract class Mapper {
         return gcAnalyse.jvmMemoryDetails(memoryDetails);
     }
 
-    public static List<GCEvent> eventsFrom(ResultSet resultSet) {
+    public static List<GCEvent> eventsFrom(Iterator<Row> resultSet) {
         List<GCEvent> events = new LinkedList<>();
-        for (Row row : resultSet) {
+        Row row;
+        while (resultSet.hasNext()) {
+            row = resultSet.next();
             GCEvent event = eventFrom(row);
             if (event != null) {
                 events.add(event);
