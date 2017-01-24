@@ -138,16 +138,13 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
 
             @Override
             public boolean hasNext() {
-                if (resultIterator == null || !resultIterator.hasNext()) {
-                    if (!selectNext()) {
-                        return false;
-                    }
-                }
+                if (checkIterator()) return false;
                 return resultIterator.hasNext();
             }
 
             @Override
             public Row next() {
+                checkIterator();
                 return resultIterator.next();
             }
 
@@ -166,6 +163,15 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 } else {
                     return false;
                 }
+            }
+
+            private boolean checkIterator() {
+                if (resultIterator == null || !resultIterator.hasNext()) {
+                    if (!selectNext()) {
+                        return true;
+                    }
+                }
+                return false;
             }
         };
     }
