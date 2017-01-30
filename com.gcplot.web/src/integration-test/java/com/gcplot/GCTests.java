@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -194,6 +193,21 @@ public class GCTests extends IntegrationTest {
                     ar2.lastEventUTC.get(jvm));
             Assert.assertEquals(19, events.size());
         }
+    }
+
+    @Test
+    public void gcStatsTest() throws Exception {
+        String token = login();
+
+        JsonObject resp = processGCLogFile(token, "", "", "par_old_pigsty_log_1.log");
+        Assert.assertTrue(success().test(resp));
+
+        AnalyseResponse ar = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
+        long from = ar.startUTC;
+        long to = ar.lastEventUTC.values().iterator().next();
+        List<GCEventResponse> events = getEventsStream(token, EventsController.ANONYMOUS_ANALYSE_ID, ar.jvmIds.iterator().next(),
+                from, to, "/gc/jvm/events/full/sample/stream");
+        Assert.assertTrue(events.size() > 1);
     }
 
     @Test

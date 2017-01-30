@@ -59,10 +59,10 @@ public class RatesInterceptor extends BaseInterceptor implements Interceptor {
 
     private void write(GCEvent event, Runnable delimit, RequestContext ctx) {
         try {
-            if (allocationRateCount > 0 && allocationRateSum > 0 && promotionRateSum > 0 &&
-                    promotionRateCount > 0) {
-                long allRate = allocationRateSum / allocationRateCount;
-                long prRate = promotionRateSum / promotionRateCount;
+            if ((allocationRateCount > 0 && allocationRateSum > 0) || (promotionRateSum > 0 &&
+                    promotionRateCount > 0)) {
+                long allRate = allocationRateSum / Math.max(allocationRateCount, 1);
+                long prRate = promotionRateSum / Math.max(promotionRateCount, 1);
                 sb.append("{\"alr\":").append(allRate).append(",\"prr\":").append(prRate)
                         .append(",\"d\":").append(event.occurred().getMillis()).append("}");
                 ctx.write(sb.toString());
