@@ -138,8 +138,8 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
 
             @Override
             public boolean hasNext() {
-                if (checkIterator()) return false;
-                return resultIterator.hasNext();
+                checkIterator();
+                return resultIterator != null && resultIterator.hasNext();
             }
 
             @Override
@@ -148,7 +148,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 return resultIterator.next();
             }
 
-            private boolean selectNext() {
+            private void selectNext() {
                 if (dates.hasNext()) {
                     String date = dates.next();
                     Statement statement = QueryBuilder.select(fields).from(TABLE_NAME)
@@ -159,19 +159,13 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                             .and(lte("written_at", QueryBuilder.fcall("maxTimeuuid", range.to.getMillis()))).setFetchSize(fetchSize);
                     LOG.debug("Query: {}", statement);
                     resultIterator = connector.session().execute(statement).iterator();
-                    return true;
-                } else {
-                    return false;
                 }
             }
 
-            private boolean checkIterator() {
-                if (resultIterator == null || !resultIterator.hasNext()) {
-                    if (!selectNext()) {
-                        return true;
-                    }
+            private void checkIterator() {
+                while ((resultIterator == null || !resultIterator.hasNext()) && dates.hasNext()) {
+                    selectNext();
                 }
-                return false;
             }
         };
     }
