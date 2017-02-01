@@ -203,7 +203,7 @@ public class GCTests extends IntegrationTest {
         Assert.assertTrue(success().test(resp));
 
         AnalyseResponse ar = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
-        long from = ar.startUTC;
+        long from = ar.lastEventUTC.values().iterator().next() - 60 * 1000;
         long to = ar.lastEventUTC.values().iterator().next();
         List<GCEventResponse> events = getEventsStream(token, EventsController.ANONYMOUS_ANALYSE_ID, ar.jvmIds.iterator().next(),
                 from, to, "/gc/jvm/events/full/sample/stream");
