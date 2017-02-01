@@ -95,7 +95,7 @@ public class SurvivorAgesInfoProducer {
             total[i] /= count[i];
         }
 
-        return new AgesState(desiredSurvivorSize / desiredSurvivorCount, Arrays.asList(ArrayUtils.toObject(occupied)),
+        return new AgesState(desiredSurvivorSize / Math.max(desiredSurvivorCount, 1), Arrays.asList(ArrayUtils.toObject(occupied)),
                 Arrays.asList(ArrayUtils.toObject(total)));
     }
 
