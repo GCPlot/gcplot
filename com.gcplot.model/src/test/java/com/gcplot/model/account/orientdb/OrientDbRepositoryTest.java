@@ -10,6 +10,8 @@ import com.gcplot.repository.*;
 import com.google.common.collect.Lists;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,7 +44,7 @@ public class OrientDbRepositoryTest {
         repository.init();
         Assert.assertFalse(repository.account("token").isPresent());
         AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
-                "artem@reveno.org", "token", "pass", "salt", new ArrayList<>());
+                "artem@reveno.org", "token", "pass", "salt", new ArrayList<>(), DateTime.now(DateTimeZone.UTC));
         account = (AccountImpl) repository.insert(account);
         Assert.assertNotNull(account.getOId());
         Assert.assertTrue(repository.account("token").isPresent());
@@ -104,7 +106,7 @@ public class OrientDbRepositoryTest {
         Assert.assertEquals(0, role.restrictions().get(1).properties().size());
 
         AccountImpl account = AccountImpl.createNew("abc", "Artem", "Dmitriev",
-                "artem@reveno.org", "token", "pass", "salt", Lists.newArrayList(role));
+                "artem@reveno.org", "token", "pass", "salt", Lists.newArrayList(role), DateTime.now(DateTimeZone.UTC));
         accRep.insert(account);
         account = (AccountImpl) accRep.account("token").get();
 

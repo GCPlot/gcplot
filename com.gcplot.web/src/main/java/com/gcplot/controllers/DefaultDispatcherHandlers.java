@@ -80,6 +80,13 @@ public class DefaultDispatcherHandlers {
         sb.append("User Agent [").append(req.getUserAgent()).append("] ");
         sb.append("IP [").append(req.getIp()).append("] ");
         sb.append("Method [").append(req.method()).append("] ");
+        if (req.loginInfo().isPresent()) {
+            sb.append("User [").append(req.loginInfo().get().getAccount().username())
+                    .append(" | ").append(req.loginInfo().get().getAccount().firstName()).append(" ")
+                    .append(req.loginInfo().get().getAccount().lastName()).append("] ");
+        } else {
+            sb.append("Anonymous User [] ");
+        }
         sb.append("Headers [");
         req.headers().forEach((k, v) -> sb.append(k).append("=").append('"').append(v).append("\";"));
         sb.append("]");

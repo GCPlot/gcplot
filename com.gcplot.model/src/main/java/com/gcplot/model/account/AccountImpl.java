@@ -4,9 +4,12 @@ import com.gcplot.Identifier;
 import com.gcplot.model.role.Role;
 import com.gcplot.model.role.RoleImpl;
 import com.google.common.base.MoreObjects;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -110,6 +113,16 @@ public class AccountImpl implements Account {
     public List<Role> roles() {
         return (List<Role>) roles;
     }
+
+    @Override
+    public DateTime registrationTime() {
+        return new DateTime(registrationTime, DateTimeZone.UTC);
+    }
+
+    public void setRegistrationTime(DateTime registrationTime) {
+        this.registrationTime = registrationTime.toDate();
+    }
+
     public List<RoleImpl> rolesImpl() {
         return (List<RoleImpl>) roles;
     }
@@ -144,7 +157,7 @@ public class AccountImpl implements Account {
     protected AccountImpl(String username, String firstName, String lastName,
                           String email, String token,
                           String passHash, boolean confirmed, String confirmationSalt,
-                          ArrayList<RoleImpl> roles) {
+                          ArrayList<RoleImpl> roles, DateTime registrationTime) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -154,14 +167,16 @@ public class AccountImpl implements Account {
         this.confirmed = confirmed;
         this.confirmationSalt = confirmationSalt;
         this.roles = roles;
+        this.registrationTime = registrationTime.toDate();
     }
 
     public static AccountImpl createNew(String username,
                                         String firstName, String lastName,
                                         String email, String token, String passHash,
-                                        String confirmationSalt, ArrayList<RoleImpl> roles) {
+                                        String confirmationSalt, ArrayList<RoleImpl> roles,
+                                        DateTime registrationTime) {
         return new AccountImpl(username, firstName, lastName,
-                email, token, passHash, false, confirmationSalt, roles);
+                email, token, passHash, false, confirmationSalt, roles, registrationTime);
     }
 
     @Override
@@ -217,6 +232,7 @@ public class AccountImpl implements Account {
                 .add("confirmationSalt", confirmationSalt)
                 .add("roles", roles)
                 .add("version", version)
+                .add("registrationTime", registrationTime)
                 .toString();
     }
 
@@ -234,6 +250,7 @@ public class AccountImpl implements Account {
     protected boolean blocked;
     protected String confirmationSalt;
     protected boolean roleManagement;
+    protected Date registrationTime;
     @OneToMany(targetEntity = RoleImpl.class)
     protected ArrayList<? super RoleImpl> roles;
 }

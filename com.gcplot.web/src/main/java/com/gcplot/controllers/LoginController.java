@@ -13,6 +13,8 @@ import com.gcplot.services.UrlBuilder;
 import com.gcplot.web.RequestContext;
 import com.google.common.base.Strings;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -92,7 +94,8 @@ public class LoginController extends Controller {
         } else {
             Account newAccount = AccountImpl.createNew(request.username, request.firstName, request.lastName,
                     request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
-                    hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()), new ArrayList<>());
+                    hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()), new ArrayList<>(),
+                    DateTime.now(DateTimeZone.UTC));
             try {
                 getAccountRepository().insert(newAccount);
             } catch (NotUniqueException e) {

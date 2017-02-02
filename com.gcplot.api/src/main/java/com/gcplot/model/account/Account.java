@@ -2,6 +2,7 @@ package com.gcplot.model.account;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.role.Role;
+import org.joda.time.DateTime;
 
 import java.util.List;
 
@@ -30,4 +31,6 @@ public interface Account {
     String confirmationSalt();
 
     List<Role> roles();
+
+    DateTime registrationTime();
 }
