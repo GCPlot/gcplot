@@ -52,17 +52,18 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         GCResource gcResource = new GCResource("default");
         gcResource.setLogger(ctx.logger());
         StreamDataReader dr;
+        final DateTime now = DateTime.now(DateTimeZone.UTC);
         GCEvent[] firstEvent = new GCEvent[1];
         AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
         List<Future> fs = new ArrayList<>();
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
             if (firstEvent[0] == null) {
-                firstEvent[0] = map(ctx, l.get(0)).get(0);
+                firstEvent[0] = map(now, ctx, l.get(0)).get(0);
                 firstEventListener.accept(firstEvent[0]);
             }
             lastEvent[0] = l.get(l.size() - 1);
             fs.add(executor.submit(() -> { try {
-                l.forEach(e -> map(ctx, e).forEach(eventsConsumer));
+                l.forEach(e -> map(now, ctx, e).forEach(eventsConsumer));
             } catch (Throwable t) {
                 ctx.logger().error(t.getMessage(), t);
             }}));
@@ -91,7 +92,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
             } catch (Throwable ignored) {}
         });
         if (lastEvent[0] != null) {
-            List<GCEvent> mapped = map(ctx, lastEvent[0]);
+            List<GCEvent> mapped = map(now, ctx, lastEvent[0]);
             lastEventListener.accept(mapped.get(mapped.size() - 1));
         }
         // temp stuff
@@ -126,7 +127,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         }
     }
 
-    public List<GCEvent> map(ParserContext ctx, AbstractGCEvent<?> event) {
+    public List<GCEvent> map(DateTime now, ParserContext ctx, AbstractGCEvent<?> event) {
         ArrayList<GCEvent> events = new ArrayList<>(1);
         String description = event.getTypeAsString();
         VMEventType vmEventType = VMEventType.GARBAGE_COLLECTION;
@@ -140,7 +141,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         DateTime datestamp;
         Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
         if (event.getDatestamp() == null) {
-            datestamp = DateTime.now(DateTimeZone.UTC).plusMillis((int)(event.getTimestamp() * 1000));
+            datestamp = now.minusMillis((int)(event.getTimestamp() * 1000));
         } else {
             TimeZone timeZone = TimeZone.getTimeZone(event.getDatestamp().getZone().getId());
             DateTimeZone z = DateTimeZone.forTimeZone(timeZone);
