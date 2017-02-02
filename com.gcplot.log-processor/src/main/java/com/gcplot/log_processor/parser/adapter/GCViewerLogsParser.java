@@ -12,6 +12,7 @@ import com.gcplot.model.gc.GCEvent;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
 import com.tagtraum.perf.gcviewer.model.*;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         GCResource gcResource = new GCResource("default");
         gcResource.setLogger(ctx.logger());
         StreamDataReader dr;
-        final DateTime now = DateTime.now(DateTimeZone.UTC);
+        final DateTime now = DateTime.now(DateTimeZone.UTC).withDayOfYear(1).withTimeAtStartOfDay();
         GCEvent[] firstEvent = new GCEvent[1];
         AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
         List<Future> fs = new ArrayList<>();
@@ -141,7 +142,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         DateTime datestamp;
         Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
         if (event.getDatestamp() == null) {
-            datestamp = now.minusMillis((int)(event.getTimestamp() * 1000));
+            datestamp = now.plusMillis((int)(event.getTimestamp() * 1000));
         } else {
             TimeZone timeZone = TimeZone.getTimeZone(event.getDatestamp().getZone().getId());
             DateTimeZone z = DateTimeZone.forTimeZone(timeZone);
