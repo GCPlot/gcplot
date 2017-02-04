@@ -1,6 +1,7 @@
 package com.gcplot.log_processor.survivor;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +37,11 @@ public class AgesState {
         this.ages = occupied.size();
         this.occupied = Collections.unmodifiableList(occupied);
         this.total = Collections.unmodifiableList(total);
+    }
+
+    public static AgesState single(long desiredSurvivorSize, Pair<Long, Long> sizes) {
+        return new AgesState(desiredSurvivorSize, Collections.singletonList(sizes.getLeft()),
+                Collections.singletonList(sizes.getRight()));
     }
 
     public static final AgesState NONE = new AgesState(0L, Collections.emptyList(), Collections.emptyList());

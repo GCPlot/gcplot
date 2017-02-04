@@ -2,10 +2,10 @@ package com.gcplot.log_processor.parser.producers.v8;
 
 import com.gcplot.log_processor.survivor.AgesState;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,13 +22,9 @@ public class SurvivorAgesInfoProducer {
     private static final String AGES_PREFIX = "- age";
     private static final Pattern AGE_PATTERN = Pattern.compile(AGES_PREFIX + "[ \\t]+(?<" + AGE_NUM_GROUP + ">[0-9]+):[ \\t]+" +
             "(?<" + AGE_OCCUPIED_GROUP + ">[0-9]+)[ \\t]+bytes,[ \\t]+(?<" + AGE_TOTAL_GROUP + ">[0-9]+)[ \\t]+total");
-    protected List<AgesState> agesStates = new ArrayList<>();
-    protected List<Long> occupied = new ArrayList<>();
-    protected List<Long> total = new ArrayList<>();
+    protected SortedMap<Integer, List<Pair<Long, Long>>> ages = new TreeMap<>();
     protected long desiredSurvivorSize;
     protected long desiredSurvivorCount;
-    protected int lastAge = -1;
-    protected int maxAge = 0;
     protected Runnable onFinished = () -> {};
 
     public void parse(String s) {
@@ -38,12 +34,7 @@ public class SurvivorAgesInfoProducer {
                 int age = Integer.parseInt(m.group(AGE_NUM_GROUP));
                 long ocp = Long.parseLong(m.group(AGE_OCCUPIED_GROUP));
                 long ttl = Long.parseLong(m.group(AGE_TOTAL_GROUP));
-                if (age <= lastAge) {
-                    finish();
-                }
-                occupied.add(ocp);
-                total.add(ttl);
-                lastAge = age;
+                ages.computeIfAbsent(age, k -> new ArrayList<>()).add(Pair.of(ocp, ttl));
             }
         } else if (s.startsWith(DESIRED_PREFIX)) {
             Matcher m = DESIRED_SIZE_PATTERN.matcher(s);
@@ -56,46 +47,32 @@ public class SurvivorAgesInfoProducer {
 
     public void finish() {
         onFinished.run();
-        agesStates.add(new AgesState(0L, new ArrayList<>(occupied), new ArrayList<>(total)));
-        occupied.clear();
-        total.clear();
-        if (lastAge > maxAge) {
-            maxAge = lastAge;
-        }
-    }
-
-    public void reset() {
-        agesStates.clear();
-        occupied.clear();
-        total.clear();
-        lastAge = -1;
-        maxAge = 0;
     }
 
     public AgesState averageAgesState() {
-        if (agesStates.size() == 0) {
+        long dss = desiredSurvivorSize / Math.max(desiredSurvivorCount, 1);
+        if (ages.size() == 0) {
             return AgesState.NONE;
         }
-        if (agesStates.size() == 1) {
-            return agesStates.get(0);
-        }
-        long[] occupied = new long[maxAge];
-        long[] total = new long[maxAge];
-        long[] count = new long[maxAge];
+        long[] occupied = new long[ages.size()];
+        long[] total = new long[ages.size()];
+        long[] count = new long[ages.size()];
 
-        for (AgesState as : agesStates) {
-            for (int i = 0; i < as.getOccupied().size(); i++) {
-                occupied[i] += as.getOccupied().get(i);
-                total[i] += as.getTotal().get(i);
-                count[i]++;
+        AtomicInteger ctr = new AtomicInteger();
+        ages.forEach((age, sizes) -> {
+            for (Pair<Long, Long> size : sizes) {
+                occupied[ctr.get()] += size.getLeft();
+                total[ctr.get()] += size.getRight();
+                count[ctr.get()]++;
             }
-        }
-        for (int i = 0; i < maxAge; i++) {
-            occupied[i] /= count[i];
-            total[i] /= count[i];
+            ctr.incrementAndGet();
+        });
+        for (int i = 0; i < ages.size(); i++) {
+            occupied[i] /= Math.max(count[i], 1);
+            total[i] /= Math.max(count[i], 1);
         }
 
-        return new AgesState(desiredSurvivorSize / Math.max(desiredSurvivorCount, 1), Arrays.asList(ArrayUtils.toObject(occupied)),
+        return new AgesState(dss, Arrays.asList(ArrayUtils.toObject(occupied)),
                 Arrays.asList(ArrayUtils.toObject(total)));
     }
 
