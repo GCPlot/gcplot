@@ -58,16 +58,23 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
         List<Future> fs = new ArrayList<>();
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
-            if (firstEvent[0] == null) {
-                firstEvent[0] = map(now, ctx, l.get(0)).get(0);
-                firstEventListener.accept(firstEvent[0]);
+            if (l.size() > 0) {
+                if (firstEvent[0] == null) {
+                    List<GCEvent> map = map(now, ctx, l.get(0));
+                    if (map.size() > 0) {
+                        firstEvent[0] = map.get(0);
+                        firstEventListener.accept(firstEvent[0]);
+                    }
+                }
+                lastEvent[0] = l.get(l.size() - 1);
+                fs.add(executor.submit(() -> {
+                    try {
+                        l.forEach(e -> map(now, ctx, e).forEach(eventsConsumer));
+                    } catch (Throwable t) {
+                        ctx.logger().error(t.getMessage(), t);
+                    }
+                }));
             }
-            lastEvent[0] = l.get(l.size() - 1);
-            fs.add(executor.submit(() -> { try {
-                l.forEach(e -> map(now, ctx, e).forEach(eventsConsumer));
-            } catch (Throwable t) {
-                ctx.logger().error(t.getMessage(), t);
-            }}));
         };
         try {
             if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
@@ -218,12 +225,6 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         long properties = detectProperties(event);
         events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
                 event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, cause, properties, concurrency, capacityByGeneration, ""));
-        /*if (!event.isVmEvent() && !event.isConcurrent() && ((com.tagtraum.perf.gcviewer.model.GCEvent)event).getPerm() != null) {
-            com.tagtraum.perf.gcviewer.model.GCEvent perm = ((com.tagtraum.perf.gcviewer.model.GCEvent) event).getPerm();
-            events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, perm.getTypeAsString(), VMEventType.GARBAGE_COLLECTION,
-                    of(perm), totalCapacity, event.getTimestamp(), 0, EnumSet.of(metaspaceGeneration(perm.getTypeAsString())),
-                    Phase.OTHER, EventConcurrency.SERIAL, ""));
-        }*/
 
         return events;
     }
