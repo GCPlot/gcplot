@@ -74,18 +74,18 @@ public class EventsController extends Controller {
         put(7776000L, 18000L); /* 90 days -> 5 hours */
     }};
     private static final Map<Long, Long> FULL_PERIOD_SAMPLING_BUCKETS = new LinkedHashMap<Long, Long>() {{
-        put(3600L, 30L); /* 1 hours -> 30 seconds */
-        put(7200L, 60L); /* 2 hours -> 1 minute */
-        put(21600L, 120L); /* 6 hours -> 2 minutes */
-        put(43200L, 240L); /* 12 hours -> 2 minutes */
-        put(86400L, 600L); /* 24 hours -> 10 minutes */
-        put(172800L, 1200L); /* 2 days -> 20 minutes */
-        put(345600L, 1800L); /* 4 days -> 30 minutes */
-        put(604800L, 3000L); /* 7 days -> 50 minutes */
-        put(1209600L, 7200L); /* 14 days -> 2 hours */
-        put(2592000L, 14400L); /* 30 days -> 4 hours */
-        put(5184000L, 18000L); /* 60 days -> 5 hours */
-        put(7776000L, 36000L); /* 90 days -> 10 hours */
+        put(3600L, 7L); /* 1 hours -> 7 seconds */
+        put(7200L, 15L); /* 2 hours -> 15 seconds */
+        put(21600L, 30L); /* 6 hours -> 30 seconds */
+        put(43200L, 60L); /* 12 hours -> 1 minute */
+        put(86400L, 120L); /* 24 hours -> 2 minutes */
+        put(172800L, 300L); /* 2 days -> 5 minutes */
+        put(345600L, 600L); /* 4 days -> 10 minutes */
+        put(604800L, 900L); /* 7 days -> 15 minutes */
+        put(1209600L, 1500L); /* 14 days -> 25 minutes */
+        put(2592000L, 3600L); /* 30 days -> 1 hour */
+        put(5184000L, 7200L); /* 60 days -> 2 hours */
+        put(7776000L, 10800L); /* 90 days -> 3 hours */
     }};
     private static final int ERASE_ALL_PERIOD_YEARS = 10;
     protected static final Logger LOG = LoggerFactory.getLogger(EventsController.class);
@@ -465,7 +465,7 @@ public class EventsController extends Controller {
     }
 
     private int pickUpFullSampling(long seconds) {
-        return pickUpSampling(seconds, 3600, 36000, FULL_PERIOD_SAMPLING_BUCKETS);
+        return pickUpSampling(seconds, 3600, 10800, FULL_PERIOD_SAMPLING_BUCKETS);
     }
 
     private int pickUpSampling(long seconds, long start, int last, Map<Long, Long> buckets) {

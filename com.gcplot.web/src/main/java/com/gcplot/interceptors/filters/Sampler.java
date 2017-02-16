@@ -42,15 +42,7 @@ public class Sampler implements Filter {
     }
 
     protected void process(GCEvent event, Consumer<GCEvent> write, EventsBundle b) {
-        if (b.getMin() == null) {
-            b.setMin(event);
-        }
-        if (b.getMax() == null) {
-            b.setMax(event);
-        }
-        if (edge == null) {
-            edge(event);
-        }
+        initialProcess(event, b);
         if (edgeMinus.isBefore(event.occurred())) {
             if (event.pauseMu() < b.getMin().pauseMu()) {
                 b.setMin(event);
@@ -61,6 +53,19 @@ public class Sampler implements Filter {
             }
         } else {
             writeAndReset(write, b);
+            initialProcess(event, b);
+            edge(event);
+        }
+    }
+
+    private void initialProcess(GCEvent event, EventsBundle b) {
+        if (b.getMin() == null) {
+            b.setMin(event);
+        }
+        if (b.getMax() == null) {
+            b.setMax(event);
+        }
+        if (edge == null) {
             edge(event);
         }
     }
