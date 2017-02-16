@@ -6,26 +6,27 @@ import org.joda.time.DateTime;
 
 import java.util.EnumSet;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         11/13/16
  */
 public class Sampler implements Filter {
-    private final EnumSet<Generation> applyTo;
+    private final Predicate<GCEvent> applyTo;
     private final int sampleSeconds;
     private EventsBundle events = new EventsBundle();
     private DateTime edge = null;
     private DateTime edgeMinus = null;
 
-    public Sampler(int sampleSeconds, EnumSet<Generation> applyTo) {
+    public Sampler(int sampleSeconds, Predicate<GCEvent> applyTo) {
         this.sampleSeconds = sampleSeconds;
         this.applyTo = applyTo;
     }
 
     @Override
     public boolean isApplicable(GCEvent event) {
-        return applyTo.size() <= 0 || event.generations().equals(applyTo);
+        return applyTo.test(event);
     }
 
     @Override

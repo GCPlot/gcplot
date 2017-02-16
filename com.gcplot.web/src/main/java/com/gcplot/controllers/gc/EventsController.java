@@ -59,7 +59,7 @@ public class EventsController extends Controller {
     public static final String DEFAULT_CHUNK_DELIMETER = "$d";
     public static final String ANONYMOUS_ANALYSE_NAME = "Files";
     public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
-    private static final Map<Long, Long> PERIOD_SAMPLING_BUCKETS = new LinkedHashMap<Long, Long>() {{
+    private static final Map<Long, Long> YOUNG_PERIOD_SAMPLING_BUCKETS = new LinkedHashMap<Long, Long>() {{
         put(3600L, 15L); /* 1 hours -> 15 seconds */
         put(7200L, 30L); /* 2 hours -> 30 seconds */
         put(21600L, 60L); /* 6 hours -> 1 minute */
@@ -72,6 +72,20 @@ public class EventsController extends Controller {
         put(2592000L, 7200L); /* 30 days -> 2 hours */
         put(5184000L, 14400L); /* 60 days -> 4 hours */
         put(7776000L, 18000L); /* 90 days -> 5 hours */
+    }};
+    private static final Map<Long, Long> FULL_PERIOD_SAMPLING_BUCKETS = new LinkedHashMap<Long, Long>() {{
+        put(3600L, 30L); /* 1 hours -> 30 seconds */
+        put(7200L, 60L); /* 2 hours -> 1 minute */
+        put(21600L, 120L); /* 6 hours -> 2 minutes */
+        put(43200L, 240L); /* 12 hours -> 2 minutes */
+        put(86400L, 600L); /* 24 hours -> 10 minutes */
+        put(172800L, 1200L); /* 2 days -> 20 minutes */
+        put(345600L, 1800L); /* 4 days -> 30 minutes */
+        put(604800L, 3000L); /* 7 days -> 50 minutes */
+        put(1209600L, 7200L); /* 14 days -> 2 hours */
+        put(2592000L, 14400L); /* 30 days -> 4 hours */
+        put(5184000L, 18000L); /* 60 days -> 5 hours */
+        put(7776000L, 36000L); /* 90 days -> 10 hours */
     }};
     private static final int ERASE_ALL_PERIOD_YEARS = 10;
     protected static final Logger LOG = LoggerFactory.getLogger(EventsController.class);
@@ -285,31 +299,35 @@ public class EventsController extends Controller {
                     }
                 }
                 long secondsBetween = new Duration(from, to).getStandardSeconds();
-                int sampleSeconds = pickUpSampling(secondsBetween);
+                int youngSampleSeconds = pickUpYoungSampling(secondsBetween);
+                int fullSampleSeconds = pickUpFullSampling(secondsBetween);
 
                 ctx.setChunked(true);
                 Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(from, to));
                 final EnumSet<Generation> tenuredOnly = EnumSet.of(Generation.TENURED);
                 final Runnable delimit = () -> delimit(ctx, pp);
 
-                Sampler youngSampler = new Sampler(sampleSeconds, EnumSet.of(Generation.YOUNG));
-                Sampler concurrentSampler = new PhaseSampler(sampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
+                Sampler youngSampler = new Sampler(youngSampleSeconds, GCEvent::isYoung);
+                Sampler fullSampler = new Sampler(fullSampleSeconds, GCEvent::isFull);
+                Sampler concurrentSampler = new PhaseSampler(youngSampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
                 Accumulator tenuredAcc = new Accumulator(config.readInt(ConfigProperty.TENURED_ACCUMULATE_SECONDS),
                         e -> e.generations().equals(tenuredOnly) && e.concurrency() == EventConcurrency.SERIAL);
                 StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(analyse.jvmGCTypes().get(pp.jvmId) == GarbageCollectorType.ORACLE_G1);
-                RatesInterceptor ri = new RatesInterceptor(sampleSeconds);
+                RatesInterceptor ri = new RatesInterceptor(youngSampleSeconds);
 
                 final Consumer<GCEvent> write = e -> write(ctx, pp, e);
                 while (i.hasNext()) {
                     GCEvent event = i.next();
                     if (event != null) {
-                        if (sampleSeconds != 1) {
+                        if (youngSampleSeconds != 1) {
                             if (youngSampler.isApplicable(event)) {
                                 youngSampler.process(event, write);
                             } else if (tenuredAcc.isApplicable(event)) {
                                 tenuredAcc.process(event, write);
                             } else if (concurrentSampler.isApplicable(event)) {
                                 concurrentSampler.process(event, write);
+                            } else if (fullSampler.isApplicable(event)) {
+                                fullSampler.process(event, write);
                             } else {
                                 write.accept(event);
                             }
@@ -322,9 +340,10 @@ public class EventsController extends Controller {
                         }
                     }
                 }
-                if (sampleSeconds != 1) {
+                if (youngSampleSeconds != 1) {
                     tenuredAcc.complete(write);
                     youngSampler.complete(write);
+                    fullSampler.complete(write);
                 }
 
                 if (pp.isStats()) {
@@ -441,19 +460,27 @@ public class EventsController extends Controller {
         }
     }
 
-    private int pickUpSampling(long seconds) {
-        if (seconds < 3600) {
+    private int pickUpYoungSampling(long seconds) {
+        return pickUpSampling(seconds, 3600, 18000, YOUNG_PERIOD_SAMPLING_BUCKETS);
+    }
+
+    private int pickUpFullSampling(long seconds) {
+        return pickUpSampling(seconds, 3600, 36000, FULL_PERIOD_SAMPLING_BUCKETS);
+    }
+
+    private int pickUpSampling(long seconds, long start, int last, Map<Long, Long> buckets) {
+        if (seconds < start) {
             return 1;
         }
         long sample = 0;
-        for (Map.Entry<Long, Long> e : PERIOD_SAMPLING_BUCKETS.entrySet()) {
+        for (Map.Entry<Long, Long> e : buckets.entrySet()) {
             if (seconds < e.getKey()) {
                 sample = e.getValue();
                 break;
             }
         }
         if (sample == 0) {
-            return 18000;
+            return last;
         }
         return (int) sample;
     }
