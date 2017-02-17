@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -119,12 +120,12 @@ public class EventsController extends Controller {
      */
     public void processJvmLog(RequestContext ctx) {
         UploadedFile uf = ctx.files().get(0);
+        final boolean isSync = Boolean.parseBoolean(ctx.param("sync", "false"));
+        final String analyseId = ctx.param("analyse_id", ANONYMOUS_ANALYSE_ID);
+        final String jvmId = ctx.param("jvm_id", UUID.randomUUID().toString());
+        final String username = esc(account(ctx).username());
         try {
-            final boolean isSync = Boolean.parseBoolean(ctx.param("sync", "false"));
-            final String analyseId = ctx.param("analyse_id", ANONYMOUS_ANALYSE_ID);
-            final String jvmId = ctx.param("jvm_id", UUID.randomUUID().toString());
             final Identifier userId = account(ctx).id();
-            final String username = esc(account(ctx).username());
             String checksum = ctx.param("checksum", null);
 
             Optional<GCAnalyse> oAnalyse = Optional.empty();
@@ -191,6 +192,8 @@ public class EventsController extends Controller {
                             persistObjectAges(analyseId, jvmId, pr);
                         }
                     }
+
+                    truncateFile(logFile, getConfig().readLong(ConfigProperty.PARSE_LOG_MAX_FILE_SIZE));
                     uploadLogFile(isSync, analyseId, jvmId, username, logFile);
                     ctx.response(SUCCESS);
                 } catch (Throwable t) {
@@ -198,8 +201,8 @@ public class EventsController extends Controller {
                 }
             }
         } finally {
+            uploadLogFile(isSync, "gc-log", analyseId, jvmId, username, uf.file());
             // TODO log file size processed per user
-            FileUtils.deleteSilent(uf.file());
         }
     }
 
@@ -471,6 +474,16 @@ public class EventsController extends Controller {
         return (int) sample;
     }
 
+    private void truncateFile(File logFile, long maxSize) {
+        if (logFile.length() > maxSize) {
+            try (FileChannel outChan = new FileOutputStream(logFile, true).getChannel()) {
+                outChan.truncate(maxSize);
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+            }
+        }
+    }
+
     private String calculateFileChecksum(RequestContext ctx, UploadedFile uf) throws IOException, NoSuchAlgorithmException {
         String checksum;
         LOG.warn("No checksum was provided in the request, calculating own: {}", ctx);
@@ -503,12 +516,17 @@ public class EventsController extends Controller {
     }
 
     private void uploadLogFile(boolean isSync, String analyseId, String jvmId, String username, File logFile) {
+        uploadLogFile(isSync, "log", analyseId, jvmId, username, logFile);
+    }
+
+    private void uploadLogFile(boolean isSync, String rootFolder,
+                               String analyseId, String jvmId, String username, File logFile) {
         if (!resourceManager.isDisabled()) {
             Future f = executor.submit(() -> {
                 try {
                     LOG.debug("Starting uploading {}", logFile);
                     resourceManager.upload(logFile,
-                            "log/" + username + "/" + esc(analyseId) + "/" + esc(jvmId));
+                            rootFolder + "/" + username + "/" + esc(analyseId) + "/" + esc(jvmId));
                 } catch (Throwable t) {
                     LOG.error(t.getMessage(), t);
                 } finally {

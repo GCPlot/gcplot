@@ -34,7 +34,9 @@ public enum ConfigProperty {
 
     PASSWORD_MIN_LENGTH("password.min.length", 1),
 
-    CONFIRMATION_IS_RESTRICTED("confirmation.is.restricted", false);
+    CONFIRMATION_IS_RESTRICTED("confirmation.is.restricted", false),
+
+    PARSE_LOG_MAX_FILE_SIZE("parse.log.max.file.size", 512L * 1024 * 1024);
 
     private static Map<String, ConfigProperty> types = new HashMap<>();
 
