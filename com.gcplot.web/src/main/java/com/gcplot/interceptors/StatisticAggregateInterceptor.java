@@ -145,7 +145,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         }
         calcGCStats(event, g);
 
-        if (event.isYoung()) {
+        if (event.isYoung() || (event.isFull() && event.hasYoungCapacity())) {
             if (firstEvent == 0) {
                 firstEvent = event.occurred().getMillis();
             }
