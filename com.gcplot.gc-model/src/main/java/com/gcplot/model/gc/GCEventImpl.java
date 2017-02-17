@@ -241,7 +241,7 @@ public class GCEventImpl implements GCEvent {
         if (parentEvent != null ? !parentEvent.equals(gcEvent.parentEvent) : gcEvent.parentEvent != null) return false;
         if (analyseId != null ? !analyseId.equals(gcEvent.analyseId) : gcEvent.analyseId != null) return false;
         if (description != null ? !description.equals(gcEvent.description) : gcEvent.description != null) return false;
-        if (occurred != null ? !occurred.equals(gcEvent.occurred) : gcEvent.occurred != null) return false;
+        if (!occurred.equals(gcEvent.occurred)) return false;
         if (vmEventType != gcEvent.vmEventType) return false;
         if (phase != gcEvent.phase) return false;
         if (cause != gcEvent.cause) return false;
@@ -250,8 +250,7 @@ public class GCEventImpl implements GCEvent {
             return false;
         if (generations != null ? !generations.equals(gcEvent.generations) : gcEvent.generations != null) return false;
         if (concurrency != gcEvent.concurrency) return false;
-        if (ext != null ? !ext.equals(gcEvent.ext) : gcEvent.ext != null) return false;
-        return capacityByGeneration != null ? capacityByGeneration.equals(gcEvent.capacityByGeneration) : gcEvent.capacityByGeneration == null;
+        return ext != null ? ext.equals(gcEvent.ext) : gcEvent.ext == null;
     }
 
     @Override
@@ -264,7 +263,7 @@ public class GCEventImpl implements GCEvent {
         result = 31 * result + (parentEvent != null ? parentEvent.hashCode() : 0);
         result = 31 * result + (analyseId != null ? analyseId.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (occurred != null ? occurred.hashCode() : 0);
+        result = 31 * result + occurred.hashCode();
         temp = Double.doubleToLongBits(timestamp);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (vmEventType != null ? vmEventType.hashCode() : 0);
@@ -277,7 +276,6 @@ public class GCEventImpl implements GCEvent {
         result = 31 * result + (generations != null ? generations.hashCode() : 0);
         result = 31 * result + (concurrency != null ? concurrency.hashCode() : 0);
         result = 31 * result + (ext != null ? ext.hashCode() : 0);
-        result = 31 * result + (capacityByGeneration != null ? capacityByGeneration.hashCode() : 0);
         return result;
     }
 
