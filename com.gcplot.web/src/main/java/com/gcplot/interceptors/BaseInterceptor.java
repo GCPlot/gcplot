@@ -1,7 +1,9 @@
 package com.gcplot.interceptors;
 
 import com.gcplot.model.Property;
+import com.gcplot.model.gc.Capacity;
 import com.gcplot.model.gc.GCEvent;
+import com.gcplot.model.gc.Generation;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -18,13 +20,16 @@ public class BaseInterceptor {
 
     protected void countRates(GCEvent event) {
         if (ratePreviousEvent != null) {
+            Capacity capacity = event.isYoung() ? event.capacity() : event.capacityByGeneration().get(Generation.YOUNG);
+            Capacity prevCapacity = event.isYoung() ? ratePreviousEvent.capacity() :
+                    ratePreviousEvent.capacityByGeneration().get(Generation.YOUNG);
             long period = Math.abs(ratePreviousEvent.occurred().getMillis() - event.occurred().getMillis());
-            long allocated = Math.abs(ratePreviousEvent.capacity().usedBefore() - event.capacity().usedAfter());
+            long allocated = Math.abs(prevCapacity.usedBefore() - capacity.usedAfter());
             allocatedSum += allocated;
             allocationRateSum += ((1000 * allocated) / period);
             allocationRateCount++;
 
-            long youngDecreased = Math.abs(event.capacity().usedBefore() - event.capacity().usedAfter());
+            long youngDecreased = Math.abs(capacity.usedBefore() - capacity.usedAfter());
             long totalDecreased = Math.abs(event.totalCapacity().usedBefore() - event.totalCapacity().usedAfter());
             // it's not a promotion when TOTAL heap decreased more than YOUNG
             if (!event.hasProperty(Property.G1_MIXED) && totalDecreased < youngDecreased) {

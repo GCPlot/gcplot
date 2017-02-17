@@ -113,7 +113,7 @@ public abstract class Mapper {
             Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
             if (gcEvent.generations().size() > 1 && row.getColumnDefinitions().contains("gen_cap_before") &&
                     row.getColumnDefinitions().contains("gen_cap_after") && row.getColumnDefinitions().contains("gen_cap_total")) {
-                capacityByGeneration = new HashMap<>();
+                capacityByGeneration = new IdentityHashMap<>(2);
                 Map<Integer, Long> before = row.getMap("gen_cap_before", Integer.class, Long.class);
                 Map<Integer, Long> after = row.getMap("gen_cap_after", Integer.class, Long.class);
                 Map<Integer, Long> total = row.getMap("gen_cap_total", Integer.class, Long.class);

@@ -126,7 +126,7 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
 
     protected void fillEvent(String analyseId, String jvmId, String bucketId,
                              double seconds, GCEventImpl event) {
-        Map<Generation, Capacity> generationCapacityMap = new HashMap<>();
+        Map<Generation, Capacity> generationCapacityMap = new IdentityHashMap<>();
         generationCapacityMap.put(Generation.YOUNG, Capacity.NONE);
         generationCapacityMap.put(Generation.TENURED, Capacity.NONE);
         event.jvmId(jvmId).analyseId(analyseId).description("descr1")

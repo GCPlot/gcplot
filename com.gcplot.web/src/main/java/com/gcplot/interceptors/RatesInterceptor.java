@@ -28,7 +28,7 @@ public class RatesInterceptor extends BaseInterceptor implements Interceptor {
         if (edge == null) {
             edge(event);
         }
-        if (event.isYoung()) {
+        if (event.isYoung() || (event.isFull() && event.hasYoungCapacity())) {
             try {
                 if (ratePreviousEvent != null) {
                     if (sampleSeconds > 1) {
