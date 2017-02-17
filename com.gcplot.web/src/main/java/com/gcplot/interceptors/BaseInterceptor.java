@@ -21,7 +21,7 @@ public class BaseInterceptor {
     protected void countRates(GCEvent event) {
         if (ratePreviousEvent != null) {
             Capacity capacity = event.isYoung() ? event.capacity() : event.capacityByGeneration().get(Generation.YOUNG);
-            Capacity prevCapacity = event.isYoung() ? ratePreviousEvent.capacity() :
+            Capacity prevCapacity = ratePreviousEvent.isYoung() ? ratePreviousEvent.capacity() :
                     ratePreviousEvent.capacityByGeneration().get(Generation.YOUNG);
             long period = Math.abs(ratePreviousEvent.occurred().getMillis() - event.occurred().getMillis());
             long allocated = Math.abs(prevCapacity.usedBefore() - capacity.usedAfter());
