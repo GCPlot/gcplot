@@ -3,6 +3,13 @@ CREATE KEYSPACE IF NOT EXISTS gcplot
 
 USE gcplot;
 
+CREATE TABLE IF NOT EXISTS gc_log_source (
+  id uuid,
+  analyse_id uuid,
+  jvm_id varchar,
+  config_string varchar
+);
+
 CREATE TABLE IF NOT EXISTS gc_analyse (
   id uuid,
   account_id varchar,
