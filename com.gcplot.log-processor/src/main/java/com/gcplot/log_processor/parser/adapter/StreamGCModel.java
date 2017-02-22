@@ -68,7 +68,8 @@ public class StreamGCModel extends GCModel {
     }
 
     private void processNextBatch() {
-        List<AbstractGCEvent<?>> toConsume = allEvents.subList(0, allEvents.size() / 2);
+        int size = allEvents.size();
+        List<AbstractGCEvent<?>> toConsume = new ArrayList<>(allEvents.subList(0, size / 2));
         allEvents = cutBy(allEvents, 2);
         if (stopTheWorldEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
             stopTheWorldEvents = cutBy(stopTheWorldEvents, 2);
@@ -88,10 +89,11 @@ public class StreamGCModel extends GCModel {
         if (fullGCEvents.size() >= BATCH_SIZE_MIN_THRESHOLD) {
             fullGCEvents = cutBy(fullGCEvents, 2);
         }
-        eventsConsumer.accept(new ArrayList<>(toConsume));
+        eventsConsumer.accept(toConsume);
     }
 
     private <T> List<T> cutBy(List<T> list, int ratio) {
-        return list.subList(list.size() / ratio, list.size());
+        int size = list.size();
+        return new ArrayList<>(list.subList(size / ratio, size));
     }
 }

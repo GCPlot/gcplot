@@ -33,16 +33,8 @@ public abstract class CollectionUtils {
         return EMPTY_LONG_SET;
     }
 
-    public static IntList copy(IntList list) {
-        return list.subList(0, list.size());
-    }
-
     public static IntSet copy(IntSet set) {
         return new IntOpenHashSet(set);
-    }
-
-    public static LongList copy(LongList list) {
-        return list.subList(0, list.size());
     }
 
     public static LongSet copy(LongSet set) {
