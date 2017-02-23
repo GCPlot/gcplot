@@ -218,6 +218,7 @@ public class VertxRequestContext implements RequestContext {
 
     public VertxRequestContext reset(RoutingContext context) {
         this.context = context;
+        this.loginInfo = null;
         this.clear();
         mimeType = APPLICATION_JSON;
         return this;
