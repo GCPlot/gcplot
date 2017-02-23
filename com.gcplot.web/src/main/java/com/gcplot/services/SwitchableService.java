@@ -13,7 +13,7 @@ public abstract class SwitchableService {
 
     public abstract void stop();
 
-    private void init() {
+    public void init() {
         if (isEnabled()) {
             try {
                 start();
@@ -26,7 +26,7 @@ public abstract class SwitchableService {
         }
     }
 
-    private void destroy() {
+    public void destroy() {
         if (isEnabled()) {
             try {
                 stop();

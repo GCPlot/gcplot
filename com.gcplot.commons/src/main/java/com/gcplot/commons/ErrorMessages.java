@@ -28,6 +28,7 @@ public class ErrorMessages {
     public static final long LOG_FILE_UNDETECTABLE = 0x203;
 
     public static final long INVALID_REQUEST_PARAM = 0x301;
+    public static final long SERVING_IS_DISABLED = 0x999;
 
     public static String buildJson(long code) {
         ObjectNode node = new ObjectNode(JSON_NODE_FACTORY);
@@ -60,6 +61,7 @@ public class ErrorMessages {
         errorMessages.put(RESOURCE_NOT_FOUND_RESPONSE, "Requested resource was not found in the system.");
         errorMessages.put(ACCESS_DENIED, "The access to the given resource is denied by the internal role system.");
         errorMessages.put(LOG_FILE_UNDETECTABLE, "Unable to detect JVM version or GC type from the log file.");
+        errorMessages.put(SERVING_IS_DISABLED, "Application is on a maintenance. Please try again in a few minutes.");
     }
 
     private static final JsonNodeFactory JSON_NODE_FACTORY = JsonNodeFactory.instance;

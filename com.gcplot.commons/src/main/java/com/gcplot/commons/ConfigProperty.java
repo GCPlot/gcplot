@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ConfigProperty {
-
+    SERVING_DISABLED("serving.disabled", false),
     POLL_INTERVAL("config.poll.interval", 15000),
 
     PUBLIC_HOST("public.host.domain", "gcplot.com"),
