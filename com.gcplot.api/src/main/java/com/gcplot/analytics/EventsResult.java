@@ -1,13 +1,6 @@
 package com.gcplot.analytics;
 
-import com.gcplot.model.DatedEvent;
-import com.gcplot.model.IdentifiedEvent;
-import com.gcplot.model.gc.GCEvent;
-import com.gcplot.model.stats.GCStatistic;
 import com.google.common.base.Strings;
-import com.sun.xml.internal.xsom.impl.scd.Iterators;
-
-import java.util.Iterator;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

@@ -1,6 +1,9 @@
 package com.gcplot.repository.cassandra;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.RegularStatement;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.gcplot.commons.Range;
@@ -25,8 +28,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.gcplot.commons.CollectionUtils.processKeyMap;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
+import static com.gcplot.commons.CollectionUtils.processKeyMap;
 import static com.gcplot.model.gc.cassandra.Mapper.eventFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 

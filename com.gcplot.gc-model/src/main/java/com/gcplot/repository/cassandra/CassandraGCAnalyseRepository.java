@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static com.gcplot.commons.CollectionUtils.processMap;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
+import static com.gcplot.commons.CollectionUtils.processMap;
 import static com.gcplot.commons.CollectionUtils.transformValue;
 import static com.gcplot.model.gc.cassandra.Mapper.analyseFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.analysesFrom;

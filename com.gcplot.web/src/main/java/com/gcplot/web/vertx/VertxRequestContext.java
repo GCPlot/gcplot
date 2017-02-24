@@ -20,7 +20,6 @@ import io.vertx.ext.web.RoutingContext;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;

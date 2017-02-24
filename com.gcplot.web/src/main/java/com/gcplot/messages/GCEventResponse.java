@@ -5,10 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.CollectionUtils;
 import com.gcplot.commons.enums.TypedEnum;
 import com.gcplot.model.gc.*;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.Collections;

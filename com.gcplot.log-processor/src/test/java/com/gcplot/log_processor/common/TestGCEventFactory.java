@@ -1,10 +1,8 @@
 package com.gcplot.log_processor.common;
 
 import com.gcplot.model.gc.*;
-import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;

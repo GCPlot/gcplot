@@ -3,7 +3,6 @@ package com.gcplot.logs;
 import com.gcplot.model.gc.GCEvent;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.function.Consumer;
 
 public interface LogsParser<ParseResult> {

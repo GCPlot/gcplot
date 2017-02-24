@@ -8,18 +8,21 @@ import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
 import com.gcplot.model.Property;
 import com.gcplot.model.gc.*;
-import com.gcplot.model.gc.GCEvent;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
-import com.tagtraum.perf.gcviewer.model.*;
+import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
+import com.tagtraum.perf.gcviewer.model.ConcurrentGCEvent;
+import com.tagtraum.perf.gcviewer.model.GCResource;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**

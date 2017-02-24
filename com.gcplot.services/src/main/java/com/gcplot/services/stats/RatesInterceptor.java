@@ -8,7 +8,6 @@ import org.joda.time.DateTime;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Promotion and allocation rates interceptor which helps gather

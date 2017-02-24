@@ -1,6 +1,5 @@
 package com.gcplot.services;
 
-import com.gcplot.model.DatedEvent;
 import com.gcplot.model.IdentifiedEvent;
 import com.gcplot.model.gc.GCEvent;
 

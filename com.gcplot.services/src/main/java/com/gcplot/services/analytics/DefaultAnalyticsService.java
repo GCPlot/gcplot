@@ -15,11 +15,9 @@ import com.gcplot.services.filters.PhaseSampler;
 import com.gcplot.services.filters.Sampler;
 import com.gcplot.services.stats.RatesInterceptor;
 import com.gcplot.services.stats.StatisticAggregateInterceptor;
-import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.longs.Long2LongLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
 

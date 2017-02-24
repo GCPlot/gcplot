@@ -26,8 +26,8 @@ import com.gcplot.repository.GCEventRepository;
 import com.gcplot.repository.VMEventsRepository;
 import com.gcplot.repository.operations.analyse.AddJvmOperation;
 import com.gcplot.repository.operations.analyse.AnalyseOperation;
-import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
+import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.resources.ResourceManager;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
@@ -48,8 +48,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
-import static com.gcplot.commons.CollectionUtils.cloneAndPut;
 import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
+import static com.gcplot.commons.CollectionUtils.cloneAndPut;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

@@ -2,7 +2,6 @@ package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
-import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
 
 import java.util.Collections;
