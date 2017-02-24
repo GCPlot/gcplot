@@ -40,7 +40,7 @@ public abstract class FileUtils {
     public static String getFileChecksum(MessageDigest digest, File file) throws IOException
     {
         try (BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file))) {
-            byte[] byteArray = new byte[1024];
+            byte[] byteArray = new byte[8 * 1024];
             int bytesCount = 0;
 
             while ((bytesCount = fis.read(byteArray)) != -1) {

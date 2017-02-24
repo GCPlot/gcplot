@@ -600,9 +600,11 @@ public class EventsController extends Controller {
 
     private InputStream logStream(UploadedFile uf) {
         try {
-            InputStream fis = new BufferedInputStream(new FileInputStream(uf.file()));
-            if (isGzipped(fis)) {
+            InputStream fis = new FileInputStream(uf.file());
+            if (isGzipped(uf.file())) {
                 fis = new GZIPInputStream(fis);
+            } else {
+                fis = new BufferedInputStream(fis);
             }
             return fis;
         } catch (Throwable t) {
@@ -610,9 +612,8 @@ public class EventsController extends Controller {
         }
     }
 
-    private boolean isGzipped(InputStream in) throws IOException {
-        in.mark(2);
-        try {
+    private boolean isGzipped(File file) throws IOException {
+        try (FileInputStream in = new FileInputStream(file)){
             final int b1 = in.read();
             final int b2 = in.read();
             if (b2 < 0) {
@@ -620,8 +621,6 @@ public class EventsController extends Controller {
             }
             int firstBytes = (b2 << 8) | b1;
             return firstBytes == GZIPInputStream.GZIP_MAGIC;
-        } finally {
-            in.reset();
         }
     }
 
