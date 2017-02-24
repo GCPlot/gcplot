@@ -88,8 +88,8 @@ public class DefaultAnalyticsService implements AnalyticsService {
         }
         if (sampleSeconds > 1) {
             samplers.forEach(s -> s.complete().forEach(listener));
-            interceptors.forEach(ic -> ic.complete().forEach(listener));
         }
+        interceptors.forEach(ic -> ic.complete().forEach(listener));
 
         return EventsResult.SUCCESS;
     }
