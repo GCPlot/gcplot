@@ -1,4 +1,4 @@
-package com.gcplot.interceptors.stats;
+package com.gcplot.model.stats;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.math.DoubleMath;

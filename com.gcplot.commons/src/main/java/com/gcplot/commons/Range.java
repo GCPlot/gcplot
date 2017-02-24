@@ -2,9 +2,9 @@ package com.gcplot.commons;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
 
 public class Range {
-
     public final DateTime from;
     public final DateTime to;
 
@@ -19,6 +19,10 @@ public class Range {
 
     public static Range of(DateTime from, DateTime to) {
         return new Range(from ,to);
+    }
+
+    public static Range of(Interval interval) {
+        return new Range(interval.getStart(), interval.getEnd());
     }
 
 }

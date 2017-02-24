@@ -59,6 +59,7 @@ dependencies {
     compile project(":com.gcplot.model")
     compile project(":com.gcplot.api")
     compile project(":com.gcplot.commons")
+    compile project(":com.gcplot.services")
     compile project(":com.gcplot.gc-model")
     compile project(":com.gcplot.log-processor")
 

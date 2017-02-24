@@ -144,4 +144,14 @@ public class TestGCEventFactory implements GCEventFactory {
         };
     }
 
+    @Override
+    public GCEvent create(GCEvent event) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public GCEvent create(GCEvent event, Capacity capacity, Capacity totalCapacity, long pauseMu, Phase phase) {
+        throw new UnsupportedOperationException();
+    }
+
 }

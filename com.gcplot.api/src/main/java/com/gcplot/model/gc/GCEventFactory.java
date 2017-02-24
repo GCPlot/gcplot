@@ -16,4 +16,9 @@ public interface GCEventFactory {
                    long pauseMu, EnumSet<Generation> generations, Phase phase, Cause cause, long properties,
                    EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap, String ext);
 
+    GCEvent create(GCEvent event);
+
+    GCEvent create(GCEvent event, Capacity capacity, Capacity totalCapacity, long pauseMu,
+                   Phase phase);
+
 }

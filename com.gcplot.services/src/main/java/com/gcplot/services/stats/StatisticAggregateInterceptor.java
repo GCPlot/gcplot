@@ -1,18 +1,17 @@
-package com.gcplot.interceptors;
+package com.gcplot.services.stats;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.quantile.Quantile;
 import com.gcplot.commons.quantile.QuantileEstimationCKMS;
-import com.gcplot.commons.serialization.JsonSerializer;
-import com.gcplot.interceptors.stats.GCStats;
 import com.gcplot.model.gc.*;
+import com.gcplot.model.stats.GCStatistic;
+import com.gcplot.model.stats.GenerationStats;
 import com.gcplot.model.stats.MinMaxAvg;
-import com.gcplot.web.RequestContext;
+import com.gcplot.services.EventInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -34,7 +33,7 @@ import java.util.function.Function;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         11/17/16
  */
-public class StatisticAggregateInterceptor extends BaseInterceptor implements Interceptor {
+public class StatisticAggregateInterceptor extends BaseInterceptor implements EventInterceptor, GCStatistic {
     private static final Logger LOG = LoggerFactory.getLogger(StatisticAggregateInterceptor.class);
     private static final Quantile[] QUANTILES = {
             new Quantile(0.50, 0.005),
@@ -76,6 +75,61 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         this.isG1 = isG1;
     }
 
+    @Override
+    public Map<Generation, MinMaxAvg> generationsTotalSizes() {
+        return null;
+    }
+
+    @Override
+    public Map<Generation, MinMaxAvg> generationsUsageSizes() {
+        return null;
+    }
+
+    @Override
+    public Map<Generation, GenerationStats> generationStats() {
+        return null;
+    }
+
+    @Override
+    public Map<Phase, GenerationStats> phaseStats() {
+        return null;
+    }
+
+    @Override
+    public Map<Cause, Integer> causeStats() {
+        return null;
+    }
+
+    @Override
+    public GenerationStats cumulativeStats() {
+        return null;
+    }
+
+    @Override
+    public GenerationStats fullStats() {
+        return null;
+    }
+
+    @Override
+    public MinMaxAvg heapTotalBytes() {
+        return null;
+    }
+
+    @Override
+    public MinMaxAvg heapUsageBytes() {
+        return null;
+    }
+
+    @Override
+    public long firstEventTime() {
+        return 0;
+    }
+
+    @Override
+    public long lastEventTime() {
+        return 0;
+    }
+
     @JsonProperty("percentiles")
     public Map<Double, Long> percentiles() {
         HashMap<Double, Long> percentiles = new HashMap<>();
@@ -114,10 +168,10 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
     }
 
     @Override
-    public void process(GCEvent event, Runnable delimit, RequestContext ctx) {
+    public List<GCStatistic> process(GCEvent event) {
         if (event.generations().size() == 0) {
             LOG.debug("Event with no generation: " + event);
-            return;
+            return Collections.emptyList();
         }
         Generation g = event.generations().iterator().next();
         boolean isYoung = event.isYoung();
@@ -163,12 +217,12 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements In
         if (isYoung) {
             lastYoungEvent = event;
         }
+        return Collections.emptyList();
     }
 
     @Override
-    public void complete(Runnable delimit, RequestContext ctx) {
-        ctx.write(JsonSerializer.serialize(this));
-        delimit.run();
+    public List<GCStatistic> complete() {
+        return Collections.singletonList(this);
     }
 
     private void calcGCStats(GCEvent event, Generation g) {

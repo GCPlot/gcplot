@@ -38,4 +38,19 @@ public class DefaultGCEventFactory implements GCEventFactory {
         event.ext(ext);
         return event;
     }
+
+    @Override
+    public GCEvent create(GCEvent event) {
+        return new GCEventImpl(event);
+    }
+
+    @Override
+    public GCEvent create(GCEvent event, Capacity capacity, Capacity totalCapacity, long pauseMu, Phase phase) {
+        GCEventImpl e = new GCEventImpl(event);
+        e.capacity(capacity);
+        e.totalCapacity(totalCapacity);
+        e.pauseMu(pauseMu);
+        e.phase(phase);
+        return e;
+    }
 }

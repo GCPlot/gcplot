@@ -1,8 +1,7 @@
-package com.gcplot.interceptors.stats;
+package com.gcplot.services.stats;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.gc.Capacity;
-import com.gcplot.model.gc.EventConcurrency;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.stats.DMinMaxAvg;
 import com.gcplot.model.stats.MinMaxAvg;
