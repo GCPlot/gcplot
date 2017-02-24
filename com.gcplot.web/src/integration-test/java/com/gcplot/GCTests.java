@@ -214,7 +214,7 @@ public class GCTests extends IntegrationTest {
     public void sampleLogParseTest() throws Exception {
         String token = login();
 
-        JsonObject resp = processGCLogFile(token, "", "", "real_log_cms.log");
+        JsonObject resp = processGCLogFile(token, "", "", "real_log_cms.log.gz");
         Assert.assertTrue(success().test(resp));
 
         AnalyseResponse ar = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
