@@ -5,8 +5,16 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 
 public class Range {
-    public final DateTime from;
-    public final DateTime to;
+    private final DateTime from;
+    private final DateTime to;
+
+    public DateTime from() {
+        return from;
+    }
+
+    public DateTime to() {
+        return to;
+    }
 
     public Range(DateTime from, DateTime to) {
         this(from, to, DateTimeZone.UTC);

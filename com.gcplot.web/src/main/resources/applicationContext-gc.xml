@@ -13,9 +13,7 @@
           init-method="init" destroy-method="destroy">
         <property name="batchSize" value="${logs.parser.batch.size:512}"/>
         <property name="configurationManager" ref="config"/>
-        <property name="eventFactory">
-            <bean class="com.gcplot.parser.DefaultGCEventFactory"/>
-        </property>
+        <property name="eventFactory" ref="eventFactory"/>
     </bean>
 
 </beans>

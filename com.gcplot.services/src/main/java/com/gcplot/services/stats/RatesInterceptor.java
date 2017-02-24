@@ -17,11 +17,10 @@ import java.util.Optional;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         11/18/16
  */
-public class RatesInterceptor extends BaseInterceptor implements EventInterceptor {
+public class RatesInterceptor extends BaseInterceptor implements EventInterceptor<GCRate> {
     private final int sampleSeconds;
     private DateTime edge = null;
     private DateTime edgeMinus = null;
-    private StringBuilder sb = new StringBuilder(128);
 
     public RatesInterceptor(int sampleSeconds) {
         this.sampleSeconds = sampleSeconds;
@@ -64,17 +63,11 @@ public class RatesInterceptor extends BaseInterceptor implements EventIntercepto
     }
 
     private List<GCRate> write(GCEvent event) {
-        try {
-            if ((allocationRateCount > 0 && allocationRateSum > 0) || (promotionRateSum > 0 &&
-                    promotionRateCount > 0)) {
-                long allRate = allocationRateSum / Math.max(allocationRateCount, 1);
-                long prRate = promotionRateSum / Math.max(promotionRateCount, 1);
-                /*sb.append("{\"alr\":").append(allRate).append(",\"prr\":").append(prRate)
-                        .append(",\"d\":").append(event.occurred().getMillis()).append("}");*/
-                return Collections.singletonList(new GCRateImpl(event.occurred(), allRate, prRate));
-            }
-        } finally {
-            sb.setLength(0);
+        if ((allocationRateCount > 0 && allocationRateSum > 0) || (promotionRateSum > 0 &&
+                promotionRateCount > 0)) {
+            long allRate = allocationRateSum / Math.max(allocationRateCount, 1);
+            long prRate = promotionRateSum / Math.max(promotionRateCount, 1);
+            return Collections.singletonList(new GCRateImpl(event.occurred(), allRate, prRate));
         }
         return Collections.emptyList();
     }

@@ -7,6 +7,7 @@
     <context:annotation-config/>
 
     <import resource="applicationContext-config.xml"/>
+    <import resource="applicationContext-cassandra.xml"/>
 
     <bean id="vertxOpts" class="io.vertx.core.VertxOptions">
         <property name="workerPoolSize" value="${vertx.worker.pool.size:20}"/>
@@ -38,6 +39,12 @@
                 <constructor-arg index="0" value="${files.upload.dir}"/>
             </bean>
         </property>
+    </bean>
+
+    <bean id="analyticsService" class="com.gcplot.services.analytics.DefaultAnalyticsService">
+        <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
+        <property name="eventFactory" ref="eventFactory"/>
+        <property name="eventRepository" ref="cassandraGCEventRepository"/>
     </bean>
 
     <bean id="s3ResourceManager" class="com.gcplot.parser.S3ResourceManager" init-method="init">

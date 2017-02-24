@@ -1,5 +1,6 @@
 package com.gcplot.model.gc;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.gcplot.commons.enums.TypedEnum;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -36,6 +37,7 @@ public enum Generation implements TypedEnum {
     }
 
     @Override
+    @JsonValue
     public String toString() {
         return Integer.toString(type);
     }

@@ -4,14 +4,13 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.FileAppender;
 import com.gcplot.Identifier;
+import com.gcplot.analytics.AnalyticsService;
+import com.gcplot.analytics.EventsResult;
+import com.gcplot.analytics.GCEventFeature;
 import com.gcplot.commons.*;
 import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.controllers.Controller;
-import com.gcplot.interceptors.RatesInterceptor;
-import com.gcplot.interceptors.StatisticAggregateInterceptor;
-import com.gcplot.interceptors.filters.Accumulator;
-import com.gcplot.interceptors.filters.PhaseSampler;
-import com.gcplot.interceptors.filters.Sampler;
 import com.gcplot.log_processor.LogMetadata;
 import com.gcplot.log_processor.parser.ParseResult;
 import com.gcplot.log_processor.parser.detect.VMProperties;
@@ -20,6 +19,7 @@ import com.gcplot.log_processor.survivor.AgesState;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
 import com.gcplot.messages.GCEventResponse;
+import com.gcplot.messages.GCRateResponse;
 import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
@@ -56,27 +56,32 @@ import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
  *         8/13/16
  */
 public class EventsController extends Controller {
-    private static final EnumSet<Generation> OTHER_GENERATION = EnumSet.of(Generation.OTHER);
     public static final String DEFAULT_CHUNK_DELIMETER = "$d";
-    public static final String ANONYMOUS_ANALYSE_NAME = "Files";
     public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
-    private static final Map<Long, Long> PERIOD_SAMPLING_BUCKETS = new LinkedHashMap<Long, Long>() {{
-        put(3600L, 15L); /* 1 hours -> 15 seconds */
-        put(7200L, 30L); /* 2 hours -> 30 seconds */
-        put(21600L, 60L); /* 6 hours -> 1 minute */
-        put(43200L, 120L); /* 12 hours -> 2 minutes */
-        put(86400L, 240L); /* 24 hours -> 4 minutes */
-        put(172800L, 600L); /* 2 days -> 10 minutes */
-        put(345600L, 1200L); /* 4 days -> 20 minutes */
-        put(604800L, 1800L); /* 7 days -> 30 minutes */
-        put(1209600L, 3000L); /* 14 days -> 50 minutes */
-        put(2592000L, 7200L); /* 30 days -> 2 hours */
-        put(5184000L, 14400L); /* 60 days -> 4 hours */
-        put(7776000L, 18000L); /* 90 days -> 5 hours */
-    }};
-    private static final int ERASE_ALL_PERIOD_YEARS = 10;
     protected static final Logger LOG = LoggerFactory.getLogger(EventsController.class);
-    protected static final String LOG_PATTERN = "%d{yyyyMMdd HH:mm:ss.SSS} [[%5p] %c{1} [%t]] %m%n";
+    private static final String LOG_PATTERN = "%d{yyyyMMdd HH:mm:ss.SSS} [[%5p] %c{1} [%t]] %m%n";
+    private static final String ANONYMOUS_ANALYSE_NAME = "Files";
+    private static final int ERASE_ALL_PERIOD_YEARS = 10;
+    private static final EnumSet<Generation> OTHER_GENERATION = EnumSet.of(Generation.OTHER);
+    private ThreadLocal<ch.qos.logback.classic.Logger> loggers = new ThreadLocal<ch.qos.logback.classic.Logger>() {
+        @Override
+        protected ch.qos.logback.classic.Logger initialValue() {
+            return ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Thread.currentThread().getName());
+        }
+    };
+    private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+    @Autowired
+    private GCAnalyseRepository analyseRepository;
+    @Autowired
+    private GCEventRepository eventRepository;
+    @Autowired
+    private VMEventsRepository<ObjectsAges> agesStateRepository;
+    @Autowired
+    private LogsParser<ParseResult> logsParser;
+    @Autowired
+    private ResourceManager resourceManager;
+    @Autowired
+    private AnalyticsService analyticsService;
 
     @PostConstruct
     public void init() {
@@ -221,8 +226,8 @@ public class EventsController extends Controller {
 
         checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(false);
-            List<GCEvent> events = eventRepository.pauseEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
-            ctx.response(GCEventResponse.from(events, pp.getTimeZone()));
+            List<GCEvent> events = eventRepository.pauseEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getInterval()));
+            ctx.response(GCEventResponse.from(events));
         });
     }
 
@@ -242,7 +247,7 @@ public class EventsController extends Controller {
         checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(true);
             Iterator<GCEvent> eventIterator = eventRepository.lazyPauseEvents(pp.getAnalyseId(), pp.getJvmId(),
-                    Range.of(pp.getFrom(), pp.getTo()));
+                    Range.of(pp.getInterval()));
             streamEvents(ctx, pp, eventIterator);
             ctx.finish();
         });
@@ -257,7 +262,7 @@ public class EventsController extends Controller {
         checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(true);
             Iterator<GCEvent> eventIterator = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
-                    Range.of(pp.getFrom(), pp.getTo()));
+                    Range.of(pp.getInterval()));
             streamEvents(ctx, pp, eventIterator);
             ctx.finish();
         });
@@ -268,76 +273,23 @@ public class EventsController extends Controller {
      */
     public void fullJvmSampleEventsStream(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
-        Optional<GCAnalyse> oa = analyseRepository.analyse(account(ctx).id(), pp.getAnalyseId());
 
         checkPeriodAndExecute(pp, ctx, () -> {
-            if (!oa.isPresent()) {
-                ctx.write(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYSE, "Unknown Analyse " + pp.getAnalyseId()));
-            } else {
-                GCAnalyse analyse = oa.get();
-                DateTime from = pp.getFromUTC();
-                DateTime to = pp.getToUTC();
-                if (!analyse.isContinuous()) {
-                    DateTime firstEvent = analyse.firstEvent().get(pp.getJvmId());
-                    DateTime lastEvent = analyse.lastEvent().get(pp.getJvmId());
-                    if (from.isBefore(firstEvent)) {
-                        from = firstEvent;
-                    }
-                    if (to.isAfter(lastEvent)) {
-                        to = lastEvent;
-                    }
-                }
-                long secondsBetween = new Duration(from, to).getStandardSeconds();
-                int youngSampleSeconds = pickUpYoungSampling(secondsBetween);
-                int fullSampleSeconds = pickUpFullSampling(secondsBetween);
-
-                ctx.setChunked(true);
-                Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(from, to));
-                final Runnable delimit = () -> delimit(ctx, pp);
-
-                Sampler youngSampler = new Sampler(youngSampleSeconds, GCEvent::isYoung);
-                Sampler fullSampler = new Sampler(fullSampleSeconds, GCEvent::isFull);
-                Sampler concurrentSampler = new PhaseSampler(youngSampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
-                PhaseSampler tenuredSampler = new PhaseSampler(youngSampleSeconds,
-                        e -> e.isTenured() && e.concurrency() == EventConcurrency.SERIAL);
-                StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(isG1(pp, analyse));
-                RatesInterceptor ri = new RatesInterceptor(youngSampleSeconds);
-
-                final Consumer<GCEvent> write = e -> write(ctx, pp, e);
-                while (i.hasNext()) {
-                    GCEvent event = i.next();
-                    if (event != null) {
-                        if (youngSampleSeconds != 1) {
-                            if (youngSampler.isApplicable(event)) {
-                                youngSampler.process(event, write);
-                            } else if (tenuredSampler.isApplicable(event)) {
-                                tenuredSampler.process(event, write);
-                            } else if (concurrentSampler.isApplicable(event)) {
-                                concurrentSampler.process(event, write);
-                            } else if (fullSampler.isApplicable(event)) {
-                                fullSampler.process(event, write);
-                            } else {
-                                write.accept(event);
-                            }
-                        } else {
-                            write.accept(event);
+            EnumSet<GCEventFeature> features = pp.isStats() ? GCEventFeature.getAll() : GCEventFeature.getSamplers();
+            EventsResult r = analyticsService.events(account(ctx).id(), pp.getAnalyseId(), pp.getJvmId(), pp.getInterval(),
+                    features, e -> {
+                        if (e.isGCEvent()) {
+                            ctx.write(GCEventResponse.toJson((GCEvent) e));
+                        } else if (e.isRate()) {
+                            ctx.write(GCRateResponse.toJson((GCRate) e));
+                        } else if (e.isStatistic()) {
+                            ctx.write(JsonSerializer.serialize(e));
                         }
-                        if (pp.isStats()) {
-                            stats.process(event, delimit, ctx);
-                            ri.process(event, delimit, ctx);
-                        }
-                    }
-                }
-                if (youngSampleSeconds != 1) {
-                    tenuredSampler.complete(write);
-                    youngSampler.complete(write);
-                    fullSampler.complete(write);
-                }
-
-                if (pp.isStats()) {
-                    stats.complete(delimit, ctx);
-                    ri.complete(delimit, ctx);
-                }
+                        delimit(ctx, pp);
+                    });
+            if (!r.isSuccess()) {
+                ctx.write(r.getErrorMessage());
+                delimit(ctx, pp);
             }
         });
     }
@@ -350,8 +302,8 @@ public class EventsController extends Controller {
 
         checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(false);
-            List<GCEvent> events = eventRepository.events(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
-            ctx.response(GCEventResponse.from(events, pp.getTimeZone()));
+            List<GCEvent> events = eventRepository.events(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getInterval()));
+            ctx.response(GCEventResponse.from(events));
         });
     }
 
@@ -369,9 +321,8 @@ public class EventsController extends Controller {
         PeriodParams pp = new PeriodParams(ctx);
 
         Optional<GCAnalyse> analyse = analyseRepository.analyse(account(ctx).id(), pp.getAnalyseId());
-        if (analyse.isPresent()) {
-            eventRepository.erase(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getFrom(), pp.getTo()));
-        }
+        analyse.ifPresent(gcAnalyse ->
+                eventRepository.erase(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getInterval())));
         ctx.response(SUCCESS);
     }
 
@@ -402,14 +353,17 @@ public class EventsController extends Controller {
      */
     public void jvmStats(RequestContext ctx) {
         PeriodParams pp = new PeriodParams(ctx);
-        Optional<GCAnalyse> oa = analyseRepository.analyse(account(ctx).id(), pp.getAnalyseId());
 
         checkPeriodAndExecute(pp, ctx, () -> {
-            Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
-                    Range.of(pp.getFrom(), pp.getTo()));
-            StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(isG1(pp, oa.get()));
-            i.forEachRemaining(e -> stats.process(e, () -> delimit(ctx, pp), ctx));
-            stats.complete(() -> delimit(ctx, pp), ctx);
+            EventsResult r = analyticsService.events(account(ctx).id(), pp.getAnalyseId(), pp.getJvmId(), pp.getInterval(),
+                    EnumSet.of(GCEventFeature.CALC_STATISTIC), e -> {
+                        if (e.isStatistic()) {
+                            ctx.write(JsonSerializer.serialize(e));
+                        }
+                    });
+            if (!r.isSuccess()) {
+                ctx.write(r.getErrorMessage());
+            }
         });
     }
 
@@ -436,40 +390,16 @@ public class EventsController extends Controller {
     }
 
     private void checkPeriodAndExecute(PeriodParams pp, RequestContext ctx, Runnable ex) {
-        if (Days.daysBetween(pp.getFrom(), pp.getTo()).getDays() > config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
+        if (Days.daysBetween(pp.getInterval().getStart(), pp.getInterval().getEnd()).getDays() >
+                config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS)) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Days interval exceeds max "
                     + config.readInt(ConfigProperty.GC_EVENTS_MAX_INTERVAL_DAYS) + " days."));
-        } else if (Minutes.minutesBetween(pp.getFrom(), pp.getTo()).getMinutes() < 1) {
+        } else if (Minutes.minutesBetween(pp.getInterval().getStart(), pp.getInterval().getEnd()).getMinutes() < 1) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM,
                     "The interval should higher or equal to 1 minute."));
         } else {
             ex.run();
         }
-    }
-
-    private int pickUpYoungSampling(long seconds) {
-        return pickUpSampling(seconds, 3600, 18000, PERIOD_SAMPLING_BUCKETS);
-    }
-
-    private int pickUpFullSampling(long seconds) {
-        return pickUpYoungSampling(seconds);
-    }
-
-    private int pickUpSampling(long seconds, long start, int last, Map<Long, Long> buckets) {
-        if (seconds < start) {
-            return 1;
-        }
-        long sample = 0;
-        for (Map.Entry<Long, Long> e : buckets.entrySet()) {
-            if (seconds < e.getKey()) {
-                sample = e.getValue();
-                break;
-            }
-        }
-        if (sample == 0) {
-            return last;
-        }
-        return (int) sample;
     }
 
     private void truncateFile(File logFile, long maxSize) {
@@ -676,36 +606,10 @@ public class EventsController extends Controller {
         return "Params required: analyse_id, jvm_id, from, to";
     }
 
-    public void setEventsBatchSize(int eventsBatchSize) {
-        this.eventsBatchSize = eventsBatchSize;
-    }
-
-    protected ThreadLocal<ch.qos.logback.classic.Logger> loggers = new ThreadLocal<ch.qos.logback.classic.Logger>() {
-        @Override
-        protected ch.qos.logback.classic.Logger initialValue() {
-            return ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Thread.currentThread().getName());
-        }
-    };
-
-    protected ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
-    protected int eventsBatchSize;
-    @Autowired
-    protected GCAnalyseRepository analyseRepository;
-    @Autowired
-    protected GCEventRepository eventRepository;
-    @Autowired
-    protected VMEventsRepository<ObjectsAges> agesStateRepository;
-    @Autowired
-    protected LogsParser<ParseResult> logsParser;
-    @Autowired
-    protected ResourceManager resourceManager;
-
     protected static class PeriodParams {
         private final String analyseId;
         private final String jvmId;
-        private final DateTime from;
-        private final DateTime to;
-        private final DateTimeZone timeZone;
+        private final Interval interval;
         private final boolean delimit;
         private final boolean stats;
 
@@ -715,20 +619,8 @@ public class EventsController extends Controller {
         public String getJvmId() {
             return jvmId;
         }
-        public DateTime getFrom() {
-            return from;
-        }
-        public DateTime getTo() {
-            return to;
-        }
-        public DateTime getFromUTC() {
-            return new DateTime(from, DateTimeZone.UTC);
-        }
-        public DateTime getToUTC() {
-            return new DateTime(to, DateTimeZone.UTC);
-        }
-        public DateTimeZone getTimeZone() {
-            return timeZone;
+        public Interval getInterval() {
+            return interval;
         }
         public boolean isDelimit() {
             return delimit;
@@ -745,11 +637,10 @@ public class EventsController extends Controller {
                 ctx.finish(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Param tz is invalid."));
                 throw Exceptions.runtime(t);
             }
-            this.timeZone = tz;
             this.analyseId = ctx.param("analyse_id");
             this.jvmId = ctx.param("jvm_id");
-            this.from = new DateTime(Long.parseLong(ctx.param("from")), tz);
-            this.to = new DateTime(Long.parseLong(ctx.param("to")), tz);
+            this.interval = new Interval(new DateTime(Long.parseLong(ctx.param("from")), tz),
+                    new DateTime(Long.parseLong(ctx.param("to")), tz));
             this.delimit = Boolean.parseBoolean(ctx.param("delimit", "false"));
             this.stats = Boolean.parseBoolean(ctx.param("stats", "false"));
         }

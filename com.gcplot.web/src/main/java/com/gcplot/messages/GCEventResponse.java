@@ -79,8 +79,7 @@ public class GCEventResponse {
         this.ext = ext;
     }
 
-    public static GCEventResponse from(GCEvent event, DateTimeZone tz) {
-        Preconditions.checkNotNull(tz);
+    public static GCEventResponse from(GCEvent event) {
         if (event == null) {
             return null;
         }
@@ -88,7 +87,7 @@ public class GCEventResponse {
         Map<String, CapacityResponse> cbg = event.capacityByGeneration().size() != 0 ?
                 CollectionUtils.processKeyMap(event.capacityByGeneration(), Generation::toString, CapacityResponse::from) :
                 Collections.emptyMap();
-        return new GCEventResponse(event.pauseMu(), event.occurred().toDateTime(tz).getMillis(),
+        return new GCEventResponse(event.pauseMu(), event.occurred().getMillis(),
                 gens, event.concurrency().type(), event.phase().type(), event.cause().type(),
                 event.properties(), CapacityResponse.from(event.capacity()),
                 CapacityResponse.from(event.totalCapacity()), cbg, event.ext());
@@ -152,7 +151,7 @@ public class GCEventResponse {
         }
     }
 
-    public static List<GCEventResponse> from(List<GCEvent> events, DateTimeZone tz) {
-        return events.stream().map(e -> from(e, tz)).collect(Collectors.toList());
+    public static List<GCEventResponse> from(List<GCEvent> events) {
+        return events.stream().map(GCEventResponse::from).collect(Collectors.toList());
     }
 }

@@ -50,22 +50,23 @@ public class DefaultAnalyticsService implements AnalyticsService {
     private GCEventFactory eventFactory;
 
     @Override
-    public EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval, DateTimeZone tz,
+    public EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval,
                                EnumSet<GCEventFeature> features, Consumer<IdentifiedEvent> listener) {
         Optional<GCAnalyse> oa = analyseRepository.analyse(accountId, analyseId);
         if (!oa.isPresent()) {
             return new EventsResult(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYSE, "Unknown Analyse " + analyseId));
         }
         GCAnalyse analyse = oa.get();
+        Range range = Range.of(interval);
         if (!analyse.isContinuous()) {
-            interval = correctIntervalIfRequired(jvmId, interval, analyse);
+            range = correctIntervalIfRequired(jvmId, range, analyse);
         }
-        long secondsBetween = new Duration(interval.getStart(), interval.getEnd()).getStandardSeconds();
+        long secondsBetween = new Duration(range.from(), range.to()).getStandardSeconds();
         int sampleSeconds = pickUpSampling(secondsBetween);
 
-        Iterator<GCEvent> i = eventRepository.lazyEvents(analyseId, jvmId, Range.of(interval));
+        Iterator<GCEvent> i = eventRepository.lazyEvents(analyseId, jvmId, range);
         List<EventInterceptor<GCEvent>> samplers = buildSamplers(features, sampleSeconds);
-        List<EventInterceptor<IdentifiedEvent>> interceptors = features.contains(GCEventFeature.CALC_STATISTIC) ?
+        List<EventInterceptor> interceptors = features.contains(GCEventFeature.CALC_STATISTIC) ?
                 buildInterceptors(sampleSeconds, isG1(jvmId, analyse)) : Collections.emptyList();
         while (i.hasNext()) {
             GCEvent next = i.next();
@@ -95,7 +96,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
         return EventsResult.SUCCESS;
     }
 
-    private List<EventInterceptor<IdentifiedEvent>> buildInterceptors(int sampleSeconds, boolean isG1) {
+    private List<EventInterceptor> buildInterceptors(int sampleSeconds, boolean isG1) {
         return Arrays.asList(new StatisticAggregateInterceptor(isG1), new RatesInterceptor(sampleSeconds));
     }
 
@@ -141,16 +142,16 @@ public class DefaultAnalyticsService implements AnalyticsService {
         return analyse.jvmGCTypes().get(jvmId) == GarbageCollectorType.ORACLE_G1;
     }
 
-    private Interval correctIntervalIfRequired(String jvmId, Interval interval, GCAnalyse analyse) {
+    private Range correctIntervalIfRequired(String jvmId, Range interval, GCAnalyse analyse) {
         DateTime firstEvent = analyse.firstEvent().get(jvmId);
         DateTime lastEvent = analyse.lastEvent().get(jvmId);
-        if (!interval.getStart().isBefore(firstEvent)) {
-            firstEvent = interval.getStart();
+        if (!interval.from().isBefore(firstEvent)) {
+            firstEvent = interval.from();
         }
-        if (!interval.getEnd().isAfter(lastEvent)) {
-            lastEvent = interval.getEnd();
+        if (!interval.to().isAfter(lastEvent)) {
+            lastEvent = interval.to();
         }
-        return new Interval(firstEvent, lastEvent);
+        return new Range(firstEvent, lastEvent);
     }
 
     public GCAnalyseRepository getAnalyseRepository() {

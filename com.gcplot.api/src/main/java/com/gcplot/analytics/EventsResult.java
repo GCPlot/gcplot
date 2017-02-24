@@ -17,6 +17,10 @@ public class EventsResult {
     public static final EventsResult SUCCESS = new EventsResult();
     private final String errorMessage;
 
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
     public boolean isSuccess() {
         return Strings.isNullOrEmpty(errorMessage);
     }

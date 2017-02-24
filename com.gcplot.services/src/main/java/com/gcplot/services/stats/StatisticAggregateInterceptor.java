@@ -1,8 +1,10 @@
 package com.gcplot.services.stats;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.quantile.Quantile;
 import com.gcplot.commons.quantile.QuantileEstimationCKMS;
+import com.gcplot.model.GenerationStatsImpl;
 import com.gcplot.model.gc.*;
 import com.gcplot.model.stats.GCStatistic;
 import com.gcplot.model.stats.GenerationStats;
@@ -33,7 +35,7 @@ import java.util.function.Function;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         11/17/16
  */
-public class StatisticAggregateInterceptor extends BaseInterceptor implements EventInterceptor, GCStatistic {
+public class StatisticAggregateInterceptor extends BaseInterceptor implements EventInterceptor<GCStatistic>, GCStatistic {
     private static final Logger LOG = LoggerFactory.getLogger(StatisticAggregateInterceptor.class);
     private static final Quantile[] QUANTILES = {
             new Quantile(0.50, 0.005),
@@ -41,25 +43,26 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
             new Quantile(0.95, 0.001),
             new Quantile(0.99, 0.001),
             new Quantile(0.999, 0.0005)};
-    private static final Function<Integer, MinMaxAvg> MIN_MAX_FACTORY = k -> new MinMaxAvg();
-    public static final Function<Integer, GCStats> STATS_INTERVAL_FACTORY = k -> new GCStats(true);
-    public static final Function<Integer, GCStats> STATS_FACTORY = k -> new GCStats();
+    private static final Function<Object, MinMaxAvg> MIN_MAX_FACTORY = k -> new MinMaxAvg();
+    public static final Function<Object, GenerationStatsImpl> STATS_INTERVAL_FACTORY = k -> new GenerationStatsImpl(true);
+    public static final Function<Object, GenerationStatsImpl> STATS_FACTORY = k -> new GenerationStatsImpl();
     private final boolean isG1;
     private GCEvent lastYoungEvent;
     @JsonProperty("generation_total")
-    private Map<Integer, MinMaxAvg> generationsTotalSizes = new HashMap<>();
+    @JsonFormat()
+    private Map<Generation, MinMaxAvg> generationsTotalSizes = new EnumMap<>(Generation.class);
     @JsonProperty("generation_usage")
-    private Map<Integer, MinMaxAvg> generationsUsageSizes = new HashMap<>();
+    private Map<Generation, MinMaxAvg> generationsUsageSizes = new EnumMap<>(Generation.class);
     @JsonProperty("generation_stats")
-    private Map<Integer, GCStats> byGeneration = new HashMap<>();
+    private Map<Generation, GenerationStats> byGeneration = new EnumMap<>(Generation.class);
     @JsonProperty("phase_stats")
-    private Map<Integer, GCStats> byPhase = new HashMap<>();
+    private Map<Phase, GenerationStats> byPhase = new EnumMap<>(Phase.class);
     @JsonProperty("cause_stats")
-    private Map<Integer, Integer> youngCauseStats = new HashMap<>();
+    private Map<Cause, Integer> youngCauseStats = new EnumMap<>(Cause.class);
     @JsonProperty("stats")
-    private GCStats stats = new GCStats();
+    private GenerationStatsImpl stats = new GenerationStatsImpl();
     @JsonProperty("full_stats")
-    private GCStats fullStats = new GCStats();
+    private GenerationStatsImpl fullStats = new GenerationStatsImpl();
     @JsonProperty("heap_total")
     private MinMaxAvg heapTotal = new MinMaxAvg();
     @JsonProperty("heap_usage")
@@ -77,57 +80,57 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
 
     @Override
     public Map<Generation, MinMaxAvg> generationsTotalSizes() {
-        return null;
+        return generationsTotalSizes;
     }
 
     @Override
     public Map<Generation, MinMaxAvg> generationsUsageSizes() {
-        return null;
+        return generationsUsageSizes;
     }
 
     @Override
     public Map<Generation, GenerationStats> generationStats() {
-        return null;
+        return byGeneration;
     }
 
     @Override
     public Map<Phase, GenerationStats> phaseStats() {
-        return null;
+        return byPhase;
     }
 
     @Override
     public Map<Cause, Integer> causeStats() {
-        return null;
+        return youngCauseStats;
     }
 
     @Override
     public GenerationStats cumulativeStats() {
-        return null;
+        return stats;
     }
 
     @Override
     public GenerationStats fullStats() {
-        return null;
+        return fullStats;
     }
 
     @Override
     public MinMaxAvg heapTotalBytes() {
-        return null;
+        return heapTotal;
     }
 
     @Override
     public MinMaxAvg heapUsageBytes() {
-        return null;
+        return heapUsage;
     }
 
     @Override
     public long firstEventTime() {
-        return 0;
+        return firstEvent;
     }
 
     @Override
     public long lastEventTime() {
-        return 0;
+        return lastEvent;
     }
 
     @JsonProperty("percentiles")
@@ -175,11 +178,11 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
         }
         Generation g = event.generations().iterator().next();
         boolean isYoung = event.isYoung();
-        youngCauseStats.merge(event.cause().type(), 1, (o, v) -> o + 1);
+        youngCauseStats.merge(event.cause(), 1, (o, v) -> o + 1);
         if (!isG1 && isYoung && lastYoungEvent != null) {
             long tenuredPrev = event.totalCapacity().usedAfter() - event.capacity().usedAfter();
             if (tenuredPrev >= 0) {
-                generationsUsageSizes.computeIfAbsent(Generation.TENURED.type(), MIN_MAX_FACTORY).next(tenuredPrev);
+                generationsUsageSizes.computeIfAbsent(Generation.TENURED, MIN_MAX_FACTORY).next(tenuredPrev);
             }
 
             long tenuredAfter = lastYoungEvent.totalCapacity().usedAfter() - lastYoungEvent.capacity().usedAfter();
@@ -187,7 +190,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
                     - (lastYoungEvent.capacity().usedBefore() - lastYoungEvent.capacity().usedAfter()));
             if (tenuredAfter - afterPromoted < tenuredPrev) {
                 long freedTenured = tenuredPrev - (tenuredAfter - afterPromoted);
-                GCStats gcs = byGeneration.computeIfAbsent(Generation.TENURED.type(), STATS_INTERVAL_FACTORY);
+                GenerationStatsImpl gcs = (GenerationStatsImpl) byGeneration.computeIfAbsent(Generation.TENURED, STATS_INTERVAL_FACTORY);
                 gcs.nextFreedMemory(null, null, freedTenured);
                 stats.nextFreedMemory(null, null, freedTenured);
             }
@@ -228,7 +231,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
     private void calcGCStats(GCEvent event, Generation g) {
         if (event.concurrency() != EventConcurrency.CONCURRENT) {
             if (event.isSingle()) {
-                GCStats gcs = byGeneration.computeIfAbsent(g.type(), STATS_INTERVAL_FACTORY);
+                GenerationStatsImpl gcs = (GenerationStatsImpl) byGeneration.computeIfAbsent(g, STATS_INTERVAL_FACTORY);
                 if (!event.isTenured() || isG1) {
                     gcs.nextFreedMemory(event, 0);
                     stats.nextFreedMemory(event, 0);
@@ -237,7 +240,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
                 stats.nextPause(event).nextInterval(event).incrementTotal();
             } else {
                 for (Generation gg : event.generations()) {
-                    GCStats gcStats = byGeneration.computeIfAbsent(gg.type(), STATS_INTERVAL_FACTORY);
+                    GenerationStatsImpl gcStats = (GenerationStatsImpl) byGeneration.computeIfAbsent(gg, STATS_INTERVAL_FACTORY);
                     gcStats.incrementTotal();
                     if (gg != Generation.TENURED || isG1) {
                         Capacity capacity = event.capacityByGeneration().get(gg);
@@ -249,21 +252,21 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
                 fullStats.nextPause(event).nextInterval(event).nextFreedMemory(event, 0).incrementTotal();
             }
         } else if (event.isSingle()) {
-            GCStats gcs = byPhase.computeIfAbsent(event.phase().type(), STATS_FACTORY);
+            GenerationStatsImpl gcs = (GenerationStatsImpl) byPhase.computeIfAbsent(event.phase(), STATS_FACTORY);
             gcs.nextInterval(event).nextPause(event).incrementTotal();
         }
     }
 
     protected void calcMemoryFootprint(GCEvent event, Generation g) {
         if (event.isSingle()) {
-            generationsUsageSizes.computeIfAbsent(g.type(), MIN_MAX_FACTORY).next(event.capacity().usedBefore());
-            generationsTotalSizes.computeIfAbsent(g.type(), MIN_MAX_FACTORY).next(event.capacity().total());
+            generationsUsageSizes.computeIfAbsent(g, MIN_MAX_FACTORY).next(event.capacity().usedBefore());
+            generationsTotalSizes.computeIfAbsent(g, MIN_MAX_FACTORY).next(event.capacity().total());
         } else {
             for (Generation gg : event.generations()) {
                 Capacity c = event.capacityByGeneration().get(gg);
                 if (c != null && !c.equals(Capacity.NONE)) {
-                    generationsUsageSizes.computeIfAbsent(gg.type(), MIN_MAX_FACTORY).next(c.usedBefore());
-                    generationsTotalSizes.computeIfAbsent(gg.type(), MIN_MAX_FACTORY).next(c.total());
+                    generationsUsageSizes.computeIfAbsent(gg, MIN_MAX_FACTORY).next(c.usedBefore());
+                    generationsTotalSizes.computeIfAbsent(gg, MIN_MAX_FACTORY).next(c.total());
                 }
             }
         }

@@ -1,10 +1,10 @@
-package com.gcplot.interceptors.stats;
+package com.gcplot.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.gc.Capacity;
-import com.gcplot.model.gc.EventConcurrency;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.stats.DMinMaxAvg;
+import com.gcplot.model.stats.GenerationStats;
 import com.gcplot.model.stats.MinMaxAvg;
 
 /**
@@ -16,7 +16,7 @@ import com.gcplot.model.stats.MinMaxAvg;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         11/19/16
  */
-public class GCStats {
+public class GenerationStatsImpl implements GenerationStats {
     private final boolean isRestrictedInterval;
     private long totalGCSum;
     private long totalGCCount; // for totalGCSum avg calc only
@@ -26,32 +26,38 @@ public class GCStats {
     private DMinMaxAvg interval = new DMinMaxAvg();
     private GCEvent prevIntervalEvent;
 
-    public GCStats() {
-        this(false);
-    }
-
-    public GCStats(boolean isRestrictedInterval) {
-        this.isRestrictedInterval = isRestrictedInterval;
-    }
-
+    @Override
     @JsonProperty("pause_time")
-    public long getTotalGCTime() {
+    public long totalPauseTimeMu() {
         return totalGCSum;
     }
 
+    @Override
     @JsonProperty("pause_count")
-    public long getTotalGCCount() {
+    public long totalPauseCount() {
         return totalGCCount;
     }
 
+    @Override
     @JsonProperty("gc_amount")
-    public long getTotalGCAmount() {
+    public long eventsCount() {
         return totalGCAmount;
     }
 
+    @Override
     @JsonProperty("freed_memory")
-    public long getFreedMemory() {
+    public long reclaimedBytes() {
         return freedMemory;
+    }
+
+    @Override
+    public MinMaxAvg pauses() {
+        return pause;
+    }
+
+    @Override
+    public DMinMaxAvg intervalBetweenEvents() {
+        return interval;
     }
 
     @JsonProperty("min_pause")
@@ -84,11 +90,19 @@ public class GCStats {
         return interval.getAvg();
     }
 
-    public GCStats nextFreedMemory(GCEvent event, long freedMemory) {
+    public GenerationStatsImpl() {
+        this(false);
+    }
+
+    public GenerationStatsImpl(boolean isRestrictedInterval) {
+        this.isRestrictedInterval = isRestrictedInterval;
+    }
+
+    public GenerationStatsImpl nextFreedMemory(GCEvent event, long freedMemory) {
         return this.nextFreedMemory(event.capacity(), event, freedMemory);
     }
 
-    public GCStats nextFreedMemory(Capacity capacity, GCEvent event, long freedMemory) {
+    public GenerationStatsImpl nextFreedMemory(Capacity capacity, GCEvent event, long freedMemory) {
         if (freedMemory <= 0) {
             freedMemory = Math.abs(capacity.usedAfter() - capacity.usedBefore());
             if (freedMemory == 0 && event.generations().size() == 1) {
@@ -99,7 +113,7 @@ public class GCStats {
         return this;
     }
 
-    public GCStats nextInterval(GCEvent event) {
+    public GenerationStatsImpl nextInterval(GCEvent event) {
         if (prevIntervalEvent != null &&
                 (!isRestrictedInterval || prevIntervalEvent.phase().equals(event.phase()))) {
             interval.next(Math.abs(event.occurred().getMillis() - prevIntervalEvent.occurred().getMillis()));
@@ -110,16 +124,15 @@ public class GCStats {
         return this;
     }
 
-    public GCStats nextPause(GCEvent event) {
+    public GenerationStatsImpl nextPause(GCEvent event) {
         totalGCSum += event.pauseMu();
         totalGCCount++;
         pause.next(event.pauseMu());
         return this;
     }
 
-    public GCStats incrementTotal() {
+    public GenerationStatsImpl incrementTotal() {
         totalGCAmount++;
         return this;
     }
-
 }

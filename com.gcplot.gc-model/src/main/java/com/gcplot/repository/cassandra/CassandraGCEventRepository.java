@@ -155,8 +155,8 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                             .where(eq("analyse_id", UUID.fromString(analyseId)))
                             .and(eq("jvm_id", jvmId))
                             .and(eq("date", date))
-                            .and(gte("written_at", QueryBuilder.fcall("minTimeuuid", range.from.getMillis())))
-                            .and(lte("written_at", QueryBuilder.fcall("maxTimeuuid", range.to.getMillis()))).setFetchSize(fetchSize);
+                            .and(gte("written_at", QueryBuilder.fcall("minTimeuuid", range.from().getMillis())))
+                            .and(lte("written_at", QueryBuilder.fcall("maxTimeuuid", range.to().getMillis()))).setFetchSize(fetchSize);
                     LOG.debug("Query: {}", statement);
                     resultIterator = connector.session().execute(statement).iterator();
                 }
@@ -178,9 +178,9 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
      */
     protected List<String> dates(Range range) {
         return Lists.reverse(IntStream.range(0, Months.monthsBetween(
-                range.from.monthOfYear().roundFloorCopy(),
-                range.to.monthOfYear().roundCeilingCopy()).getMonths())
-                .mapToObj(i -> range.from.plusMonths(i).toString(DATE_PATTERN))
+                range.from().monthOfYear().roundFloorCopy(),
+                range.to().monthOfYear().roundCeilingCopy()).getMonths())
+                .mapToObj(i -> range.from().plusMonths(i).toString(DATE_PATTERN))
                 .collect(Collectors.toList()));
     }
 
