@@ -293,15 +293,14 @@ public class EventsController extends Controller {
 
                 ctx.setChunked(true);
                 Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(), Range.of(from, to));
-                final EnumSet<Generation> tenuredOnly = EnumSet.of(Generation.TENURED);
                 final Runnable delimit = () -> delimit(ctx, pp);
 
                 Sampler youngSampler = new Sampler(youngSampleSeconds, GCEvent::isYoung);
                 Sampler fullSampler = new Sampler(fullSampleSeconds, GCEvent::isFull);
                 Sampler concurrentSampler = new PhaseSampler(youngSampleSeconds, e -> e.concurrency() == EventConcurrency.CONCURRENT);
-                Accumulator tenuredAcc = new Accumulator(config.readInt(ConfigProperty.TENURED_ACCUMULATE_SECONDS),
-                        e -> e.generations().equals(tenuredOnly) && e.concurrency() == EventConcurrency.SERIAL);
-                StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(analyse.jvmGCTypes().get(pp.jvmId) == GarbageCollectorType.ORACLE_G1);
+                PhaseSampler tenuredSampler = new PhaseSampler(youngSampleSeconds,
+                        e -> e.isTenured() && e.concurrency() == EventConcurrency.SERIAL);
+                StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(isG1(pp, analyse));
                 RatesInterceptor ri = new RatesInterceptor(youngSampleSeconds);
 
                 final Consumer<GCEvent> write = e -> write(ctx, pp, e);
@@ -311,8 +310,8 @@ public class EventsController extends Controller {
                         if (youngSampleSeconds != 1) {
                             if (youngSampler.isApplicable(event)) {
                                 youngSampler.process(event, write);
-                            } else if (tenuredAcc.isApplicable(event)) {
-                                tenuredAcc.process(event, write);
+                            } else if (tenuredSampler.isApplicable(event)) {
+                                tenuredSampler.process(event, write);
                             } else if (concurrentSampler.isApplicable(event)) {
                                 concurrentSampler.process(event, write);
                             } else if (fullSampler.isApplicable(event)) {
@@ -330,7 +329,7 @@ public class EventsController extends Controller {
                     }
                 }
                 if (youngSampleSeconds != 1) {
-                    tenuredAcc.complete(write);
+                    tenuredSampler.complete(write);
                     youngSampler.complete(write);
                     fullSampler.complete(write);
                 }
@@ -408,8 +407,7 @@ public class EventsController extends Controller {
         checkPeriodAndExecute(pp, ctx, () -> {
             Iterator<GCEvent> i = eventRepository.lazyEvents(pp.getAnalyseId(), pp.getJvmId(),
                     Range.of(pp.getFrom(), pp.getTo()));
-            StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(
-                    oa.get().jvmGCTypes().get(pp.jvmId) == GarbageCollectorType.ORACLE_G1);
+            StatisticAggregateInterceptor stats = new StatisticAggregateInterceptor(isG1(pp, oa.get()));
             i.forEachRemaining(e -> stats.process(e, () -> delimit(ctx, pp), ctx));
             stats.complete(() -> delimit(ctx, pp), ctx);
         });
@@ -482,6 +480,10 @@ public class EventsController extends Controller {
                 LOG.error(t.getMessage(), t);
             }
         }
+    }
+
+    protected boolean isG1(PeriodParams pp, GCAnalyse analyse) {
+        return analyse.jvmGCTypes().get(pp.jvmId) == GarbageCollectorType.ORACLE_G1;
     }
 
     private String calculateFileChecksum(RequestContext ctx, UploadedFile uf) throws IOException, NoSuchAlgorithmException {

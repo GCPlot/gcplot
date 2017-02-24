@@ -29,6 +29,11 @@ import java.util.stream.Collectors;
 
 public class VertxRequestContext implements RequestContext {
     protected static final String APPLICATION_JSON = "application/json; charset=utf-8";
+    protected AccountRepository accountRepository;
+    protected StringBuilder sb = new StringBuilder();
+    protected String mimeType = APPLICATION_JSON;
+    protected RoutingContext context;
+    protected LoginInfo loginInfo;
 
     @Override
     public RequestContext response(Object response) {
@@ -85,10 +90,11 @@ public class VertxRequestContext implements RequestContext {
         }
         if (!isChunked()) {
             sb.append(value);
-            byte[] response = new byte[0];
+            byte[] response;
             try {
                 response = sb.toString().getBytes("UTF-8");
-            } catch (UnsupportedEncodingException ignored) {
+            } catch (Throwable t) {
+                response = new byte[0];
             }
             context.response().putHeader("Content-Length", response.length + "");
             context.response().end(Buffer.buffer(response));
@@ -147,19 +153,20 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public Optional<LoginInfo> loginInfo() {
-        String token = context.request().getParam("token");
-        if (token == null) {
-            token = context.request().getHeader(Constants.AUTH_TOKEN_HEADER);
+        if (loginInfo == null) {
+            String token = context.request().getParam("token");
+            if (token == null) {
+                token = context.request().getHeader(Constants.AUTH_TOKEN_HEADER);
+            }
+            if (token == null) {
+                return Optional.empty();
+            }
+            Optional<Account> account = accountRepository.account(token);
+            if (account.isPresent()) {
+                loginInfo = new LoginInfo(token, account.get());
+            }
         }
-        if (token == null) {
-            return Optional.empty();
-        }
-        Optional<Account> account = accountRepository.account(token);
-        if (account.isPresent()) {
-            return Optional.of(new LoginInfo(token, account.get()));
-        } else {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(loginInfo);
     }
 
     @Override
@@ -211,6 +218,7 @@ public class VertxRequestContext implements RequestContext {
 
     public VertxRequestContext reset(RoutingContext context) {
         this.context = context;
+        this.loginInfo = null;
         this.clear();
         mimeType = APPLICATION_JSON;
         return this;
@@ -248,11 +256,6 @@ public class VertxRequestContext implements RequestContext {
                 .add("getIp", getIp())
                 .toString();
     }
-
-    public RoutingContext context;
-    protected AccountRepository accountRepository;
-    protected StringBuilder sb = new StringBuilder();
-    protected String mimeType = APPLICATION_JSON;
 
     protected static class UploadedFileImpl implements UploadedFile {
         private final FileUpload fu;

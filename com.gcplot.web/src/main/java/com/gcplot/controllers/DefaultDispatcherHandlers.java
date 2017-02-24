@@ -1,8 +1,10 @@
 package com.gcplot.controllers;
 
 import com.codahale.metrics.MetricRegistry;
+import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Metrics;
+import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.model.role.Restriction;
 import com.gcplot.model.role.RestrictionType;
 import com.gcplot.web.Dispatcher;
@@ -29,6 +31,15 @@ public class DefaultDispatcherHandlers {
         this.dispatcher = dispatcher;
     }
 
+    protected ConfigurationManager config;
+    public ConfigurationManager getConfig() {
+        return config;
+    }
+    @Autowired
+    public void setConfig(ConfigurationManager config) {
+        this.config = config;
+    }
+
     protected MetricRegistry metrics;
     public MetricRegistry getMetrics() {
         return metrics;
@@ -46,6 +57,10 @@ public class DefaultDispatcherHandlers {
     }
 
     public boolean preHandle(RequestContext ctx) {
+        if (config.readBoolean(ConfigProperty.SERVING_DISABLED)) {
+            ctx.finish(ErrorMessages.buildJson(ErrorMessages.SERVING_IS_DISABLED));
+            return false;
+        }
         if (ctx.loginInfo().isPresent()) {
             boolean accessRestricted = ctx.loginInfo().get().getAccount().roles()
                     .stream().flatMap(r -> r.restrictions().stream())

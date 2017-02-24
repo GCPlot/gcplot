@@ -280,10 +280,10 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
     private Phase detectPhase(ParserContext ctx, AbstractGCEvent<?> event) {
         String type = event.getTypeAsString();
         if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
-            if (type.contains("GC pause") && (type.contains("(young)") || type.contains("(mixed)"))) {
-                return Phase.G1_COPYING;
-            } else if (type.contains("(initial-mark)")) {
+            if (type.contains("(initial-mark)")) {
                 return Phase.G1_INITIAL_MARK;
+            } else if (type.contains("GC pause") && (type.contains("(young)") || type.contains("(mixed)"))) {
+                return Phase.G1_COPYING;
             } else if (event.isConcurrent() && type.contains("root-region-scan")) {
                 return Phase.G1_ROOT_REGION_SCANNING;
             } else if (event.isConcurrent() && type.contains("concurrent-mark")) {
