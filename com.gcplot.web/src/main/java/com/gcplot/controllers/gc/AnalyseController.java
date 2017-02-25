@@ -31,8 +31,8 @@ public class AnalyseController extends Controller {
     @PostConstruct
     public void init() {
         newAnalyses = Caffeine.newBuilder()
-                .maximumSize(config.readLong(ConfigProperty.USER_ANALYSE_COUNT_CACHE_SIZE))
-                .expireAfterWrite(config.readLong(ConfigProperty.USER_ANALYSE_COUNT_CACHE_SECONDS), TimeUnit.SECONDS)
+                .maximumSize(config.readLong(ConfigProperty.USER_ANALYSIS_COUNT_CACHE_SIZE))
+                .expireAfterWrite(config.readLong(ConfigProperty.USER_ANALYSIS_COUNT_CACHE_SECONDS), TimeUnit.SECONDS)
                 .build(k -> analyseRepository.analysesCount(k).orElse(0));
 
         dispatcher.requireAuth().filter(c -> c.hasParam("id"), "Param 'id' of analyse is missing.")

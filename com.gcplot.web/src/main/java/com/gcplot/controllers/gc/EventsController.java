@@ -29,8 +29,13 @@ import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.resources.ResourceManager;
+import com.gcplot.services.stats.StatisticAggregateInterceptor;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.joda.time.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +74,8 @@ public class EventsController extends Controller {
             return ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Thread.currentThread().getName());
         }
     };
-    private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+    private ExecutorService uploadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8);
+    private Cache<Triple, StatisticAggregateInterceptor> analyseStatsCache;
     @Autowired
     private GCAnalyseRepository analyseRepository;
     @Autowired
@@ -85,6 +91,10 @@ public class EventsController extends Controller {
 
     @PostConstruct
     public void init() {
+        analyseStatsCache = Caffeine.newBuilder()
+                .maximumSize(config.readLong(ConfigProperty.ANALYSIS_STATISTIC_CACHE_SIZE))
+                .expireAfterWrite(config.readLong(ConfigProperty.ANALYSIS_STATISTIC_CACHE_SECONDS), TimeUnit.SECONDS)
+                .build();
         dispatcher.requireAuth().blocking().filter(c ->
                 c.files().size() == 1,
                 "You should provide only a single log file.")
@@ -109,8 +119,8 @@ public class EventsController extends Controller {
     public void shutdown() {
         super.shutdown();
         try {
-            executor.shutdownNow();
-            executor.awaitTermination(1, TimeUnit.MINUTES);
+            uploadExecutor.shutdownNow();
+            uploadExecutor.awaitTermination(1, TimeUnit.MINUTES);
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
         }
@@ -275,6 +285,12 @@ public class EventsController extends Controller {
         checkPeriodAndExecute(pp, ctx, () -> {
             ctx.setChunked(true);
             EnumSet<GCEventFeature> features = pp.isStats() ? GCEventFeature.getAll() : GCEventFeature.getSamplers();
+            StatisticAggregateInterceptor cached = analyseStatsCache.get(statsKey(pp), k -> null);
+            if (cached != null) {
+                features = EnumSet.copyOf(features);
+                features.remove(GCEventFeature.CALC_STATISTIC);
+            }
+
             EventsResult r = analyticsService.events(account(ctx).id(), pp.getAnalyseId(), pp.getJvmId(), pp.getInterval(),
                     features, e -> {
                         if (e.isGCEvent()) {
@@ -282,6 +298,7 @@ public class EventsController extends Controller {
                         } else if (e.isRate()) {
                             ctx.write(GCRateResponse.toJson((GCRate) e));
                         } else if (e.isStatistic()) {
+                            analyseStatsCache.put(statsKey(pp), (StatisticAggregateInterceptor) e);
                             ctx.write(JsonSerializer.serialize(e));
                         }
                         delimit(ctx, pp);
@@ -289,8 +306,16 @@ public class EventsController extends Controller {
             if (!r.isSuccess()) {
                 ctx.write(r.getErrorMessage());
                 delimit(ctx, pp);
+            } else if (cached != null) {
+                ctx.write(JsonSerializer.serialize(cached));
+                delimit(ctx, pp);
             }
         });
+    }
+
+    private Triple statsKey(PeriodParams pp) {
+        return Triple.of(Pair.of(pp.getInterval().getStart().getMillis(), pp.getInterval().getEnd().getMillis()),
+                pp.getAnalyseId(), pp.getJvmId());
     }
 
     /**
@@ -440,7 +465,7 @@ public class EventsController extends Controller {
     private void uploadLogFile(boolean isSync, String rootFolder,
                                String analyseId, String jvmId, String username, File logFile) {
         if (!resourceManager.isDisabled()) {
-            Future f = executor.submit(() -> {
+            Future f = uploadExecutor.submit(() -> {
                 try {
                     LOG.debug("Starting uploading {}", logFile);
                     resourceManager.upload(logFile,

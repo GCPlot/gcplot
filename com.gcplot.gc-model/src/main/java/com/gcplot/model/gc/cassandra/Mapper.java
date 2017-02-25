@@ -89,12 +89,7 @@ public abstract class Mapper {
         }
         GCEventImpl gcEvent = new GCEventImpl();
         try {
-            gcEvent.id(op(row, "id", r -> r.getUUID("id").toString()))
-                    .parentEvent(sop(row, "parent_id", r -> r.getUUID("parent_id")))
-                    .analyseId(sop(row, "analyse_id", r -> r.getUUID("analyse_id")))
-                    .bucketId(op(row, "bucket_id", r -> r.getString("bucket_id")))
-                    .jvmId(op(row, "jvm_id", r -> r.getString("jvm_id")))
-                    .description(op(row, "description", r -> r.getString("description")))
+            gcEvent.bucketId(op(row, "bucket_id", r -> r.getString("bucket_id")))
                     .timestamp(dop(row, "tmstm", r -> r.getDouble("tmstm")))
                     .occurred(op(row, "occurred", r -> new DateTime(r.getTimestamp("occurred"), DateTimeZone.UTC)))
                     .vmEventType(op(row, "vm_event_type", r -> VMEventType.get(r.getInt("vm_event_type"))))
@@ -105,8 +100,7 @@ public abstract class Mapper {
                     .cause(dop(row, "cause", Cause.OTHER, r -> Cause.get(r.getInt("cause"))))
                     .properties(lop(row, "properties", r -> r.getLong("properties")))
                     .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
-                    .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))))
-                    .ext(op(row, "ext", r -> r.getString("ext")));
+                    .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))));
 
             Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
             if (gcEvent.generations().size() > 1 && row.getColumnDefinitions().contains("gen_cap_before") &&

@@ -135,7 +135,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
 
     @JsonProperty("percentiles")
     public Map<Double, Long> percentiles() {
-        HashMap<Double, Long> percentiles = new HashMap<>();
+        HashMap<Double, Long> percentiles = new LinkedHashMap<>();
         for (Quantile q : QUANTILES) {
             percentiles.put(q.quantile, qes.query(q.quantile));
         }

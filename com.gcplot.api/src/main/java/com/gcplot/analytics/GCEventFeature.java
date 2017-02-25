@@ -7,7 +7,7 @@ import java.util.EnumSet;
  *         2/24/17
  */
 public enum GCEventFeature {
-    SAMPLE_YOUNG, SAMPLE_TENURED, SAMPLE_CONCURRENT, SAMPLE_FULL, CALC_STATISTIC;
+    SAMPLE_YOUNG, SAMPLE_TENURED, SAMPLE_CONCURRENT, SAMPLE_FULL, CALC_RATES, CALC_STATISTIC;
 
     private static final EnumSet<GCEventFeature> samplers;
     private static final EnumSet<GCEventFeature> all;

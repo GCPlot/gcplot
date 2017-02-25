@@ -25,8 +25,10 @@ public enum ConfigProperty {
 
     TEST1_CONFIG("test.config.1", "test"),
 
-    USER_ANALYSE_COUNT_CACHE_SIZE("user.analyse.cache.size", 5_000L),
-    USER_ANALYSE_COUNT_CACHE_SECONDS("user.analyse.cache.min", 120L),
+    USER_ANALYSIS_COUNT_CACHE_SIZE("user.analysis.cache.size", 5_000L),
+    USER_ANALYSIS_COUNT_CACHE_SECONDS("user.analysis.cache.min", 120L),
+    ANALYSIS_STATISTIC_CACHE_SIZE("analysis.stats.cache.size", 10_000L),
+    ANALYSIS_STATISTIC_CACHE_SECONDS("analysis.stats.cache.min", 300L),
     GC_EVENTS_MAX_INTERVAL_DAYS("user.gc.events.max.interval.days", 90),
     SURVIVOR_AGES_AVG_THRESHOLD("survivor.ages.avg.threshold", 100),
     TENURED_ACCUMULATE_SECONDS("tenured.accumulate.seconds", 10),

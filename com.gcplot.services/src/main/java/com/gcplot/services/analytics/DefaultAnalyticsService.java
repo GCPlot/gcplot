@@ -64,8 +64,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
 
         Iterator<GCEvent> i = eventRepository.lazyEvents(analyseId, jvmId, range);
         List<EventInterceptor<GCEvent>> samplers = buildSamplers(features, sampleSeconds);
-        List<EventInterceptor> interceptors = features.contains(GCEventFeature.CALC_STATISTIC) ?
-                buildInterceptors(sampleSeconds, isG1(jvmId, analyse)) : Collections.emptyList();
+        List<EventInterceptor> interceptors = buildInterceptors(features, sampleSeconds, isG1(jvmId, analyse));
         while (i.hasNext()) {
             GCEvent next = i.next();
 
@@ -94,8 +93,20 @@ public class DefaultAnalyticsService implements AnalyticsService {
         return EventsResult.SUCCESS;
     }
 
-    private List<EventInterceptor> buildInterceptors(int sampleSeconds, boolean isG1) {
-        return Arrays.asList(new StatisticAggregateInterceptor(isG1), new RatesInterceptor(sampleSeconds));
+    private List<EventInterceptor> buildInterceptors(EnumSet<GCEventFeature> features, int sampleSeconds, boolean isG1) {
+        boolean hasRates = features.contains(GCEventFeature.CALC_RATES);
+        boolean hasStats = features.contains(GCEventFeature.CALC_STATISTIC);
+        if (!hasRates && !hasStats) {
+            return Collections.emptyList();
+        }
+        List<EventInterceptor> interceptors = new ArrayList<>((hasRates ? 1 : 0) + (hasStats ? 1 : 0));
+        if (hasRates) {
+            interceptors.add(new RatesInterceptor(sampleSeconds));
+        }
+        if (hasStats) {
+            interceptors.add(new StatisticAggregateInterceptor(isG1));
+        }
+        return interceptors;
     }
 
     private List<EventInterceptor<GCEvent>> buildSamplers(EnumSet<GCEventFeature> features, int sampleSeconds) {
