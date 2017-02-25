@@ -3,6 +3,7 @@ package com.gcplot.cassandra;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PoolingOptions;
+import com.datastax.driver.core.ProtocolOptions;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy;
 import com.datastax.driver.core.policies.DowngradingConsistencyRetryPolicy;
@@ -18,6 +19,7 @@ public class CassandraConnector {
                 .addContactPoints(hosts)
                 .withRetryPolicy(DowngradingConsistencyRetryPolicy.INSTANCE)
                 .withReconnectionPolicy(new ConstantReconnectionPolicy(reconnectionDelayMs))
+                .withCompression(ProtocolOptions.Compression.LZ4)
                 .withPort(port);
         if (poolingOptions != null) {
             builder.withPoolingOptions(poolingOptions);
