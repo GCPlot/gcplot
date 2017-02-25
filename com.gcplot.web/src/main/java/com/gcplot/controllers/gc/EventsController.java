@@ -94,8 +94,6 @@ public class EventsController extends Controller {
         dispatcher.blocking().requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/stream", this::jvmEventsStream);
         dispatcher.blocking().requireAuth().filter(requiredWithPeriod(), periodMessage())
-                .get("/gc/jvm/events/full", this::fullJvmEvents);
-        dispatcher.blocking().requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/full/stream", this::fullJvmEventsStream);
         dispatcher.blocking().requireAuth().filter(requiredWithPeriod(), periodMessage())
                 .get("/gc/jvm/events/full/sample/stream", this::fullJvmSampleEventsStream);
@@ -292,19 +290,6 @@ public class EventsController extends Controller {
                 ctx.write(r.getErrorMessage());
                 delimit(ctx, pp);
             }
-        });
-    }
-
-    /**
-     * GET /gc/jvm/events/full
-     */
-    public void fullJvmEvents(RequestContext ctx) {
-        PeriodParams pp = new PeriodParams(ctx);
-
-        checkPeriodAndExecute(pp, ctx, () -> {
-            ctx.setChunked(false);
-            List<GCEvent> events = eventRepository.events(pp.getAnalyseId(), pp.getJvmId(), Range.of(pp.getInterval()));
-            ctx.response(GCEventResponse.from(events));
         });
     }
 
