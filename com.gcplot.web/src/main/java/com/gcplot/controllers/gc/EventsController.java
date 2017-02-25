@@ -275,6 +275,7 @@ public class EventsController extends Controller {
         PeriodParams pp = new PeriodParams(ctx);
 
         checkPeriodAndExecute(pp, ctx, () -> {
+            ctx.setChunked(true);
             EnumSet<GCEventFeature> features = pp.isStats() ? GCEventFeature.getAll() : GCEventFeature.getSamplers();
             EventsResult r = analyticsService.events(account(ctx).id(), pp.getAnalyseId(), pp.getJvmId(), pp.getInterval(),
                     features, e -> {
