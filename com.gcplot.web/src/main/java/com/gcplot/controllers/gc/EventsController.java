@@ -11,11 +11,11 @@ import com.gcplot.commons.*;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.controllers.Controller;
-import com.gcplot.log_processor.LogMetadata;
-import com.gcplot.log_processor.parser.ParseResult;
-import com.gcplot.log_processor.parser.detect.VMProperties;
+import com.gcplot.logs.LogMetadata;
+import com.gcplot.logs.ParseResult;
+import com.gcplot.model.gc.vm.VMProperties;
 import com.gcplot.log_processor.parser.detect.VMPropertiesDetector;
-import com.gcplot.log_processor.survivor.AgesState;
+import com.gcplot.logs.survivor.AgesState;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
 import com.gcplot.messages.GCEventResponse;
@@ -68,12 +68,8 @@ public class EventsController extends Controller {
     private static final String ANONYMOUS_ANALYSE_NAME = "Files";
     private static final int ERASE_ALL_PERIOD_YEARS = 10;
     private static final EnumSet<Generation> OTHER_GENERATION = EnumSet.of(Generation.OTHER);
-    private ThreadLocal<ch.qos.logback.classic.Logger> loggers = new ThreadLocal<ch.qos.logback.classic.Logger>() {
-        @Override
-        protected ch.qos.logback.classic.Logger initialValue() {
-            return ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Thread.currentThread().getName());
-        }
-    };
+    private ThreadLocal<ch.qos.logback.classic.Logger> loggers = ThreadLocal.withInitial(
+            () -> ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Thread.currentThread().getName()));
     private ExecutorService uploadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8);
     private Cache<Triple, StatisticAggregateInterceptor> analyseStatsCache;
     @Autowired
@@ -83,7 +79,7 @@ public class EventsController extends Controller {
     @Autowired
     private VMEventsRepository<ObjectsAges> agesStateRepository;
     @Autowired
-    private LogsParser<ParseResult> logsParser;
+    private LogsParser logsParser;
     @Autowired
     private ResourceManager resourceManager;
     @Autowired

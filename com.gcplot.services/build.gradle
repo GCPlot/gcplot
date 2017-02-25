@@ -2,5 +2,6 @@ dependencies {
   compile project(":com.gcplot.api")
   compile project(":com.gcplot.commons")
 
-  compile group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.4.9'
+  compile group: 'org.apache.zookeeper', name: 'zookeeper', version: "$zookeeperVersion"
+  compile "com.amazonaws:aws-java-sdk-s3:$s3Version"
 }

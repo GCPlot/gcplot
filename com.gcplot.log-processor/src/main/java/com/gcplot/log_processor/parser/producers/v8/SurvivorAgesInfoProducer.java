@@ -1,6 +1,6 @@
 package com.gcplot.log_processor.parser.producers.v8;
 
-import com.gcplot.log_processor.survivor.AgesState;
+import com.gcplot.logs.survivor.AgesState;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 

@@ -8,6 +8,9 @@ public interface VMEvent {
 
     String jvmId();
 
+    VMEvent jvmId(String jvmId);
+
     String analyseId();
 
+    VMEvent analyseId(String analyseId);
 }

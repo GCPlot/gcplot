@@ -1,3 +1,4 @@
 dependencies {
     compile project(":com.gcplot.commons")
+    compile "org.apache.commons:commons-lang3:$langVersion"
 }

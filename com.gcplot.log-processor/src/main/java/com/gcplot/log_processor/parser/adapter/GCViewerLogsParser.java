@@ -1,7 +1,7 @@
 package com.gcplot.log_processor.parser.adapter;
 
 import com.gcplot.configuration.ConfigurationManager;
-import com.gcplot.log_processor.parser.ParseResult;
+import com.gcplot.logs.ParseResult;
 import com.gcplot.log_processor.parser.producers.v8.MetadataInfoProducer;
 import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.logs.LogsParser;
@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         7/24/16
  */
-public class GCViewerLogsParser implements LogsParser<ParseResult> {
+public class GCViewerLogsParser implements LogsParser {
     protected ConfigurationManager configurationManager;
     protected GCEventFactory eventFactory;
     protected int batchSize = -1;

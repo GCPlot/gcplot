@@ -1,4 +1,4 @@
-package com.gcplot.log_processor.parser.detect;
+package com.gcplot.model.gc.vm;
 
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;

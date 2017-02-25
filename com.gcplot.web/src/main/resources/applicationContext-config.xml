@@ -17,6 +17,6 @@
         <property name="hostGroup" value="${hosts.group}"/>
     </bean>
 
-    <bean id="eventFactory" class="com.gcplot.parser.DefaultGCEventFactory"/>
+    <bean id="eventFactory" class="com.gcplot.model.DefaultGCEventFactory"/>
 
 </beans>

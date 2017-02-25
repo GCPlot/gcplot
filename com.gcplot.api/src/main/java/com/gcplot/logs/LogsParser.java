@@ -5,7 +5,7 @@ import com.gcplot.model.gc.GCEvent;
 import java.io.InputStream;
 import java.util.function.Consumer;
 
-public interface LogsParser<ParseResult> {
+public interface LogsParser {
 
     /**
      * Parses the input GC log stream and produces appropriate GC Events.

@@ -1,7 +1,7 @@
 package com.gcplot.log_processor.adapter;
 
 import com.gcplot.log_processor.common.TestGCEventFactory;
-import com.gcplot.log_processor.parser.ParseResult;
+import com.gcplot.logs.ParseResult;
 import com.gcplot.log_processor.parser.adapter.GCViewerLogsParser;
 import com.gcplot.logs.ParserContext;
 import com.gcplot.model.VMVersion;
