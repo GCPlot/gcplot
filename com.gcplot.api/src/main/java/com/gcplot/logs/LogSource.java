@@ -20,6 +20,6 @@ public interface LogSource {
 
     Optional<File> localFile();
 
-    Optional<String> checksum();
+    String checksum();
 
 }

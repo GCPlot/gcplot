@@ -20,18 +20,20 @@ import com.gcplot.model.gc.vm.VMPropertiesDetector;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
 import com.gcplot.repository.operations.analyse.AddJvmOperation;
+import com.gcplot.repository.operations.analyse.AnalyseOperation;
+import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
+import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.EnumSet;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
@@ -99,15 +101,35 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
             LogProcessResult x = checkAnalyzeCorrect(analyzeId, jvmId, userId, analyze);
             if (x != null) return x;
 
-            String checksum = source.checksum().orElse(null);
-            if (checksum == null) {
-                return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR, "Unable to detect checksum."));
-            }
-
             final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
             Logger log = createLogger(logFile);
 
+            AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
+            ParseResult pr = parseAndPersist(sync, source, jvmId, analyze, log, e -> {
+                lastEventTime.set(e.occurred());
+                e.analyseId(analyzeId).jvmId(jvmId);
+            });
 
+            if (pr.isSuccessful()) {
+                List<AnalyseOperation> ops = new ArrayList<>(2);
+                if (lastEventTime.get() != null) {
+                    ops.add(new UpdateCornerEventsOperation(userId, analyzeId, jvmId,
+                            pr.getFirstEvent() != null ? pr.getFirstEvent().occurred() : null,
+                            lastEventTime.get()));
+                }
+                if (pr.getLogMetadata().isPresent()) {
+                    updateAnalyseMetadata(analyzeId, jvmId, userId, pr, ops);
+                }
+                if (ops.size() > 0) {
+                    analyseRepository.perform(ops);
+                }
+                if (pr.getAgesStates().size() > 0) {
+                    persistObjectAges(analyzeId, jvmId, pr);
+                }
+            } else {
+                LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
+                log.error(pr.getException().get().getMessage(), pr.getException().get());
+            }
 
             return null;
         } catch (Throwable t) {
@@ -115,6 +137,14 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         } finally {
 
         }
+    }
+
+    private void updateAnalyseMetadata(String analyseId, String jvmId, Identifier userId, ParseResult pr,
+                                       List<AnalyseOperation> ops) {
+        LogMetadata md = pr.getLogMetadata().get();
+        ops.add(new UpdateJvmInfoOperation(userId, analyseId, jvmId, md.commandLines(),
+                new MemoryDetailsImpl(md.pageSize(), md.physicalTotal(), md.physicalFree(),
+                        md.swapTotal(), md.swapFree())));
     }
 
     protected GCAnalyse createFilesAnalyze(String analyzeId, Identifier userId) {
@@ -149,13 +179,13 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return null;
     }
 
-    private ParseResult parseAndPersist(boolean isSync, LogSource source, String jvmId, String checksum, GCAnalyse analyse,
+    private ParseResult parseAndPersist(boolean isSync, LogSource source, String jvmId, GCAnalyse analyse,
                                         Logger log, Consumer<GCEvent> enricher) throws IOException {
-        ParserContext ctx = new ParserContext(log, checksum, analyse.jvmGCTypes().get(jvmId),
+        ParserContext ctx = new ParserContext(log, source.checksum(), analyse.jvmGCTypes().get(jvmId),
                 analyse.jvmVersions().get(jvmId));
         final GCEvent[] firstParsed = new GCEvent[1];
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
-                eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
+                eventRepository.lastEvent(analyse.id(), jvmId, source.checksum(), firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
         try (InputStream fis = source.logStream()) {
             pr = logsParser.parse(fis, first -> {

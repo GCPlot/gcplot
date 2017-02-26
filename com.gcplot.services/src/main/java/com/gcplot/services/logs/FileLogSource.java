@@ -59,7 +59,7 @@ public class FileLogSource extends BaseLogSource implements LogSource {
     }
 
     @Override
-    public Optional<String> checksum() {
+    public String checksum() {
         if (checksum == null) {
             try {
                 LOG.warn("No checksum was provided in the request, calculating own: {}", localFile());
@@ -67,11 +67,10 @@ public class FileLogSource extends BaseLogSource implements LogSource {
                     checksum = FileUtils.getFileChecksum(MessageDigest.getInstance("MD5"), is);
                 }
                 LOG.warn("The calculated checksum for {} is {}", name(), checksum);
-                return Optional.of(checksum);
             } catch (Throwable t) {
                 throw Exceptions.runtime(t);
             }
         }
-        return Optional.of(checksum);
+        return checksum;
     }
 }
