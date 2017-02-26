@@ -6,7 +6,9 @@ import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.ProtocolOptions;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy;
+import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.core.policies.DowngradingConsistencyRetryPolicy;
+import com.datastax.driver.core.policies.RetryPolicy;
 import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ public class CassandraConnector {
                 .addContactPoints(hosts)
                 .withRetryPolicy(DowngradingConsistencyRetryPolicy.INSTANCE)
                 .withReconnectionPolicy(new ConstantReconnectionPolicy(reconnectionDelayMs))
+                .withRetryPolicy(DefaultRetryPolicy.INSTANCE)
                 .withCompression(ProtocolOptions.Compression.LZ4)
                 .withPort(port);
         if (poolingOptions != null) {
