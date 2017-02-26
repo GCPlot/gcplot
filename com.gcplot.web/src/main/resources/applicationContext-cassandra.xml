@@ -18,7 +18,10 @@
         <property name="reconnectionDelayMs" value="${cassandra.reconnect.delay.ms}"/>
         <property name="keyspace" value="${cassandra.keyspace}"/>
         <property name="poolingOptions">
-            <bean class="com.datastax.driver.core.PoolingOptions"/>
+            <bean class="com.datastax.driver.core.PoolingOptions">
+                <property name="maxQueueSize" value="524288"/>
+                <property name="heartbeatIntervalSeconds" value="10"/>
+            </bean>
         </property>
     </bean>
 
