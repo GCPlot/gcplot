@@ -10,29 +10,28 @@ import com.gcplot.commons.LazyVal;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.logs.*;
+import com.gcplot.logs.survivor.AgesState;
 import com.gcplot.model.account.Account;
-import com.gcplot.model.gc.GCAnalyse;
-import com.gcplot.model.gc.GCAnalyseFactory;
-import com.gcplot.model.gc.GCEvent;
-import com.gcplot.model.gc.Generation;
+import com.gcplot.model.gc.*;
 import com.gcplot.model.gc.vm.VMProperties;
 import com.gcplot.model.gc.vm.VMPropertiesDetector;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
+import com.gcplot.repository.VMEventsRepository;
 import com.gcplot.repository.operations.analyse.AddJvmOperation;
 import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
+import com.gcplot.resource.ResourceManager;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -52,11 +51,14 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
     private ThreadLocal<ch.qos.logback.classic.Logger> loggers = ThreadLocal.withInitial(
             () -> ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Thread.currentThread().getName()));
     private ExecutorService uploadExecutor;
+    private ResourceManager resourceManager;
     private GCAnalyseRepository analyseRepository;
     private GCEventRepository eventRepository;
+    private VMEventsRepository<ObjectsAges> agesStateRepository;
     private LogsParser logsParser;
     private VMPropertiesDetector vmPropertiesDetector;
     private GCAnalyseFactory analyseFactory;
+    private ObjectsAgesFactory objectsAgesFactory;
     private ConfigurationManager config;
 
     public void init() {
@@ -111,40 +113,59 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
             });
 
             if (pr.isSuccessful()) {
-                List<AnalyseOperation> ops = new ArrayList<>(2);
-                if (lastEventTime.get() != null) {
-                    ops.add(new UpdateCornerEventsOperation(userId, analyzeId, jvmId,
-                            pr.getFirstEvent() != null ? pr.getFirstEvent().occurred() : null,
-                            lastEventTime.get()));
-                }
-                if (pr.getLogMetadata().isPresent()) {
-                    updateAnalyseMetadata(analyzeId, jvmId, userId, pr, ops);
-                }
-                if (ops.size() > 0) {
-                    analyseRepository.perform(ops);
-                }
+                updateAnalyzeInfo(analyzeId, jvmId, userId, lastEventTime, pr);
                 if (pr.getAgesStates().size() > 0) {
                     persistObjectAges(analyzeId, jvmId, pr);
                 }
             } else {
                 LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
                 log.error(pr.getException().get().getMessage(), pr.getException().get());
+                return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR));
             }
 
-            return null;
+            truncateFile(logFile, getConfig().readLong(ConfigProperty.PARSE_LOG_MAX_FILE_SIZE));
+            uploadLogFile(sync, analyzeId, jvmId, account.username(), logFile);
+
+            return LogProcessResult.SUCCESS;
         } catch (Throwable t) {
             throw Exceptions.runtime(t);
         } finally {
-
+            if (source.localFile().isPresent()) {
+                uploadLogFile(sync, "gc-log", analyzeId, jvmId, account.username(), source.localFile().get());
+            }
+            // TODO log file size processed per user
         }
+    }
+
+    protected void updateAnalyzeInfo(String analyzeId, String jvmId, Identifier userId, AtomicReference<DateTime> lastEventTime, ParseResult pr) {
+        List<AnalyseOperation> ops = new ArrayList<>(2);
+        if (lastEventTime.get() != null) {
+            ops.add(new UpdateCornerEventsOperation(userId, analyzeId, jvmId,
+                    pr.getFirstEvent() != null ? pr.getFirstEvent().occurred() : null,
+                    lastEventTime.get()));
+        }
+        if (pr.getLogMetadata().isPresent()) {
+            updateAnalyseMetadata(analyzeId, jvmId, userId, pr, ops);
+        }
+        if (ops.size() > 0) {
+            analyseRepository.perform(ops);
+        }
+    }
+
+    private void persistObjectAges(String analyseId, String jvmId, ParseResult pr) {
+        List<ObjectsAges> oas = new ArrayList<>(1);
+        for (AgesState as : pr.getAgesStates()) {
+            oas.add(objectsAgesFactory.create(analyseId, jvmId, DateTime.now(DateTimeZone.UTC), as.getDesiredSurvivorSize(),
+                    as.getOccupied(), as.getTotal(), ""));
+        }
+        agesStateRepository.add(oas);
     }
 
     private void updateAnalyseMetadata(String analyseId, String jvmId, Identifier userId, ParseResult pr,
                                        List<AnalyseOperation> ops) {
         LogMetadata md = pr.getLogMetadata().get();
         ops.add(new UpdateJvmInfoOperation(userId, analyseId, jvmId, md.commandLines(),
-                new MemoryDetailsImpl(md.pageSize(), md.physicalTotal(), md.physicalFree(),
-                        md.swapTotal(), md.swapFree())));
+                new MemoryDetails(md.pageSize(), md.physicalTotal(), md.physicalFree(), md.swapTotal(), md.swapFree())));
     }
 
     protected GCAnalyse createFilesAnalyze(String analyzeId, Identifier userId) {
@@ -241,6 +262,58 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return log;
     }
 
+    private void uploadLogFile(boolean isSync, String analyseId, String jvmId, String username, File logFile) {
+        uploadLogFile(isSync, "log", analyseId, jvmId, username, logFile);
+    }
+
+    private void uploadLogFile(boolean isSync, String rootFolder,
+                               String analyseId, String jvmId, String username, File logFile) {
+        if (!resourceManager.isDisabled()) {
+            Future f = uploadExecutor.submit(() -> {
+                try {
+                    LOG.debug("Starting uploading {}", logFile);
+                    resourceManager.upload(logFile,
+                            rootFolder + "/" + esc(username) + "/" + esc(analyseId) + "/" + esc(jvmId));
+                } catch (Throwable t) {
+                    LOG.error(t.getMessage(), t);
+                } finally {
+                    org.apache.commons.io.FileUtils.deleteQuietly(logFile);
+                }
+            });
+            if (isSync) {
+                try {
+                    f.get();
+                } catch (InterruptedException | ExecutionException ignored) {
+                }
+            }
+        } else {
+            LOG.warn("Resource Manager is currently disabled, can't upload log file.");
+            org.apache.commons.io.FileUtils.deleteQuietly(logFile);
+        }
+    }
+
+    private void truncateFile(File logFile, long maxSize) {
+        if (logFile.length() > maxSize) {
+            try (FileChannel outChan = new FileOutputStream(logFile, true).getChannel()) {
+                outChan.truncate(maxSize);
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+            }
+        }
+    }
+
+    private String esc(String username) {
+        return username.toLowerCase().replaceAll("[^a-zA-Z0-9.-]", "_");
+    }
+
+    public ResourceManager getResourceManager() {
+        return resourceManager;
+    }
+
+    public void setResourceManager(ResourceManager resourceManager) {
+        this.resourceManager = resourceManager;
+    }
+
     public GCAnalyseRepository getAnalyseRepository() {
         return analyseRepository;
     }
@@ -255,6 +328,14 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
     public void setEventRepository(GCEventRepository eventRepository) {
         this.eventRepository = eventRepository;
+    }
+
+    public VMEventsRepository<ObjectsAges> getAgesStateRepository() {
+        return agesStateRepository;
+    }
+
+    public void setAgesStateRepository(VMEventsRepository<ObjectsAges> agesStateRepository) {
+        this.agesStateRepository = agesStateRepository;
     }
 
     public LogsParser getLogsParser() {
@@ -279,6 +360,14 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
     public void setAnalyseFactory(GCAnalyseFactory analyseFactory) {
         this.analyseFactory = analyseFactory;
+    }
+
+    public ObjectsAgesFactory getObjectsAgesFactory() {
+        return objectsAgesFactory;
+    }
+
+    public void setObjectsAgesFactory(ObjectsAgesFactory objectsAgesFactory) {
+        this.objectsAgesFactory = objectsAgesFactory;
     }
 
     public ConfigurationManager getConfig() {

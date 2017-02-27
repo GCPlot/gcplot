@@ -4,4 +4,5 @@ dependencies {
 
   compile group: 'org.apache.zookeeper', name: 'zookeeper', version: "$zookeeperVersion"
   compile "com.amazonaws:aws-java-sdk-s3:$s3Version"
+  compile group: 'commons-io', name: 'commons-io', version: "$apacheCommonsIOVersion"
 }

@@ -28,7 +28,7 @@ import com.gcplot.repository.operations.analyse.AddJvmOperation;
 import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
-import com.gcplot.resources.ResourceManager;
+import com.gcplot.resource.ResourceManager;
 import com.gcplot.services.stats.StatisticAggregateInterceptor;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;
@@ -484,9 +484,7 @@ public class EventsController extends Controller {
         }
     }
 
-    private String esc(String username) {
-        return username.toLowerCase().replaceAll("[^a-zA-Z0-9.-]", "_");
-    }
+
 
     private boolean isAnalyseIncorrect(RequestContext ctx, String analyseId, String jvmId, GCAnalyse analyse) {
         if (analyse == null) {
