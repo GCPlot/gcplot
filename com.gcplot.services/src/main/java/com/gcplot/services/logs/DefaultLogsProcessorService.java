@@ -45,7 +45,6 @@ import static com.gcplot.commons.CollectionUtils.cloneAndPut;
 public class DefaultLogsProcessorService implements LogsProcessorService {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultLogsProcessorService.class);
     private static final EnumSet<Generation> OTHER_GENERATION = EnumSet.of(Generation.OTHER);
-    public static final String ANONYMOUS_ANALYSE_ID = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
     private static final String ANONYMOUS_ANALYSE_NAME = "Files";
     private static final String LOG_PATTERN = "%d{yyyyMMdd HH:mm:ss.SSS} [[%5p] %c{1} [%t]] %m%n";
     private ThreadLocal<ch.qos.logback.classic.Logger> loggers = ThreadLocal.withInitial(

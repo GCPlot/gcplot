@@ -1,5 +1,6 @@
 package com.gcplot.log_processor.common;
 
+import com.gcplot.model.VMEvent;
 import com.gcplot.model.gc.*;
 import org.joda.time.DateTime;
 
@@ -110,7 +111,17 @@ public class TestGCEventFactory implements GCEventFactory {
             }
 
             @Override
+            public VMEvent jvmId(String jvmId) {
+                return null;
+            }
+
+            @Override
             public String analyseId() {
+                return null;
+            }
+
+            @Override
+            public VMEvent analyseId(String analyseId) {
                 return null;
             }
 

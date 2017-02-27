@@ -41,7 +41,7 @@ public class MemoryStatus {
     }
 
     public MemoryDetails toDetails() {
-        return new MemoryDetailsImpl(pageSize, physicalTotal, physicalFree, swapTotal, swapFree);
+        return new MemoryDetails(pageSize, physicalTotal, physicalFree, swapTotal, swapFree);
     }
 
     @Override

@@ -14,28 +14,28 @@ import java.util.List;
 public abstract class AbstractVMEventsCassandraRepository<T extends VMEvent> extends AbstractCassandraRepository
         implements VMEventsRepository<T> {
 
-    abstract RegularStatement addStatement(String analyseId, String jvmId, T event);
+    abstract RegularStatement addStatement(T event);
 
     @Override
-    public void add(String analyseId, String jvmId, T event) {
-        connector.session().execute(addStatement(analyseId, jvmId, event));
+    public void add(T event) {
+        connector.session().execute(addStatement(event));
     }
 
     @Override
-    public void add(String analyseId, String jvmId, List<T> events) {
+    public void add(List<T> events) {
         connector.session().execute(
-                QueryBuilder.batch(events.stream().map(e -> addStatement(analyseId, jvmId, e)).toArray(RegularStatement[]::new)));
+                QueryBuilder.batch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
     }
 
     @Override
-    public void addAsync(String analyseId, String jvmId, T event) {
-        connector.session().executeAsync(addStatement(analyseId, jvmId, event));
+    public void addAsync(T event) {
+        connector.session().executeAsync(addStatement(event));
     }
 
     @Override
-    public void addAsync(String analyseId, String jvmId, List<T> events) {
+    public void addAsync(List<T> events) {
         connector.session().executeAsync(
-                QueryBuilder.batch(events.stream().map(e -> addStatement(analyseId, jvmId, e)).toArray(RegularStatement[]::new)));
+                QueryBuilder.batch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
     }
 
 }

@@ -19,9 +19,11 @@ public class FileLogSource extends BaseLogSource implements LogSource {
     private static final Logger LOG = LoggerFactory.getLogger(FileLogSource.class);
     private File file;
     private String checksum;
+    private String name;
 
-    public FileLogSource(File file) {
+    public FileLogSource(File file, String name) {
         this.file = file;
+        this.name = name;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class FileLogSource extends BaseLogSource implements LogSource {
 
     @Override
     public String name() {
-        return file.getName();
+        return name;
     }
 
     @Override

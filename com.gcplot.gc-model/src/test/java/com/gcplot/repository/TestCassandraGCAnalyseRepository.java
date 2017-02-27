@@ -113,7 +113,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
 
     private static MemoryDetails md(long pageSize, long physicalTotal, long physicalFree,
                                    long swapTotal, long swapFree) {
-        return new MemoryDetailsImpl().pageSize(pageSize).physicalTotal(physicalTotal)
+        return new MemoryDetails().pageSize(pageSize).physicalTotal(physicalTotal)
                 .physicalFree(physicalFree).swapTotal(swapTotal).swapFree(swapFree);
     }
 

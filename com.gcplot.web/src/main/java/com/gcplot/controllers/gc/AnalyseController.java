@@ -112,7 +112,7 @@ public class AnalyseController extends Controller {
         Identifier userId = account(ctx).id();
         MemoryDetails md = null;
         if (req.memoryStatus != null) {
-            md = new MemoryDetailsImpl(req.memoryStatus.pageSize,
+            md = new MemoryDetails(req.memoryStatus.pageSize,
                     req.memoryStatus.physicalTotal, req.memoryStatus.physicalFree,
                     req.memoryStatus.swapTotal, req.memoryStatus.swapFree);
         }

@@ -5,21 +5,41 @@ public class MemoryDetails {
     public long pageSize() {
         return pageSize;
     }
+    public MemoryDetails pageSize(long pageSize) {
+        this.pageSize = pageSize;
+        return this;
+    }
 
     public long physicalTotal() {
         return physicalTotal;
+    }
+    public MemoryDetails physicalTotal(long physicalTotal) {
+        this.physicalTotal = physicalTotal;
+        return this;
     }
 
     public long physicalFree() {
         return physicalFree;
     }
+    public MemoryDetails physicalFree(long physicalFree) {
+        this.physicalFree = physicalFree;
+        return this;
+    }
 
     public long swapTotal() {
         return swapTotal;
     }
+    public MemoryDetails swapTotal(long swapTotal) {
+        this.swapTotal = swapTotal;
+        return this;
+    }
 
     public long swapFree() {
         return swapFree;
+    }
+    public MemoryDetails swapFree(long swapFree) {
+        this.swapFree = swapFree;
+        return this;
     }
 
     public boolean isEmpty() {

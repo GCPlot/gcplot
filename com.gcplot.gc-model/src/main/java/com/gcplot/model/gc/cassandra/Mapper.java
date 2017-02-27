@@ -57,12 +57,12 @@ public abstract class Mapper {
         Map<String, Long> jvmSwapTotal = row.getMap("jvm_md_swap_total", String.class, Long.class);
         Map<String, Long> jvmSwapFree = row.getMap("jvm_md_swap_free", String.class, Long.class);
         for (String jvm : gcAnalyse.jvmIds()) {
-            MemoryDetailsImpl details = new MemoryDetailsImpl();
-            details.pageSize(jvmPageSizes.getOrDefault(jvm, 0L));
-            details.physicalTotal(jvmPhysTotal.getOrDefault(jvm, 0L));
-            details.physicalFree(jvmPhysFree.getOrDefault(jvm, 0L));
-            details.swapTotal(jvmSwapTotal.getOrDefault(jvm, 0L));
-            details.swapFree(jvmSwapFree.getOrDefault(jvm, 0L));
+            MemoryDetails details = new MemoryDetails();
+            details.pageSize(jvmPageSizes.getOrDefault(jvm, 0L))
+                    .physicalTotal(jvmPhysTotal.getOrDefault(jvm, 0L))
+                    .physicalFree(jvmPhysFree.getOrDefault(jvm, 0L))
+                    .swapTotal(jvmSwapTotal.getOrDefault(jvm, 0L))
+                    .swapFree(jvmSwapFree.getOrDefault(jvm, 0L));
             if (!details.isEmpty()) {
                 memoryDetails.put(jvm, details);
             }
