@@ -8,6 +8,7 @@
 
     <import resource="applicationContext-config.xml"/>
     <import resource="applicationContext-cassandra.xml"/>
+    <import resource="applicationContext-gc.xml"/>
 
     <bean id="vertxOpts" class="io.vertx.core.VertxOptions">
         <property name="workerPoolSize" value="${vertx.worker.pool.size:20}"/>
@@ -45,6 +46,19 @@
         <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
         <property name="eventFactory" ref="eventFactory"/>
         <property name="eventRepository" ref="cassandraGCEventRepository"/>
+    </bean>
+
+    <bean id="logsProcessorService" class="com.gcplot.services.logs.DefaultLogsProcessorService"
+          init-method="init" destroy-method="destroy">
+        <property name="eventRepository" ref="cassandraGCEventRepository"/>
+        <property name="agesStateRepository" ref="cassandraObjectsAgesRepository"/>
+        <property name="analyseFactory" ref="analyzeFactory"/>
+        <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
+        <property name="config" ref="config"/>
+        <property name="logsParser" ref="logsParser"/>
+        <property name="objectsAgesFactory" ref="objectsAgesFactory"/>
+        <property name="resourceManager" ref="s3ResourceManager"/>
+        <property name="vmPropertiesDetector" ref="vmPropertiesDetector"/>
     </bean>
 
     <bean id="s3ResourceManager" class="com.gcplot.parser.S3ResourceManager" init-method="init">

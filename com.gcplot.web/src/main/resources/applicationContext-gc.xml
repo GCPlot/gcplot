@@ -16,4 +16,6 @@
         <property name="eventFactory" ref="eventFactory"/>
     </bean>
 
+    <bean id="vmPropertiesDetector" class="com.gcplot.log_processor.parser.detect.DefaultVMPropertiesDetector"/>
+
 </beans>

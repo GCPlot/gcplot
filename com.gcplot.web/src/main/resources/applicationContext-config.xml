@@ -18,5 +18,7 @@
     </bean>
 
     <bean id="eventFactory" class="com.gcplot.model.DefaultGCEventFactory"/>
+    <bean id="analyzeFactory" class="com.gcplot.model.DefaultGCAnalyseFactory"/>
+    <bean id="objectsAgesFactory" class="com.gcplot.model.DefaultObjectsAgesFactory"/>
 
 </beans>
