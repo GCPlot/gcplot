@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.account.Account;
 
 public class LoginResult {
-
     @JsonProperty("username")
     public String username;
     @JsonProperty("first_name")

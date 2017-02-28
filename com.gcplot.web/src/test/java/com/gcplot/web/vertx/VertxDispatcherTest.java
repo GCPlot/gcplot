@@ -137,8 +137,11 @@ public class VertxDispatcherTest {
 
 
     public static class TestEntity {
+        @JsonProperty("num")
         public final int num;
+        @JsonProperty("str")
         public final String str;
+        @JsonProperty("nums")
         public final List<Integer> nums;
 
         @JsonCreator

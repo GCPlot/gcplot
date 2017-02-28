@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *         8/30/16
  */
 public class UpdateJvmVersionRequest {
-
     @JsonProperty(value = "an_id", required = true)
     public String analyseId;
     @JsonProperty(value = "jvm_id", required = true)
