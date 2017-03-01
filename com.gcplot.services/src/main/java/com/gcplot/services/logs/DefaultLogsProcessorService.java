@@ -107,7 +107,9 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
             AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
             ParseResult pr = parseAndPersist(sync, source, jvmId, analyze, log, e -> {
-                lastEventTime.set(e.occurred());
+                if (e.generations().size() > 0 && !e.generations().equals(OTHER_GENERATION)) {
+                    lastEventTime.set(e.occurred());
+                }
                 e.analyseId(analyzeId).jvmId(jvmId);
             });
 

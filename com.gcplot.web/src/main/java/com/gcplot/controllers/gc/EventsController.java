@@ -13,7 +13,7 @@ import com.gcplot.messages.GCRateResponse;
 import com.gcplot.model.gc.*;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.GCEventRepository;
-import com.gcplot.services.logs.FileLogSource;
+import com.gcplot.services.logs.sources.FileLogSource;
 import com.gcplot.services.stats.StatisticAggregateInterceptor;
 import com.gcplot.web.RequestContext;
 import com.gcplot.web.UploadedFile;

@@ -1,9 +1,15 @@
 package com.gcplot.parser;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.retry.v2.RetryPolicy;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import com.gcplot.resource.ResourceManager;
 import com.google.common.base.Strings;
@@ -29,7 +35,13 @@ public class S3ResourceManager implements ResourceManager {
 
     public void init() {
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-        client = new AmazonS3Client(credentials);
+        client = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withClientConfiguration(new ClientConfiguration()
+                        .withMaxConnections(Runtime.getRuntime().availableProcessors() * 10)
+                        .withMaxErrorRetry(50))
+                .withRegion(Regions.EU_CENTRAL_1)
+                .build();
     }
 
     @Override
