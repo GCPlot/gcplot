@@ -181,7 +181,9 @@ public class EventsController extends Controller {
                     Logger log = createLogger(logFile);
                     AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
                     ParseResult pr = parseAndPersist(isSync, uf, jvmId, checksum, analyse, log, e -> {
-                        lastEventTime.set(e.occurred());
+                        if (e.generations().size() > 0 && !e.generations().equals(OTHER_GENERATION)) {
+                            lastEventTime.set(e.occurred());
+                        }
                         e.analyseId(analyseId);
                         e.jvmId(jvmId);
                     });
