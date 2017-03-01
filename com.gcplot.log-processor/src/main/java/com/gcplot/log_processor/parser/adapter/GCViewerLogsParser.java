@@ -107,7 +107,9 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         });
         if (lastEvent[0] != null) {
             List<GCEvent> mapped = map(now, ctx, lastEvent[0]);
-            lastEventListener.accept(mapped.get(mapped.size() - 1));
+            if (mapped.size() > 0) {
+                lastEventListener.accept(mapped.get(mapped.size() - 1));
+            }
         }
         // temp stuff
         return ParseResult.success(Collections.emptyList(),
