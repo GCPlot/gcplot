@@ -72,7 +72,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
                 boolean wasAccepted = false;
                 for (EventInterceptor<GCEvent> sampler : samplers) {
                     if (sampler.isApplicable(next)) {
-                        sampler.process(next).forEach(listener::accept);
+                        sampler.process(next).forEach(listener);
                         wasAccepted = true;
                         break;
                     }

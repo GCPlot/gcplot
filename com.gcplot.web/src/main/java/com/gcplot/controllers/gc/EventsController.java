@@ -524,12 +524,17 @@ public class EventsController extends Controller {
         ParseResult pr;
         try (InputStream fis = logStream(uf)) {
             pr = logsParser.parse(fis, first -> {
-                        firstParsed[0] = first;
-                        lastPersistedEvent.get();
+                if (first.generations().size() > 0 && !first.generations().equals(OTHER_GENERATION)) {
+                    firstParsed[0] = first;
+                    lastPersistedEvent.get();
+                    return true;
+                } else {
+                    return false;
+                }
                     }, last -> enricher.accept((GCEventImpl) last),
                     e -> {
                         enricher.accept((GCEventImpl) e);
-                        if (lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
+                        if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
                                 e.timestamp()) {
                             persist(isSync, e);
                         } else {

@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -48,7 +49,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
     }
 
     @Override
-    public ParseResult parse(InputStream reader, Consumer<GCEvent> firstEventListener,
+    public ParseResult parse(InputStream reader, Predicate<GCEvent> firstEventListener,
                              Consumer<GCEvent> lastEventListener, Consumer<GCEvent> eventsConsumer,
                              ParserContext ctx) {
         SurvivorAgesInfoProducer agesInfoProducer = new SurvivorAgesInfoProducer();
@@ -66,7 +67,9 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                     List<GCEvent> map = map(now, ctx, l.get(0));
                     if (map.size() > 0) {
                         firstEvent[0] = map.get(0);
-                        firstEventListener.accept(firstEvent[0]);
+                        if (!firstEventListener.test(firstEvent[0])) {
+                            firstEvent[0] = null;
+                        }
                     }
                 }
                 lastEvent[0] = l.get(l.size() - 1);
