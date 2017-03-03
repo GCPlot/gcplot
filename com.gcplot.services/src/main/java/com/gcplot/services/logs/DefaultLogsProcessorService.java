@@ -44,7 +44,6 @@ import static com.gcplot.commons.CollectionUtils.cloneAndPut;
  */
 public class DefaultLogsProcessorService implements LogsProcessorService {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultLogsProcessorService.class);
-    private static final EnumSet<Generation> OTHER_GENERATION = EnumSet.of(Generation.OTHER);
     private static final String ANONYMOUS_ANALYSE_NAME = "Files";
     private static final String LOG_PATTERN = "%d{yyyyMMdd HH:mm:ss.SSS} [[%5p] %c{1} [%t]] %m%n";
     private ThreadLocal<ch.qos.logback.classic.Logger> loggers = ThreadLocal.withInitial(
@@ -107,7 +106,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
             AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
             ParseResult pr = parseAndPersist(sync, source, jvmId, analyze, log, e -> {
-                if (e.generations().size() > 0 && !e.generations().equals(OTHER_GENERATION)) {
+                if (!e.isOther()) {
                     lastEventTime.set(e.occurred());
                 }
                 e.analyseId(analyzeId).jvmId(jvmId);
@@ -211,26 +210,29 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         ParseResult pr;
         try (InputStream fis = source.logStream()) {
             pr = logsParser.parse(fis, first -> {
-                        firstParsed[0] = first;
-                        lastPersistedEvent.get();
-                    }, enricher,
-                    e -> {
-                        enricher.accept(e);
-                        if (lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                                e.timestamp()) {
-                            persist(isSync, e);
-                        } else {
-                            log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
-                            LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
-                        }
-                    }, ctx);
+                if (!first.isOther()) {
+                    firstParsed[0] = first;
+                    lastPersistedEvent.get();
+                    return true;
+                } else {
+                    return false;
+                }
+            }, e -> {
+                enricher.accept(e);
+                if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
+                        e.timestamp()) {
+                    persist(isSync, e);
+                } else {
+                    log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                    LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                }
+            }, ctx);
         }
         return pr;
     }
 
     private void persist(boolean isSync, GCEvent event) {
-        if (!config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION) ||
-                !event.generations().equals(OTHER_GENERATION)) {
+        if (!config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION) || !event.isOther()) {
             if (isSync) {
                 eventRepository.add(event);
             } else {

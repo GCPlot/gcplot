@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -48,8 +49,7 @@ public class GCViewerLogsParser implements LogsParser {
     }
 
     @Override
-    public ParseResult parse(InputStream reader, Consumer<GCEvent> firstEventListener,
-                             Consumer<GCEvent> lastEventListener, Consumer<GCEvent> eventsConsumer,
+    public ParseResult parse(InputStream reader, Predicate<GCEvent> firstEventListener, Consumer<GCEvent> eventsConsumer,
                              ParserContext ctx) {
         SurvivorAgesInfoProducer agesInfoProducer = new SurvivorAgesInfoProducer();
         MetadataInfoProducer metadataInfoProducer = new MetadataInfoProducer();
@@ -58,7 +58,6 @@ public class GCViewerLogsParser implements LogsParser {
         StreamDataReader dr;
         final DateTime now = DateTime.now(DateTimeZone.UTC).withDayOfYear(1).withTimeAtStartOfDay();
         GCEvent[] firstEvent = new GCEvent[1];
-        AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
         List<Future> fs = new ArrayList<>();
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
             if (l.size() > 0) {
@@ -66,10 +65,11 @@ public class GCViewerLogsParser implements LogsParser {
                     List<GCEvent> map = map(now, ctx, l.get(0));
                     if (map.size() > 0) {
                         firstEvent[0] = map.get(0);
-                        firstEventListener.accept(firstEvent[0]);
+                        if (!firstEventListener.test(firstEvent[0])) {
+                            firstEvent[0] = null;
+                        }
                     }
                 }
-                lastEvent[0] = l.get(l.size() - 1);
                 fs.add(executor.submit(() -> {
                     try {
                         l.forEach(e -> map(now, ctx, e).forEach(eventsConsumer));
@@ -102,10 +102,6 @@ public class GCViewerLogsParser implements LogsParser {
                 f.get();
             } catch (Throwable ignored) {}
         });
-        if (lastEvent[0] != null) {
-            List<GCEvent> mapped = map(now, ctx, lastEvent[0]);
-            lastEventListener.accept(mapped.get(mapped.size() - 1));
-        }
         // temp stuff
         return ParseResult.success(Collections.emptyList(),
                 Collections.singletonList(agesInfoProducer.averageAgesState()),
