@@ -12,6 +12,8 @@ public interface GCAnalyseRepository {
 
     List<GCAnalyse> analyses();
 
+    Iterable<GCAnalyse> analyses(boolean isContinuous);
+
     OptionalLong analysesCount(Identifier accountId);
 
     Optional<GCAnalyse> analyse(Identifier accountId, String id);

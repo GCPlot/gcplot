@@ -37,6 +37,13 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
+    public Iterable<GCAnalyse> analyses(boolean isContinuous) {
+        Statement statement = QueryBuilder.select().all().from(TABLE_NAME)
+                .where(eq("is_continuous", isContinuous));
+        return analysesFrom(connector.session().execute(statement));
+    }
+
+    @Override
     public OptionalLong analysesCount(Identifier accountId) {
         Statement statement = QueryBuilder.select().countAll()
                 .from(TABLE_NAME).where(eq("account_id", accountId.toString()));
