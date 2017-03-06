@@ -4,6 +4,7 @@ import com.gcplot.Identifier;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.messages.AccountResponse;
+import com.gcplot.messages.ConnectorSettingsMessage;
 import com.gcplot.messages.PutConfigMessage;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.role.Restriction;
@@ -22,7 +23,13 @@ import java.util.stream.Collectors;
  *         8/21/16
  */
 public class AdminController extends Controller {
-    public static final String MESSAGE = "You are not allowed to perform such action.";
+    public static final String MESSAGE = "You are not allowed to perform such an action.";
+    @Autowired
+    private AccountRepository accountRepository;
+    private String connectorS3Base;
+    private String connectorS3Bucket;
+    private String connectorS3AccessKey;
+    private String connectorS3SecretKey;
 
     @PostConstruct
     public void init() {
@@ -37,6 +44,8 @@ public class AdminController extends Controller {
                 .get("/admin/account/info", this::getAccountInfo);
         dispatcher.requireAuth()
                 .get("/admin/account/id", this::getCurrentAccountId);
+        dispatcher.requireAuth()
+                .get("/connector/settings", this::getConnectorSettings);
         dispatcher.requireAuth()
                 .filter(this::hasNonRestrictiveRole, MESSAGE)
                 .post("/admin/configs/put", PutConfigMessage.class, this::putConfig);
@@ -69,6 +78,14 @@ public class AdminController extends Controller {
      */
     public void getCurrentAccountId(RequestContext ctx) {
         ctx.response(ctx.loginInfo().get().getAccount().id().toString());
+    }
+
+    /**
+     * GET /connector/settings
+     * Require Auth (token)
+     */
+    public void getConnectorSettings(RequestContext ctx) {
+        ctx.response(new ConnectorSettingsMessage(connectorS3Bucket, connectorS3Base, connectorS3AccessKey, connectorS3SecretKey));
     }
 
     /**
@@ -138,6 +155,19 @@ public class AdminController extends Controller {
         return rs.size() > 0 && rs.stream().allMatch(r -> !r.restricted());
     }
 
-    @Autowired
-    private AccountRepository accountRepository;
+    public void setConnectorS3Base(String connectorS3Base) {
+        this.connectorS3Base = connectorS3Base;
+    }
+
+    public void setConnectorS3Bucket(String connectorS3Bucket) {
+        this.connectorS3Bucket = connectorS3Bucket;
+    }
+
+    public void setConnectorS3AccessKey(String connectorS3AccessKey) {
+        this.connectorS3AccessKey = connectorS3AccessKey;
+    }
+
+    public void setConnectorS3SecretKey(String connectorS3SecretKey) {
+        this.connectorS3SecretKey = connectorS3SecretKey;
+    }
 }

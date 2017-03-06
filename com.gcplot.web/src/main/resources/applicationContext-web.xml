@@ -61,10 +61,14 @@
         <property name="vmPropertiesDetector" ref="vmPropertiesDetector"/>
     </bean>
 
-    <bean id="s3ResourceManager" class="com.gcplot.parser.S3ResourceManager" init-method="init">
-        <property name="accessKey" value="${s3.resource.access.key}"/>
-        <property name="secretKey" value="${s3.resource.secret.key}"/>
-        <property name="bucket" value="${s3.resource.bucket}"/>
+    <bean id="s3Connector" class="com.gcplot.services.S3Connector" init-method="init">
+        <property name="accessKey" value="${s3.resource.access.key:}"/>
+        <property name="secretKey" value="${s3.resource.secret.key:}"/>
+        <property name="bucket" value="${s3.resource.bucket:}"/>
+    </bean>
+
+    <bean id="s3ResourceManager" class="com.gcplot.parser.S3ResourceManager">
+        <property name="connector" ref="s3Connector"/>
     </bean>
 
 </beans>
