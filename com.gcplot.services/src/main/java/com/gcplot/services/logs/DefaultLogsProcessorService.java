@@ -105,8 +105,8 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
             Logger log = createLogger(logFile);
 
             AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
-            ParseResult pr = parseAndPersist(sync, source, jvmId, analyze, log, e -> {
-                if (!e.isOther()) {
+            ParseResult pr = parseAndPersist(source, jvmId, analyze, log, e -> {
+                if (!e.isOther() && (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred()))) {
                     lastEventTime.set(e.occurred());
                 }
                 e.analyseId(analyzeId).jvmId(jvmId);
@@ -200,11 +200,16 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return null;
     }
 
-    private ParseResult parseAndPersist(boolean isSync, LogSource source, String jvmId, GCAnalyse analyse,
+    private ParseResult parseAndPersist(LogSource source, String jvmId, GCAnalyse analyse,
                                         Logger log, Consumer<GCEvent> enricher) throws IOException {
         ParserContext ctx = new ParserContext(log, source.checksum(), analyse.jvmGCTypes().get(jvmId),
                 analyse.jvmVersions().get(jvmId));
         final GCEvent[] firstParsed = new GCEvent[1];
+        final int[] lastMonth = new int[1];
+        final DateTime[] lastOccurred = new DateTime[1];
+        final boolean forbidOtherGen = config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION);
+        final int batchSize = config.readInt(ConfigProperty.BATCH_PUT_GC_EVENT_SIZE);
+        final ThreadLocal<List<GCEvent>> es = ThreadLocal.withInitial(() -> new ArrayList<>(batchSize));
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, source.checksum(), firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
@@ -218,27 +223,32 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                     return false;
                 }
             }, e -> {
-                enricher.accept(e);
-                if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                        e.timestamp()) {
-                    persist(isSync, e);
-                } else {
-                    log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
-                    LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                List<GCEvent> events = es.get();
+                if (e != null) {
+                    enricher.accept(e);
+                    if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
+                            e.timestamp() && (!forbidOtherGen || !e.isOther())) {
+                        if (events.size() > 0 &&
+                                (events.size() % batchSize == 0
+                                        || (lastMonth[0] != e.occurred().getMonthOfYear())
+                                        || (e.occurred().equals(lastOccurred[0])))) {
+                            persist(events);
+                        }
+                        events.add(e);
+                        lastMonth[0] = e.occurred().getMonthOfYear();
+                        lastOccurred[0] = e.occurred();
+                    }
+                } else if (events.size() > 0) {
+                    persist(events);
                 }
             }, ctx);
         }
         return pr;
     }
 
-    private void persist(boolean isSync, GCEvent event) {
-        if (!config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION) || !event.isOther()) {
-            if (isSync) {
-                eventRepository.add(event);
-            } else {
-                eventRepository.addAsync(event);
-            }
-        }
+    private void persist(List<GCEvent> events) {
+        eventRepository.addAsync(events);
+        events.clear();
     }
 
     private Logger createLogger(File logFile) {

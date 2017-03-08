@@ -1,10 +1,7 @@
 package com.gcplot.cassandra;
 
 import com.codahale.metrics.MetricRegistry;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.PoolingOptions;
-import com.datastax.driver.core.ProtocolOptions;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.core.policies.DowngradingConsistencyRetryPolicy;
@@ -19,12 +16,21 @@ public class CassandraConnector {
         LOG.info("Starting Cassandra connector initialization.");
         Cluster.Builder builder = Cluster.builder()
                 .addContactPoints(hosts)
-                .withRetryPolicy(DowngradingConsistencyRetryPolicy.INSTANCE)
                 .withReconnectionPolicy(new ConstantReconnectionPolicy(reconnectionDelayMs))
                 .withRetryPolicy(DefaultRetryPolicy.INSTANCE)
                 .withCompression(ProtocolOptions.Compression.LZ4)
+                .withSocketOptions(new SocketOptions()
+                        .setReceiveBufferSize(2 * 1024 * 1024)
+                        .setSendBufferSize(2 * 1024 * 1024))
                 .withPort(port);
         if (poolingOptions != null) {
+            int procs = Runtime.getRuntime().availableProcessors();
+            poolingOptions
+                    .setConnectionsPerHost(HostDistance.LOCAL, procs, procs * 2)
+                    .setConnectionsPerHost(HostDistance.REMOTE, (procs / 2), procs * 2)
+                    .setPoolTimeoutMillis(60000)
+                    .setMaxRequestsPerConnection(HostDistance.LOCAL, 1024)
+                    .setMaxRequestsPerConnection(HostDistance.REMOTE, 1024);
             builder.withPoolingOptions(poolingOptions);
         }
         if (!Strings.isNullOrEmpty(username)) {

@@ -21,10 +21,7 @@ import org.joda.time.Months;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -202,8 +199,8 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("cause", event.cause().type())
                 .value("properties", event.properties())
                 .value("vm_event_type", event.vmEventType().type())
-                .value("capacity", Lists.newArrayList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))
-                .value("total_capacity", Lists.newArrayList(event.totalCapacity().usedBefore(), event.totalCapacity().usedAfter(), event.totalCapacity().total()))
+                .value("capacity", Arrays.asList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))
+                .value("total_capacity", Arrays.asList(event.totalCapacity().usedBefore(), event.totalCapacity().usedAfter(), event.totalCapacity().total()))
                 .value("pause_mu", event.pauseMu())
                 .value("phase", event.phase().type())
                 .value("generations", EnumSetUtils.encode(event.generations()))

@@ -19,10 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -58,7 +55,7 @@ public class GCViewerLogsParser implements LogsParser {
         StreamDataReader dr;
         final DateTime now = DateTime.now(DateTimeZone.UTC).withDayOfYear(1).withTimeAtStartOfDay();
         GCEvent[] firstEvent = new GCEvent[1];
-        List<Future> fs = new ArrayList<>();
+        Future[] lastFuture = new Future[1];
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
             if (l.size() > 0) {
                 if (firstEvent[0] == null) {
@@ -70,13 +67,14 @@ public class GCViewerLogsParser implements LogsParser {
                         }
                     }
                 }
-                fs.add(executor.submit(() -> {
+                lastFuture[0] = executor.submit(() -> {
                     try {
                         l.forEach(e -> map(now, ctx, e).forEach(eventsConsumer));
+                        eventsConsumer.accept(null);
                     } catch (Throwable t) {
                         ctx.logger().error(t.getMessage(), t);
                     }
-                }));
+                });
             }
         };
         try {
@@ -97,11 +95,12 @@ public class GCViewerLogsParser implements LogsParser {
             return ParseResult.failure(e);
         }
 
-        fs.forEach(f -> {
+        if (lastFuture[0] != null) {
             try {
-                f.get();
-            } catch (Throwable ignored) {}
-        });
+                lastFuture[0].get();
+            } catch (InterruptedException | ExecutionException ignored) {
+            }
+        }
         // temp stuff
         return ParseResult.success(Collections.emptyList(),
                 Collections.singletonList(agesInfoProducer.averageAgesState()),
