@@ -523,6 +523,7 @@ public class EventsController extends Controller {
         final ThreadLocal<List<GCEvent>> es = ThreadLocal.withInitial(() -> new ArrayList<>(batchSize));
         final GCEvent[] firstParsed = new GCEvent[1];
         final int[] lastMonth = new int[1];
+        final DateTime[] lastOccurred = new DateTime[1];
         final boolean forbidOtherGen = config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION);
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
@@ -544,14 +545,17 @@ public class EventsController extends Controller {
                             if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
                                     e.timestamp() && (!forbidOtherGen || !e.generations().equals(OTHER_GENERATION))) {
                                 if (events.size() > 0 &&
-                                        (events.size() % batchSize == 0 || (lastMonth[0] != e.occurred().getMonthOfYear()))) {
-                                    persist(isSync, events);
+                                        (events.size() % batchSize == 0
+                                                || (lastMonth[0] != e.occurred().getMonthOfYear())
+                                                || (e.occurred().equals(lastOccurred[0])))) {
+                                    persist(events);
                                 }
                                 events.add(e);
                                 lastMonth[0] = e.occurred().getMonthOfYear();
+                                lastOccurred[0] = e.occurred();
                             }
                         } else if (events.size() > 0) {
-                            persist(isSync, events);
+                            persist(events);
                         }
                     }, ctx);
         }
@@ -584,12 +588,8 @@ public class EventsController extends Controller {
         }
     }
 
-    private void persist(boolean isSync, List<GCEvent> events) {
-        //if (isSync) {
-            eventRepository.add(events);
-        //} else {
-        //    eventRepository.addAsync(events);
-        //}
+    private void persist(List<GCEvent> events) {
+        eventRepository.add(events);
         events.clear();
     }
 
