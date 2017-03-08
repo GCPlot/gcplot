@@ -585,11 +585,11 @@ public class EventsController extends Controller {
     }
 
     private void persist(boolean isSync, List<GCEvent> events) {
-        if (isSync) {
+        //if (isSync) {
             eventRepository.add(events);
-        } else {
-            eventRepository.addAsync(events);
-        }
+        //} else {
+        //    eventRepository.addAsync(events);
+        //}
         events.clear();
     }
 
