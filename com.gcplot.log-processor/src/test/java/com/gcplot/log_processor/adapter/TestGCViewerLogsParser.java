@@ -31,9 +31,11 @@ public class TestGCViewerLogsParser {
         p.init();
         p.setEventFactory(new TestGCEventFactory());
         GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
-        ParseResult pr = p.parse(log, e -> first[0] = e, e -> {
-            last[0] = e;
-            events.add(e);
+        ParseResult pr = p.parse(log, e -> { first[0] = e; return true; }, e -> {
+            if (e != null) {
+                last[0] = e;
+                events.add(e);
+            }
         }, new ParserContext(LOG, "chcksm", GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
         p.destroy();
 
@@ -62,9 +64,11 @@ public class TestGCViewerLogsParser {
         p.setEventFactory(new TestGCEventFactory());
         p.setBatchSize(64);
         GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
-        ParseResult pr = p.parse(log, e -> first[0] = e, e -> {
-            last[0] = e;
-            events.add(e);
+        ParseResult pr = p.parse(log, e -> { first[0] = e; return true; }, e -> {
+            if (e != null) {
+                last[0] = e;
+                events.add(e);
+            }
         }, new ParserContext(LOG, "chcksm", GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
         p.destroy();
 
