@@ -12,6 +12,8 @@ import java.util.Optional;
  */
 public class S3LogSource implements LogSource {
 
+
+
     @Override
     public InputStream inputStream() {
         return null;
