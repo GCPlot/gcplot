@@ -586,7 +586,8 @@ public class EventsController extends Controller {
         if (isSync) {
             eventRepository.add(events);
         } else {
-            eventRepository.addAsync(events);
+            events.forEach(eventRepository::addAsync);
+            //eventRepository.addAsync(events);
         }
         events.clear();
     }
