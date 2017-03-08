@@ -18,24 +18,24 @@ public abstract class AbstractVMEventsCassandraRepository<T extends VMEvent> ext
 
     @Override
     public void add(T event) {
-        connector.session().execute(addStatement(event));
+        connector.session().execute(addStatement(event).setIdempotent(true));
     }
 
     @Override
     public void add(List<T> events) {
         connector.session().execute(
-                QueryBuilder.unloggedBatch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
+                QueryBuilder.unloggedBatch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)).setIdempotent(true));
     }
 
     @Override
     public void addAsync(T event) {
-        connector.session().executeAsync(addStatement(event));
+        connector.session().executeAsync(addStatement(event).setIdempotent(true));
     }
 
     @Override
     public void addAsync(List<T> events) {
         connector.session().executeAsync(
-                QueryBuilder.unloggedBatch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)));
+                QueryBuilder.unloggedBatch(events.stream().map(this::addStatement).toArray(RegularStatement[]::new)).setIdempotent(true));
     }
 
 }

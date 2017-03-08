@@ -15,7 +15,6 @@ public class CassandraConnector {
         LOG.info("Starting Cassandra connector initialization.");
         Cluster.Builder builder = Cluster.builder()
                 .addContactPoints(hosts)
-                .withRetryPolicy(DowngradingConsistencyRetryPolicy.INSTANCE)
                 .withReconnectionPolicy(new ConstantReconnectionPolicy(reconnectionDelayMs))
                 .withRetryPolicy(DefaultRetryPolicy.INSTANCE)
                 .withCompression(ProtocolOptions.Compression.LZ4)
