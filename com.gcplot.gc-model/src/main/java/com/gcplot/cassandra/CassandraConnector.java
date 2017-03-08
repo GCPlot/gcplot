@@ -27,6 +27,7 @@ public class CassandraConnector {
             poolingOptions
                     .setConnectionsPerHost(HostDistance.LOCAL, procs, procs * 2)
                     .setConnectionsPerHost(HostDistance.REMOTE, (procs / 2), procs * 2)
+                    .setPoolTimeoutMillis(60000)
                     .setMaxRequestsPerConnection(HostDistance.LOCAL, 1024)
                     .setMaxRequestsPerConnection(HostDistance.REMOTE, 1024);
             builder.withPoolingOptions(poolingOptions);

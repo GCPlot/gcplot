@@ -19,7 +19,7 @@
         <property name="keyspace" value="${cassandra.keyspace}"/>
         <property name="poolingOptions">
             <bean class="com.datastax.driver.core.PoolingOptions">
-                <property name="maxQueueSize" value="1048576"/>
+                <property name="maxQueueSize" value="5242880"/>
                 <property name="heartbeatIntervalSeconds" value="10"/>
             </bean>
         </property>
