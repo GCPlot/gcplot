@@ -19,6 +19,9 @@ public class CassandraConnector {
                 .withReconnectionPolicy(new ConstantReconnectionPolicy(reconnectionDelayMs))
                 .withRetryPolicy(DefaultRetryPolicy.INSTANCE)
                 .withCompression(ProtocolOptions.Compression.LZ4)
+                .withSocketOptions(new SocketOptions()
+                        .setReceiveBufferSize(2 * 1024 * 1024)
+                        .setSendBufferSize(2 * 1024 * 1024))
                 .withPort(port);
         if (poolingOptions != null) {
             int procs = Runtime.getRuntime().availableProcessors();
