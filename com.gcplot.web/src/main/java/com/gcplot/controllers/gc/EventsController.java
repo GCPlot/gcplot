@@ -522,6 +522,7 @@ public class EventsController extends Controller {
         final int batchSize = config.readInt(ConfigProperty.BATCH_PUT_GC_EVENT_SIZE);
         final ThreadLocal<List<GCEvent>> es = ThreadLocal.withInitial(() -> new ArrayList<>(batchSize));
         final GCEvent[] firstParsed = new GCEvent[1];
+        final boolean forbidOtherGen = config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION);
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
@@ -540,15 +541,12 @@ public class EventsController extends Controller {
                         if (e != null) {
                             enricher.accept((GCEventImpl) e);
                             if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                                    e.timestamp() && (!config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION) || !e.generations().equals(OTHER_GENERATION))) {
+                                    e.timestamp() && (!forbidOtherGen || !e.generations().equals(OTHER_GENERATION))) {
 
                                 if (events.size() > 0 && events.size() % batchSize == 0) {
                                     persist(isSync, events);
                                 }
                                 events.add(e);
-                            } else {
-                                log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
-                                LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
                             }
                         } else if (events.size() > 0) {
                             persist(isSync, events);
