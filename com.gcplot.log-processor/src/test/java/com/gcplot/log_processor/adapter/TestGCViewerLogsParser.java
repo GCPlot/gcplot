@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -31,7 +32,7 @@ public class TestGCViewerLogsParser {
         p.init();
         p.setEventFactory(new TestGCEventFactory());
         GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
-        ParseResult pr = p.parse(log, e -> first[0] = e, e -> last[0] = e, events::add, new ParserContext(LOG, "chcksm",
+        ParseResult pr = p.parse(log, e -> { first[0] = e; return true;}, e -> last[0] = e, add(events), new ParserContext(LOG, "chcksm",
                 GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
         p.destroy();
 
@@ -60,7 +61,7 @@ public class TestGCViewerLogsParser {
         p.setEventFactory(new TestGCEventFactory());
         p.setBatchSize(64);
         GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
-        ParseResult pr = p.parse(log, e -> first[0] = e, e -> last[0] = e, events::add, new ParserContext(LOG, "chcksm",
+        ParseResult pr = p.parse(log, e -> { first[0] = e; return true;}, e -> last[0] = e, add(events), new ParserContext(LOG, "chcksm",
                 GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
         p.destroy();
 
@@ -72,6 +73,10 @@ public class TestGCViewerLogsParser {
         for (int i = 2; i < events.size(); i++) {
             Assert.assertTrue("" + i, events.get(i).occurred().isAfter(events.get(i - 1).occurred()));
         }
+    }
+
+    protected Consumer<GCEvent> add(List<GCEvent> events) {
+        return e -> {if (e != null) events.add(e);};
     }
 
 }

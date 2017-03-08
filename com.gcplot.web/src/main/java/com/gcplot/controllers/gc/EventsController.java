@@ -181,7 +181,8 @@ public class EventsController extends Controller {
                     Logger log = createLogger(logFile);
                     AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
                     ParseResult pr = parseAndPersist(isSync, uf, jvmId, checksum, analyse, log, e -> {
-                        if (e.generations().size() > 0 && !e.generations().equals(OTHER_GENERATION)) {
+                        if (e.generations().size() > 0 && !e.generations().equals(OTHER_GENERATION) &&
+                                (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred()))) {
                             lastEventTime.set(e.occurred());
                         }
                         e.analyseId(analyseId);
@@ -518,28 +519,39 @@ public class EventsController extends Controller {
                                         Logger log, Consumer<GCEventImpl> enricher) throws IOException {
         ParserContext ctx = new ParserContext(log, checksum, analyse.jvmGCTypes().get(jvmId),
                 analyse.jvmVersions().get(jvmId));
+        final int batchSize = config.readInt(ConfigProperty.BATCH_PUT_GC_EVENT_SIZE);
+        final ThreadLocal<List<GCEvent>> es = ThreadLocal.withInitial(() -> new ArrayList<>(batchSize));
         final GCEvent[] firstParsed = new GCEvent[1];
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, checksum, firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
         try (InputStream fis = logStream(uf)) {
             pr = logsParser.parse(fis, first -> {
-                if (first.generations().size() > 0 && !first.generations().equals(OTHER_GENERATION)) {
-                    firstParsed[0] = first;
-                    lastPersistedEvent.get();
-                    return true;
-                } else {
-                    return false;
-                }
+                        if (first.generations().size() > 0 && !first.generations().equals(OTHER_GENERATION)) {
+                            firstParsed[0] = first;
+                            lastPersistedEvent.get();
+                            return true;
+                        } else {
+                            return false;
+                        }
                     }, last -> enricher.accept((GCEventImpl) last),
                     e -> {
-                        enricher.accept((GCEventImpl) e);
-                        if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                                e.timestamp()) {
-                            persist(isSync, e);
-                        } else {
-                            log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
-                            LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                        List<GCEvent> events = es.get();
+                        if (e != null) {
+                            enricher.accept((GCEventImpl) e);
+                            if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
+                                    e.timestamp() && (!config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION) || !e.generations().equals(OTHER_GENERATION))) {
+
+                                if (events.size() > 0 && events.size() % batchSize == 0) {
+                                    persist(isSync, events);
+                                }
+                                events.add(e);
+                            } else {
+                                log.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                                LOG.debug("Skipping event as already persisted: {}, last: {}", e, lastPersistedEvent.get());
+                            }
+                        } else if (events.size() > 0) {
+                            persist(isSync, events);
                         }
                     }, ctx);
         }
@@ -572,15 +584,13 @@ public class EventsController extends Controller {
         }
     }
 
-    private void persist(boolean isSync, GCEvent event) {
-        if (!config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION) ||
-                !event.generations().equals(OTHER_GENERATION)) {
-            if (isSync) {
-                eventRepository.add(event);
-            } else {
-                eventRepository.addAsync(event);
-            }
+    private void persist(boolean isSync, List<GCEvent> events) {
+        if (isSync) {
+            eventRepository.add(events);
+        } else {
+            eventRepository.addAsync(events);
         }
+        events.clear();
     }
 
     private Logger createLogger(File logFile) {
