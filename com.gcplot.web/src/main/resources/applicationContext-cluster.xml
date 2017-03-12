@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+    <context:annotation-config/>
+
+    <bean id="zkConnector" class="com.gcplot.services.cluster.ZookeeperConnector">
+        <property name="host" value="${cluster.zk.host:localhost}"/>
+        <property name="port" value="${cluster.zk.port:2181}"/>
+        <property name="secret" value="${cluster.zk.secret}"/>
+        <property name="uid" value="${cluster.zk.uid}"/>
+        <property name="sessionTimeout" value="5000"/>
+    </bean>
+
+</beans>

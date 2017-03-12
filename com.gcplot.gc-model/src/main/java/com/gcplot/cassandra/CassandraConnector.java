@@ -4,11 +4,11 @@ import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.policies.ConstantReconnectionPolicy;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
-import com.datastax.driver.core.policies.DowngradingConsistencyRetryPolicy;
-import com.datastax.driver.core.policies.RetryPolicy;
 import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class CassandraConnector {
 
@@ -20,17 +20,17 @@ public class CassandraConnector {
                 .withRetryPolicy(DefaultRetryPolicy.INSTANCE)
                 .withCompression(ProtocolOptions.Compression.LZ4)
                 .withSocketOptions(new SocketOptions()
-                        .setReceiveBufferSize(2 * 1024 * 1024)
-                        .setSendBufferSize(2 * 1024 * 1024))
+                        .setReceiveBufferSize(receiverBufferSize)
+                        .setSendBufferSize(senderBufferSize))
                 .withPort(port);
         if (poolingOptions != null) {
             int procs = Runtime.getRuntime().availableProcessors();
             poolingOptions
                     .setConnectionsPerHost(HostDistance.LOCAL, procs, procs * 2)
                     .setConnectionsPerHost(HostDistance.REMOTE, (procs / 2), procs * 2)
-                    .setPoolTimeoutMillis(60000)
-                    .setMaxRequestsPerConnection(HostDistance.LOCAL, 1024)
-                    .setMaxRequestsPerConnection(HostDistance.REMOTE, 1024);
+                    .setPoolTimeoutMillis(poolTimeoutMillis)
+                    .setMaxRequestsPerConnection(HostDistance.LOCAL, maxRequestsPerConnection)
+                    .setMaxRequestsPerConnection(HostDistance.REMOTE, maxRequestsPerConnection);
             builder.withPoolingOptions(poolingOptions);
         }
         if (!Strings.isNullOrEmpty(username)) {
@@ -77,6 +77,26 @@ public class CassandraConnector {
     protected long reconnectionDelayMs = 100L;
     public void setReconnectionDelayMs(long reconnectionDelayMs) {
         this.reconnectionDelayMs = reconnectionDelayMs;
+    }
+
+    protected int receiverBufferSize = 2 * 1024 * 1024;
+    public void setReceiverBufferSize(int receiverBufferSize) {
+        this.receiverBufferSize = receiverBufferSize;
+    }
+
+    protected int senderBufferSize = 2 * 1024 * 1024;
+    public void setSenderBufferSize(int senderBufferSize) {
+        this.senderBufferSize = senderBufferSize;
+    }
+
+    protected int poolTimeoutMillis = (int) TimeUnit.SECONDS.toMillis(60);
+    public void setPoolTimeoutMillis(int poolTimeoutMillis) {
+        this.poolTimeoutMillis = poolTimeoutMillis;
+    }
+
+    protected int maxRequestsPerConnection = 1024;
+    public void setMaxRequestsPerConnection(int maxRequestsPerConnection) {
+        this.maxRequestsPerConnection = maxRequestsPerConnection;
     }
 
     protected MetricRegistry metrics;

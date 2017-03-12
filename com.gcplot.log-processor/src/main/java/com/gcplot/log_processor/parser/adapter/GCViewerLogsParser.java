@@ -192,7 +192,7 @@ public class GCViewerLogsParser implements LogsParser {
                 }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.ALL) {
                 if (capacityByGeneration.equals(Collections.emptyMap())) {
-                    capacityByGeneration = new IdentityHashMap<>(2);
+                    capacityByGeneration = new IdentityHashMap<>(3);
                 }
                 capacity = of(gcEvent);
 

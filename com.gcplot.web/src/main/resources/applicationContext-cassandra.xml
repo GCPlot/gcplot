@@ -17,6 +17,10 @@
         <property name="password" value="${cassandra.password}"/>
         <property name="reconnectionDelayMs" value="${cassandra.reconnect.delay.ms}"/>
         <property name="keyspace" value="${cassandra.keyspace}"/>
+        <property name="maxRequestsPerConnection" value="${cassandra.max.reqs.per.conn:1024}"/>
+        <property name="receiverBufferSize" value="${cassandra.sock.rec.buf:2097152}"/>
+        <property name="senderBufferSize" value="${cassandra.sock.send.buf:2097152}"/>
+        <property name="poolTimeoutMillis" value="${cassandra.pool.timeout.ms:60000}"/>
         <property name="poolingOptions">
             <bean class="com.datastax.driver.core.PoolingOptions">
                 <property name="maxQueueSize" value="${cassandra.queue.size}"/>
