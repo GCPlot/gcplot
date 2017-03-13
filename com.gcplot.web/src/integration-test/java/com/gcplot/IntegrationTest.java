@@ -3,7 +3,7 @@ package com.gcplot;
 import com.dumbster.smtp.SimpleSmtpServer;
 import com.gcplot.bootstrap.Bootstrap;
 import com.gcplot.cassandra.CassandraConnector;
-import com.gcplot.cassandra.Server;
+import com.gcplot.cassandra.CassandraServer;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
@@ -21,6 +21,9 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.zookeeper.server.NIOServerCnxn;
+import org.apache.zookeeper.server.NIOServerCnxnFactory;
+import org.apache.zookeeper.server.ZooKeeperServer;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -30,6 +33,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
@@ -45,7 +49,7 @@ public abstract class IntegrationTest {
     protected static final Logger LOG = LoggerFactory.getLogger(IntegrationTest.class);
     protected HttpClient client;
     protected SimpleSmtpServer smtpServer;
-    protected static Server cassandraServer = new Server();
+    protected static CassandraServer cassandraServer = new CassandraServer();
     private Bootstrap bootstrap;
     public Bootstrap getBoot() {
         return bootstrap;
@@ -68,6 +72,10 @@ public abstract class IntegrationTest {
     private String dbName;
     protected ODatabaseDocumentTx database;
 
+    private File zkDir;
+    private Utils.Port zkPort;
+    private NIOServerCnxnFactory standaloneServerFactory;
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         cassandraServer.start();
@@ -84,6 +92,13 @@ public abstract class IntegrationTest {
         smtpServer = SimpleSmtpServer.start(SimpleSmtpServer.AUTO_SMTP_PORT);
         dbName = Utils.getRandomIdentifier();
         database = new ODatabaseDocumentTx("memory:" + dbName).create();
+
+        zkDir = Files.createTempDir().getAbsoluteFile();
+        zkPort = Utils.getFreePorts(1)[0];
+        ZooKeeperServer zkServer = new ZooKeeperServer(zkDir, zkDir, 2000);
+        standaloneServerFactory = new NIOServerCnxnFactory();
+        standaloneServerFactory.configure(new InetSocketAddress(zkPort.value), 5000);
+        standaloneServerFactory.startup(zkServer);
 
         makeTestPropertiesFile();
         bootstrap = new Bootstrap();
@@ -107,11 +122,9 @@ public abstract class IntegrationTest {
         try {
             ((ConfigurableApplicationContext) getApplicationContext()).close();
         } finally {
-            try {
-                FileUtils.delete(tempDir);
-            } catch (Throwable ignored) {
-            }
+            FileUtils.deleteSilent(tempDir);
             port.unlock();
+            zkPort.unlock();
             try {
                 new ODatabaseDocumentTx("memory:" + dbName).open("admin", "admin").drop();
             } catch (Throwable t) {
@@ -132,6 +145,13 @@ public abstract class IntegrationTest {
             } catch (Throwable t) {
                 LOG.error(t.getMessage(), t);
             }
+            try {
+                standaloneServerFactory.shutdown();
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+            } finally {
+                FileUtils.deleteSilent(zkDir);
+            }
         }
     }
 
@@ -141,7 +161,7 @@ public abstract class IntegrationTest {
         connector.setPort(cassandraServer.getNativePort());
         connector.setKeyspace(null);
         connector.init();
-        String q = readFile(new File(Server.class.getClassLoader().getResource("cassandra-scheme.sql").toURI()).getAbsolutePath(), Charsets.UTF_8);
+        String q = readFile(new File(CassandraServer.class.getClassLoader().getResource("cassandra-scheme.sql").toURI()).getAbsolutePath(), Charsets.UTF_8);
         for (String qq : q.split(";")) {
             if (!Strings.isNullOrEmpty(qq.trim())) {
                 connector.session().execute(qq.trim());
@@ -158,6 +178,7 @@ public abstract class IntegrationTest {
         sb.append("bootstrap.server.host=").append(LOCALHOST).append('\n');
         sb.append("orientdb.connection.string=memory:").append(dbName).append('\n');
         sb.append("cassandra.port=").append(cassandraServer.getNativePort()).append('\n');
+        sb.append("cluster.zk.port=").append(zkPort.value).append('\n');
         Files.write(sb.toString(), new File(tempDir, "gcplot.properties"), Charset.forName("UTF-8"));
     }
 

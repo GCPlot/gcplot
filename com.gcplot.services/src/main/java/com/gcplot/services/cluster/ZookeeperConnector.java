@@ -29,6 +29,7 @@ public class ZookeeperConnector {
     private List<ACL> acls = Collections.emptyList();
 
     public void init() throws Exception {
+        LOG.info("ZC: init()");
         client = new ZooKeeper(host + ":" + port, sessionTimeout, event -> watchers.forEach(w -> {
             try {
                 w.process(event);
@@ -42,6 +43,7 @@ public class ZookeeperConnector {
     }
 
     public void destroy() {
+        LOG.info("ZC: destroy()");
         if (client != null) {
             try {
                 client.close();

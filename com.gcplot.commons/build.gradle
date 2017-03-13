@@ -2,5 +2,7 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
     compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
     compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    compile group: 'io.protostuff', name: 'protostuff-core', version: "$protostuffVersion"
+    compile group: 'io.protostuff', name: 'protostuff-runtime', version: "$protostuffVersion"
     compile group: 'it.unimi.dsi', name: 'fastutil', version: "$fuVersion"
 }

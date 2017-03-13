@@ -5,11 +5,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 public class BaseCassandra {
-    protected static Server server;
+    protected static CassandraServer server;
 
     @BeforeClass
     public static void before() throws Exception {
-        server = new Server();
+        server = new CassandraServer();
         server.start();
     }
 

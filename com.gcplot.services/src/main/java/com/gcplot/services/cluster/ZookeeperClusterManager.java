@@ -1,7 +1,7 @@
 package com.gcplot.services.cluster;
 
 import com.gcplot.cluster.ClusterManager;
-import com.gcplot.cluster.LogProcessTask;
+import com.gcplot.cluster.WorkerTask;
 import com.gcplot.cluster.Worker;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.Watcher;
@@ -20,13 +20,22 @@ import java.util.concurrent.Executors;
  */
 public class ZookeeperClusterManager implements ClusterManager {
     private static final Logger LOG = LoggerFactory.getLogger(ZookeeperClusterManager.class);
-    private static final String PATH = "/election";
+    private static final String WORKERS_PATH = "/workers";
+    private static final String TASKS_PATH = "/tasks";
+    private static final String ENQUEUED_PATH = "/enqueued";
+    private static final String ELECTION_PATH = "/election";
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private ZookeeperConnector connector;
+    private Worker currentWorker;
+    private boolean syncElection;
     private volatile boolean isMaster = false;
 
     public void init() {
-        executor.execute(this::leaderElection);
+        if (syncElection) {
+            leaderElection();
+        } else {
+            executor.execute(this::leaderElection);
+        }
     }
 
     public void destroy() {
@@ -49,35 +58,57 @@ public class ZookeeperClusterManager implements ClusterManager {
     }
 
     @Override
-    public List<LogProcessTask> retrieveTasks() {
+    public List<WorkerTask> retrieveTasks() {
         return null;
     }
 
     @Override
-    public void completeTask(LogProcessTask task) {
+    public void proceedTask(WorkerTask task) {
 
+    }
+
+    @Override
+    public void completeTask(WorkerTask task) {
+
+    }
+
+    @Override
+    public boolean isTaskEnqueued(WorkerTask task) {
+        return false;
     }
 
     private void leaderElection() {
         leaderElection(true);
     }
 
+    private void register() {
+        try {
+            String path = WORKERS_PATH + "/" + currentWorker.getHostname();
+            Stat stat = zk().exists(path, false);
+            if (stat == null) {
+                connector.create(path, )
+            }
+        } catch (Throwable t) {
+            LOG.error(t.getMessage(), t);
+        }
+    }
+
     private void leaderElection(boolean performNewVoting) {
         try {
             debug("starting new leader election.");
-            Stat stat = zk().exists(PATH, false);
+            Stat stat = zk().exists(ELECTION_PATH, false);
             if (stat == null) {
                 debug("Election path didn't exist, creating new one.");
-                String r = connector.create(PATH);
+                String r = connector.create(ELECTION_PATH);
                 debug("Election path created: {}", r);
             }
 
             if (performNewVoting) {
-                String childPath = connector.create(PATH + "/n_", CreateMode.EPHEMERAL_SEQUENTIAL);
+                String childPath = connector.create(ELECTION_PATH + "/n_", CreateMode.EPHEMERAL_SEQUENTIAL);
                 debug("leader voting node created: {}", childPath);
             }
 
-            List<String> children = connector.getClient().getChildren(PATH, false);
+            List<String> children = connector.getClient().getChildren(ELECTION_PATH, false);
 
             String tmp = children.get(0);
             for (String s : children) {
@@ -85,7 +116,7 @@ public class ZookeeperClusterManager implements ClusterManager {
                     tmp = s;
             }
 
-            String leader = PATH + "/" + tmp;
+            String leader = ELECTION_PATH + "/" + tmp;
             Stat s = connector.getClient().exists(leader, event -> {
                 if (event.getType() == Watcher.Event.EventType.NodeDeleted) {
                     executor.execute(() -> leaderElection(false));
@@ -115,5 +146,13 @@ public class ZookeeperClusterManager implements ClusterManager {
 
     public void setConnector(ZookeeperConnector connector) {
         this.connector = connector;
+    }
+
+    public void setSyncElection(boolean syncElection) {
+        this.syncElection = syncElection;
+    }
+
+    public void setCurrentWorker(Worker currentWorker) {
+        this.currentWorker = currentWorker;
     }
 }

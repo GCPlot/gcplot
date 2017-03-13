@@ -14,8 +14,12 @@ public interface ClusterManager {
 
     List<Worker> workers();
 
-    List<LogProcessTask> retrieveTasks();
+    List<WorkerTask> retrieveTasks();
 
-    void completeTask(LogProcessTask task);
+    void proceedTask(WorkerTask task);
+
+    void completeTask(WorkerTask task);
+
+    boolean isTaskEnqueued(WorkerTask task);
 
 }

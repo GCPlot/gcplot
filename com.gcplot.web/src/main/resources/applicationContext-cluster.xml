@@ -6,7 +6,8 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
     <context:annotation-config/>
 
-    <bean id="zkConnector" class="com.gcplot.services.cluster.ZookeeperConnector">
+    <bean id="zkConnector" class="com.gcplot.services.cluster.ZookeeperConnector"
+          init-method="init" destroy-method="destroy">
         <property name="host" value="${cluster.zk.host:localhost}"/>
         <property name="port" value="${cluster.zk.port:2181}"/>
         <property name="secret" value="${cluster.zk.secret}"/>
