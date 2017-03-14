@@ -34,7 +34,7 @@ public abstract class ProtostuffSerializer {
     }
 
     public static <T> T deserialize(Class<T> type, byte[] payload) {
-        Schema schema = schemas.computeIfAbsent(type.getClass(), RuntimeSchema::createFrom);
+        Schema schema = schemas.computeIfAbsent(type, RuntimeSchema::createFrom);
         Object msg = schema.newMessage();
         ProtostuffIOUtil.mergeFrom(payload, msg, schema);
         return (T) msg;

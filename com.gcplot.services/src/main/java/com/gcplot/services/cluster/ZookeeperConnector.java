@@ -39,8 +39,8 @@ public class ZookeeperConnector {
             }
         }));
         client.addAuthInfo("digest", (uid + ":" + secret).getBytes());
-        secretDigest = DigestAuthenticationProvider.generateDigest(secret);
-        acls = Collections.singletonList(new ACL(ZooDefs.Perms.ALL, new Id("digest", uid + ":" + secretDigest)));
+        secretDigest = DigestAuthenticationProvider.generateDigest(uid + ":" + secret);
+        acls = Collections.singletonList(new ACL(ZooDefs.Perms.ALL, new Id("digest", secretDigest)));
     }
 
     public void destroy() {

@@ -112,14 +112,18 @@ public class ZookeeperClusterManager implements ClusterManager {
     }
 
     private void register() {
+        if (connector.exists(TASKS_PATH) == null) {
+            connector.create(TASKS_PATH, CreateMode.PERSISTENT);
+        }
+        if (connector.exists(WORKERS_PATH) == null) {
+            connector.create(WORKERS_PATH, CreateMode.PERSISTENT);
+        }
         String path = TASKS_PATH + "/" + currentWorker.getHostname();
-        Stat stat = connector.exists(path);
-        if (stat == null) {
+        if (connector.exists(path) == null) {
             connector.create(path, CreateMode.PERSISTENT);
         }
         path = WORKERS_PATH + "/" + currentWorker.getHostname();
-        stat = connector.exists(path);
-        if (stat == null) {
+        if (connector.exists(path) == null) {
             connector.create(path, ProtostuffSerializer.serialize(currentWorker), CreateMode.EPHEMERAL);
         }
     }
