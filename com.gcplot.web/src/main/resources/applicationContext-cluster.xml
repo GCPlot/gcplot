@@ -7,12 +7,29 @@
     <context:annotation-config/>
 
     <bean id="zkConnector" class="com.gcplot.services.cluster.ZookeeperConnector"
-          init-method="init" destroy-method="destroy">
+          init-method="init" destroy-method="destroy" lazy-init="true">
         <property name="host" value="${cluster.zk.host:localhost}"/>
         <property name="port" value="${cluster.zk.port:2181}"/>
         <property name="secret" value="${cluster.zk.secret}"/>
         <property name="uid" value="${cluster.zk.uid}"/>
         <property name="sessionTimeout" value="5000"/>
+    </bean>
+
+    <bean id="worker" class="com.gcplot.cluster.Worker">
+        <constructor-arg name="hostname" value="${app.hostname}"/>
+        <constructor-arg name="hostsGroup" value="${hosts.group}"/>
+        <constructor-arg name="hostAddress" value="${app.hostaddr}"/>
+    </bean>
+
+    <bean id="single-cluster" class="com.gcplot.services.cluster.SingleNodeClusterManager">
+        <property name="worker" ref="worker"/>
+    </bean>
+
+    <bean id="zookeeper-cluster" class="com.gcplot.services.cluster.ZookeeperClusterManager"
+          init-method="init" destroy-method="destroy" lazy-init="true">
+        <property name="connector" ref="zkConnector"/>
+        <property name="currentWorker" ref="worker"/>
+        <property name="syncElection" value="${cluster.election.sync:true}"/>
     </bean>
 
 </beans>
