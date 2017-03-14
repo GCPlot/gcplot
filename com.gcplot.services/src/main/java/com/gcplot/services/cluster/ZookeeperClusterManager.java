@@ -47,6 +47,9 @@ public class ZookeeperClusterManager implements ClusterManager {
 
     public void destroy() {
         executor.shutdownNow();
+        try {
+            connector.getClient().close();
+        } catch (InterruptedException ignored) {}
     }
 
     @Override
@@ -103,8 +106,8 @@ public class ZookeeperClusterManager implements ClusterManager {
     }
 
     @Override
-    public boolean isTaskRegistered(WorkerTask task) {
-        return connector.exists(TASKS_PATH + "/" + task.getAssigned().getHostname() + "/" + task.getId()) != null;
+    public boolean isTaskRegistered(String taskId) {
+        return connector.exists(TASK_QUEUE_PATH + "/" + taskId) != null;
     }
 
     private void leaderElection() {
@@ -117,6 +120,9 @@ public class ZookeeperClusterManager implements ClusterManager {
         }
         if (connector.exists(WORKERS_PATH) == null) {
             connector.create(WORKERS_PATH, CreateMode.PERSISTENT);
+        }
+        if (connector.exists(TASK_QUEUE_PATH) == null) {
+            connector.create(TASK_QUEUE_PATH, CreateMode.PERSISTENT);
         }
         String path = TASKS_PATH + "/" + currentWorker.getHostname();
         if (connector.exists(path) == null) {
@@ -185,6 +191,10 @@ public class ZookeeperClusterManager implements ClusterManager {
 
     public void setSyncElection(boolean syncElection) {
         this.syncElection = syncElection;
+    }
+
+    public Worker getCurrentWorker() {
+        return currentWorker;
     }
 
     public void setCurrentWorker(Worker currentWorker) {

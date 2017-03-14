@@ -1,6 +1,7 @@
 package com.gcplot.services.cluster;
 
 import com.gcplot.cluster.Worker;
+import com.gcplot.cluster.WorkerTask;
 import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
 import com.gcplot.commons.exceptions.Exceptions;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -51,13 +53,46 @@ public class ZookeeperTests {
 
     @Test
     public void simpleOneNodeTest() throws Exception {
-        ZookeeperConnector conn = createConnector();
-        ZookeeperClusterManager zcm = createClusterManager(conn, "host1", "127.0.0.1");
+        ZookeeperClusterManager zcm = createClusterManager(createConnector(), "host1", "127.0.0.1");
 
         Assert.assertTrue(zcm.isMaster());
         Assert.assertTrue(zcm.isConnected());
         Assert.assertEquals(zcm.workers().size(), 1);
         Assert.assertEquals(zcm.retrieveTasks().size(), 0);
+        Assert.assertFalse(zcm.isTaskRegistered("123"));
+
+        WorkerTask task = new WorkerTask("123", zcm.getCurrentWorker(), new TaskData("/a/b"));
+        zcm.registerTask(task);
+
+        Assert.assertTrue(zcm.isTaskRegistered("123"));
+        Assert.assertEquals(zcm.retrieveTasks().size(), 1);
+        WorkerTask retTask = zcm.retrieveTasks().get(0);
+
+        Assert.assertEquals(task, retTask);
+
+        zcm.completeTask(task);
+
+        Assert.assertEquals(zcm.retrieveTasks().size(), 0);
+    }
+
+    @Test
+    public void testLeadershipElection() throws Exception {
+        ZookeeperClusterManager zcm1 = createClusterManager(createConnector(), "host1", "127.0.0.1");
+        ZookeeperClusterManager zcm2 = createClusterManager(createConnector(), "host2", "127.0.0.2");
+        ZookeeperClusterManager zcm3 = createClusterManager(createConnector(), "host3", "127.0.0.1");
+
+        Assert.assertTrue(zcm1.isMaster());
+        Assert.assertFalse(zcm2.isMaster());
+        Assert.assertFalse(zcm3.isMaster());
+
+        zcm1.destroy();
+
+        Assert.assertTrue(Utils.waitFor(zcm2::isMaster, TimeUnit.SECONDS.toNanos(5)));
+        Assert.assertFalse(zcm3.isMaster());
+
+        zcm2.destroy();
+
+        Assert.assertTrue(Utils.waitFor(zcm3::isMaster, TimeUnit.SECONDS.toNanos(5)));
     }
 
     protected ZookeeperClusterManager createClusterManager(ZookeeperConnector conn, String hostname, String hostAddress) {
@@ -84,4 +119,30 @@ public class ZookeeperTests {
         return conn;
     }
 
+    public static class TaskData {
+        private final String path;
+
+        public String getPath() {
+            return path;
+        }
+
+        public TaskData(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TaskData taskData = (TaskData) o;
+
+            return path != null ? path.equals(taskData.path) : taskData.path == null;
+        }
+
+        @Override
+        public int hashCode() {
+            return path != null ? path.hashCode() : 0;
+        }
+    }
 }

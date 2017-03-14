@@ -21,6 +21,6 @@ public interface ClusterManager {
 
     void completeTask(WorkerTask task);
 
-    boolean isTaskRegistered(WorkerTask task);
+    boolean isTaskRegistered(String taskId);
 
 }

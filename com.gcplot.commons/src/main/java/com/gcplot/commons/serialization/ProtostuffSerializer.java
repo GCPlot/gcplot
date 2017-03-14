@@ -29,6 +29,7 @@ public abstract class ProtostuffSerializer {
         } catch (Throwable t) {
             throw Exceptions.runtime(t);
         } finally {
+            BUFFER.get().clear();
             baos.reset();
         }
     }
