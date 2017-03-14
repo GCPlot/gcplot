@@ -4,6 +4,7 @@ import com.gcplot.commons.exceptions.Exceptions;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
+import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,35 @@ public class ZookeeperConnector {
         }
     }
 
+    public List<String> children(String path) {
+        try {
+            return client.getChildren(path, false);
+        } catch (KeeperException | InterruptedException e) {
+            throw Exceptions.runtime(e);
+        }
+    }
+
+    public Stat exists(String path) {
+        try {
+            return client.exists(path, false);
+        } catch (KeeperException | InterruptedException e) {
+            throw Exceptions.runtime(e);
+        }
+    }
+
+    public byte[] data(String path, Stat stat) {
+        try {
+            return client.getData(path, false, stat);
+        } catch (KeeperException | InterruptedException e) {
+            if (e instanceof KeeperException &&
+                    ((KeeperException)e).code() == KeeperException.Code.NONODE) {
+                return null;
+            } else {
+                throw Exceptions.runtime(e);
+            }
+        }
+    }
+
     public String create(String path) {
         return create(path, new byte[0], CreateMode.PERSISTENT);
     }
@@ -65,11 +95,37 @@ public class ZookeeperConnector {
         return create(path, new byte[0], mode);
     }
 
+    public void delete(String path) {
+        Stat s = exists(path);
+
+        while (s != null) {
+            try {
+                client.delete(path, s.getVersion());
+            } catch (InterruptedException | KeeperException e) {
+                if (e instanceof KeeperException) {
+                    KeeperException ke = (KeeperException) e;
+                    if (ke.code() == KeeperException.Code.BADVERSION) {
+                        s = exists(path);
+                    } else {
+                        s = null;
+                    }
+                } else {
+                    s = null;
+                }
+            }
+        }
+    }
+
     public String create(String path, byte[] data, CreateMode mode) {
         try {
             return client.create(path, data, acls, mode);
         } catch (KeeperException | InterruptedException e) {
-            throw Exceptions.runtime(e);
+            if (e instanceof KeeperException &&
+                    ((KeeperException)e).code() == KeeperException.Code.NODEEXISTS) {
+                return path;
+            } else {
+                throw Exceptions.runtime(e);
+            }
         }
     }
 

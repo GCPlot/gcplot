@@ -9,12 +9,12 @@ import java.util.Arrays;
 public class WorkerTask {
     private final String id;
     private final Worker assigned;
-    private final byte[] data;
+    private final Object task;
 
-    public WorkerTask(String id, Worker assigned, byte[] data) {
+    public WorkerTask(String id, Worker assigned, Object task) {
         this.id = id;
         this.assigned = assigned;
-        this.data = data;
+        this.task = task;
     }
 
     public String getId() {
@@ -25,8 +25,8 @@ public class WorkerTask {
         return assigned;
     }
 
-    public byte[] getData() {
-        return data;
+    public Object getTask() {
+        return task;
     }
 
     @Override
@@ -38,14 +38,14 @@ public class WorkerTask {
 
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (assigned != null ? !assigned.equals(that.assigned) : that.assigned != null) return false;
-        return Arrays.equals(data, that.data);
+        return task != null ? task.equals(that.task) : that.task == null;
     }
 
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (assigned != null ? assigned.hashCode() : 0);
-        result = 31 * result + Arrays.hashCode(data);
+        result = 31 * result + (task != null ? task.hashCode() : 0);
         return result;
     }
 }

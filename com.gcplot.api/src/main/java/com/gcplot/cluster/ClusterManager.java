@@ -1,6 +1,7 @@
 package com.gcplot.cluster;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -12,14 +13,14 @@ public interface ClusterManager {
 
     boolean isMaster();
 
-    List<Worker> workers();
+    Set<Worker> workers();
 
     List<WorkerTask> retrieveTasks();
 
-    void proceedTask(WorkerTask task);
+    void registerTask(WorkerTask task);
 
     void completeTask(WorkerTask task);
 
-    boolean isTaskEnqueued(WorkerTask task);
+    boolean isTaskRegistered(WorkerTask task);
 
 }
