@@ -22,6 +22,10 @@ public enum SourceType {
         VALUES = Collections.unmodifiableMap(values);
     }
 
+    public static SourceType by(String urn) {
+        return VALUES.get(urn);
+    }
+
     private String urn;
     public String getUrn() {
         return urn;

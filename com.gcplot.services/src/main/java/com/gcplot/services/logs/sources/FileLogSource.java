@@ -2,6 +2,7 @@ package com.gcplot.services.logs.sources;
 
 import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
 import com.gcplot.services.logs.BaseLogSource;
 import org.slf4j.Logger;
@@ -20,11 +21,11 @@ public class FileLogSource extends BaseLogSource implements LogSource {
     private static final Logger LOG = LoggerFactory.getLogger(FileLogSource.class);
     private File file;
     private String checksum;
-    private String name;
+    private LogHandle handle;
 
-    public FileLogSource(File file, String name) {
+    public FileLogSource(File file, LogHandle handle) {
         this.file = file;
-        this.name = name;
+        this.handle = handle;
     }
 
     @Override
@@ -37,8 +38,8 @@ public class FileLogSource extends BaseLogSource implements LogSource {
     }
 
     @Override
-    public String name() {
-        return name;
+    public LogHandle handle() {
+        return handle;
     }
 
     @Override
@@ -69,7 +70,7 @@ public class FileLogSource extends BaseLogSource implements LogSource {
                 try (InputStream is = logStream()) {
                     checksum = FileUtils.getFileChecksum(MessageDigest.getInstance("MD5"), is);
                 }
-                LOG.warn("The calculated checksum for {} is {}", name(), checksum);
+                LOG.warn("The calculated checksum for {} is {}", handle.getName(), checksum);
             } catch (Throwable t) {
                 throw Exceptions.runtime(t);
             }

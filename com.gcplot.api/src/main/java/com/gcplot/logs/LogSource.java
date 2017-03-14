@@ -14,7 +14,7 @@ public interface LogSource {
 
     InputStream logStream();
 
-    String name();
+    LogHandle handle();
 
     boolean isGzipped();
 

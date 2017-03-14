@@ -8,10 +8,10 @@ import java.util.Properties;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         3/6/17
  */
-public interface FileSystemProvider {
+public interface LogsStorageProvider {
 
-    FileSystem internal();
+    LogsStorage internal();
 
-    FileSystem get(SourceType type, Properties config);
+    LogsStorage get(SourceType type, Properties config);
 
 }

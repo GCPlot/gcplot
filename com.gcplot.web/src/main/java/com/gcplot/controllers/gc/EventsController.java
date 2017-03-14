@@ -88,7 +88,8 @@ public class EventsController extends Controller {
         final String analyzeId = ctx.param("analyse_id", LogsProcessorService.ANONYMOUS_ANALYSE_ID);
         final String jvmId = ctx.param("jvm_id", UUID.randomUUID().toString());
 
-        LogProcessResult r = logsProcessorService.process(new FileLogSource(uf.file(), uf.originalName()), account(ctx),
+        LogProcessResult r = logsProcessorService.process(new FileLogSource(uf.file(), new LogHandle(uf.originalName(),
+                        account(ctx).id(), analyzeId, jvmId)), account(ctx),
                 analyzeId, jvmId, isSync);
 
         if (r.isSuccess()) {

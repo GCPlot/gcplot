@@ -1,5 +1,6 @@
 package com.gcplot.services.logs.sources;
 
+import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
 
 import java.io.File;
@@ -25,7 +26,7 @@ public class S3LogSource implements LogSource {
     }
 
     @Override
-    public String name() {
+    public LogHandle handle() {
         return null;
     }
 
