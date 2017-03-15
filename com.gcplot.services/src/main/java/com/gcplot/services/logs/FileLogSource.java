@@ -1,10 +1,9 @@
-package com.gcplot.services.logs.sources;
+package com.gcplot.services.logs;
 
 import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
-import com.gcplot.services.logs.BaseLogSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,7 +1,8 @@
-package com.gcplot.services.logs.sources;
+package com.gcplot.services.logs.s3;
 
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
+import com.gcplot.services.logs.BaseLogSource;
 
 import java.io.File;
 import java.io.InputStream;
@@ -11,7 +12,7 @@ import java.util.Optional;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         3/1/17
  */
-public class S3LogSource implements LogSource {
+public class S3LogSource extends BaseLogSource implements LogSource {
 
 
 

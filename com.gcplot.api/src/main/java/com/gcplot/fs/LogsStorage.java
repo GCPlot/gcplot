@@ -1,8 +1,9 @@
 package com.gcplot.fs;
 
-import com.gcplot.Identifier;
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
+
+import java.util.Iterator;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -10,7 +11,7 @@ import com.gcplot.logs.LogSource;
  */
 public interface LogsStorage {
 
-    Iterable<LogHandle> listAll();
+    Iterator<LogHandle> listAll();
 
     LogSource get(LogHandle handle);
 
