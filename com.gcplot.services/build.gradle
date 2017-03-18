@@ -8,7 +8,9 @@ dependencies {
   compile project(":com.gcplot.api")
   compile project(":com.gcplot.commons")
 
-  compile group: 'org.apache.zookeeper', name: 'zookeeper', version: "$zookeeperVersion"
+  compile("org.apache.zookeeper:zookeeper:$zookeeperVersion") {
+    exclude group: 'org.slf4j'
+  }
   compile "com.amazonaws:aws-java-sdk-s3:$s3Version"
   compile group: 'commons-io', name: 'commons-io', version: "$apacheCommonsIOVersion"
   compile "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
