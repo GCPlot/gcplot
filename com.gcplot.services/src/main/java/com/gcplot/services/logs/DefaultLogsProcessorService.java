@@ -37,6 +37,7 @@ import java.util.function.Consumer;
 
 import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
 import static com.gcplot.commons.CollectionUtils.cloneAndPut;
+import static com.gcplot.commons.Utils.esc;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -313,10 +314,6 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                 LOG.error(t.getMessage(), t);
             }
         }
-    }
-
-    private String esc(String username) {
-        return username.toLowerCase().replaceAll("[^a-zA-Z0-9.-]", "_");
     }
 
     public ResourceManager getResourceManager() {

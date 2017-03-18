@@ -1,5 +1,6 @@
 package com.gcplot.services.logs.s3;
 
+import com.amazonaws.services.s3.model.S3Object;
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
 import com.gcplot.services.logs.BaseLogSource;
@@ -13,36 +14,36 @@ import java.util.Optional;
  *         3/1/17
  */
 public class S3LogSource extends BaseLogSource implements LogSource {
+    private LogHandle handle;
+    private S3Object object;
 
-
-
-    @Override
-    public InputStream inputStream() {
-        return null;
+    public S3LogSource(LogHandle handle, S3Object object) {
+        this.handle = handle;
+        this.object = object;
     }
 
     @Override
-    public InputStream logStream() {
-        return null;
+    public InputStream inputStream() {
+        return object.getObjectContent();
     }
 
     @Override
     public LogHandle handle() {
-        return null;
+        return handle;
     }
 
     @Override
     public boolean isGzipped() {
-        return false;
+        return handle.getName().endsWith(".gz");
     }
 
     @Override
     public Optional<File> localFile() {
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public String checksum() {
-        return null;
+        return handle.getName().substring(0, handle.getName().lastIndexOf('.'));
     }
 }

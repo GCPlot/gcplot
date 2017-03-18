@@ -10,8 +10,9 @@ import java.util.Map;
  *         3/14/17
  */
 public class LogHandle {
+    public static final LogHandle INVALID_LOG = new LogHandle(null, null, null, null);
     private final String name;
-    private final Identifier accountId;
+    private final String username;
     private final String analyzeId;
     private final String jvmId;
     private final Map<String, String> properties;
@@ -20,8 +21,8 @@ public class LogHandle {
         return name;
     }
 
-    public Identifier getAccountId() {
-        return accountId;
+    public String getUsername() {
+        return username;
     }
 
     public String getAnalyzeId() {
@@ -36,13 +37,13 @@ public class LogHandle {
         return properties;
     }
 
-    public LogHandle(String name, Identifier accountId, String analyzeId, String jvmId) {
-        this(name, accountId, analyzeId, jvmId, Collections.emptyMap());
+    public LogHandle(String name, String username, String analyzeId, String jvmId) {
+        this(name, username, analyzeId, jvmId, Collections.emptyMap());
     }
 
-    public LogHandle(String name, Identifier accountId, String analyzeId, String jvmId, Map<String, String> properties) {
+    public LogHandle(String name, String username, String analyzeId, String jvmId, Map<String, String> properties) {
         this.name = name;
-        this.accountId = accountId;
+        this.username = username;
         this.analyzeId = analyzeId;
         this.jvmId = jvmId;
         this.properties = Collections.unmodifiableMap(properties);

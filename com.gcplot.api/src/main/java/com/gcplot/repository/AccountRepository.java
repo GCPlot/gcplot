@@ -11,6 +11,8 @@ public interface AccountRepository {
 
     List<Account> accounts();
 
+    Optional<Identifier> map(String username);
+
     Optional<Account> account(Identifier id);
 
     Optional<Account> account(String token);

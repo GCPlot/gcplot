@@ -11,6 +11,8 @@ import com.gcplot.services.S3Connector;
 
 import java.util.Iterator;
 
+import static com.gcplot.commons.Utils.esc;
+
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         3/15/17
@@ -39,7 +41,13 @@ public class S3LogsStorage implements LogsStorage {
             @Override
             public LogHandle next() {
                 S3ObjectSummary s = i.next();
-                return null;
+                String key = s.getKey().replace(prefix, "");
+                String[] parts = key.substring(key.indexOf('/') + 1).split("/");
+                if (parts.length == 4) {
+                    return new LogHandle(parts[3], parts[0], parts[1], parts[2]);
+                } else {
+                    return LogHandle.INVALID_LOG;
+                }
             }
 
             private boolean loadIfRequired() {
@@ -55,31 +63,20 @@ public class S3LogsStorage implements LogsStorage {
         };
     }
 
-    public static void main(String[] args) {
-        S3Connector c = new S3Connector();
-        c.setAccessKey("AKIAICRUH6IDD2ZUFAOA");
-        c.setSecretKey("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");
-        c.setBucket("gcplot");
-        c.init();
-
-        S3LogsStorage s = new S3LogsStorage();
-        s.setConnector(c);
-        s.setPrefix("gc-log");
-
-        Iterator<LogHandle> i = s.listAll();
-        while (i.hasNext()) {
-            i.next();
-        }
-    }
-
     @Override
     public LogSource get(LogHandle handle) {
-        return null;
+        return new S3LogSource(handle, client().getObject(connector.getBucket(), handlePath(handle)));
     }
 
     @Override
     public void delete(LogHandle handle) {
+        client().deleteObject(connector.getBucket(), handlePath(handle));
+    }
 
+    protected String handlePath(LogHandle handle) {
+        return prefix + "/" +
+                esc(handle.getUsername()) + "/" + esc(handle.getAnalyzeId()) + "/" +
+                esc(handle.getJvmId()) + "/" + esc(handle.getName());
     }
 
     private AmazonS3 client() {

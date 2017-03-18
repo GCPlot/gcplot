@@ -11,6 +11,7 @@ dependencies {
   compile group: 'org.apache.zookeeper', name: 'zookeeper', version: "$zookeeperVersion"
   compile "com.amazonaws:aws-java-sdk-s3:$s3Version"
   compile group: 'commons-io', name: 'commons-io', version: "$apacheCommonsIOVersion"
+  compile "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
   
-  testCompile group: 'io.findify', name: 's3mock_2.12', version: '0.1.8 '
+  testCompile group: 'io.findify', name: 's3mock_2.12', version: '0.1.8'
 }
