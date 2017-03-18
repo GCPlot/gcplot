@@ -1,6 +1,7 @@
 package com.gcplot.services.logs;
 
 import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
 
 import java.io.BufferedInputStream;
@@ -12,6 +13,12 @@ import java.util.zip.GZIPInputStream;
  *         2/26/17
  */
 public abstract class BaseLogSource implements LogSource {
+    protected LogHandle handle;
+
+    @Override
+    public LogHandle handle() {
+        return handle;
+    }
 
     @Override
     public InputStream logStream() {

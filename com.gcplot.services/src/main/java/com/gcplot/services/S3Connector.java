@@ -25,7 +25,6 @@ public class S3Connector {
                 .withClientConfiguration(new ClientConfiguration()
                         .withMaxConnections(Runtime.getRuntime().availableProcessors() * 10)
                         .withMaxErrorRetry(50))
-                .withRegion(Regions.EU_CENTRAL_1)
                 .build();
     }
 

@@ -20,7 +20,6 @@ public class FileLogSource extends BaseLogSource implements LogSource {
     private static final Logger LOG = LoggerFactory.getLogger(FileLogSource.class);
     private File file;
     private String checksum;
-    private LogHandle handle;
 
     public FileLogSource(File file, LogHandle handle) {
         this.file = file;
@@ -34,11 +33,6 @@ public class FileLogSource extends BaseLogSource implements LogSource {
         } catch (FileNotFoundException e) {
             throw Exceptions.runtime(e);
         }
-    }
-
-    @Override
-    public LogHandle handle() {
-        return handle;
     }
 
     @Override

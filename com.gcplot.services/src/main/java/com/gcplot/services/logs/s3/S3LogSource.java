@@ -14,7 +14,6 @@ import java.util.Optional;
  *         3/1/17
  */
 public class S3LogSource extends BaseLogSource implements LogSource {
-    private LogHandle handle;
     private S3Object object;
 
     public S3LogSource(LogHandle handle, S3Object object) {
@@ -25,11 +24,6 @@ public class S3LogSource extends BaseLogSource implements LogSource {
     @Override
     public InputStream inputStream() {
         return object.getObjectContent();
-    }
-
-    @Override
-    public LogHandle handle() {
-        return handle;
     }
 
     @Override

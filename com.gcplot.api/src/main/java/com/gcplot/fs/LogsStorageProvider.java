@@ -10,8 +10,6 @@ import java.util.Properties;
  */
 public interface LogsStorageProvider {
 
-    LogsStorage internal();
-
     LogsStorage get(SourceType type, Properties config);
 
 }
