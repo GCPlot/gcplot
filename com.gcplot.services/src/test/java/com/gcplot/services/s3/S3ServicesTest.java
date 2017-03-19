@@ -50,17 +50,13 @@ public class S3ServicesTest {
             s3Mock.stop();
         } finally {
             FileUtils.deleteSilent(tempDir);
+            port.unlock();
         }
     }
 
     @Test
     public void test() throws URISyntaxException, IOException {
-        S3Connector connector = new S3Connector();
-        connector.setEndpoint(endpoint);
-        connector.setBucket("gcplot");
-        connector.init();
-
-        connector.getClient().createBucket("gcplot");
+        S3Connector connector = getConnector();
         S3ResourceManager rm = new S3ResourceManager();
         rm.setConnector(connector);
 
@@ -88,6 +84,31 @@ public class S3ServicesTest {
         Assert.assertEquals(source.isGzipped(), false);
         Assert.assertArrayEquals(IOUtils.toByteArray(source.logStream()),
                 IOUtils.toByteArray(new FileInputStream(file("logs/3cbc9e4b0932ca6e745b3f344a27ff95.log"))));
+
+        ls.delete(lh);
+        lhl = Lists.newArrayList(ls.listAll());
+        Assert.assertEquals(lhl.size(), 0);
+
+        rm.upload(file("logs/3cbc9e4b0932ca6e745b3f344a27ff95.log.gz"),
+                "connector-logs/admin/analyze/jvm");
+        lhl = Lists.newArrayList(ls.listAll());
+        Assert.assertEquals(lhl.size(), 1);
+        lh = lhl.get(0);
+        source = ls.get(lh);
+        Assert.assertEquals(source.checksum(), "3cbc9e4b0932ca6e745b3f344a27ff95");
+        Assert.assertEquals(source.isGzipped(), true);
+        Assert.assertArrayEquals(IOUtils.toByteArray(source.logStream()),
+                IOUtils.toByteArray(new FileInputStream(file("logs/3cbc9e4b0932ca6e745b3f344a27ff95.log"))));
+    }
+
+    protected S3Connector getConnector() {
+        S3Connector connector = new S3Connector();
+        connector.setEndpoint(endpoint);
+        connector.setBucket("gcplot");
+        connector.init();
+
+        connector.getClient().createBucket("gcplot");
+        return connector;
     }
 
     protected File file(String file) throws URISyntaxException {

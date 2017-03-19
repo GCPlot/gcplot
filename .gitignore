@@ -9,6 +9,7 @@ file-uploads
 file-uploads/*
 
 !*log*.log
+!3cbc9e4b0932ca6e745b3f344a27ff95.log
 
 # Build directory#
 build/

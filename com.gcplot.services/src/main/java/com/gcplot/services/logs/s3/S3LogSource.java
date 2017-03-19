@@ -38,6 +38,6 @@ public class S3LogSource extends BaseLogSource implements LogSource {
 
     @Override
     public String checksum() {
-        return handle.getName().substring(0, handle.getName().lastIndexOf('.'));
+        return handle.getName().substring(0, handle.getName().indexOf('.'));
     }
 }
