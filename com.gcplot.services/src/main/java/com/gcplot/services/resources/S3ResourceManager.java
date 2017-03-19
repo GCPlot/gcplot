@@ -1,4 +1,4 @@
-package com.gcplot.parser;
+package com.gcplot.services.resources;
 
 import com.amazonaws.services.s3.model.*;
 import com.gcplot.resource.ResourceManager;

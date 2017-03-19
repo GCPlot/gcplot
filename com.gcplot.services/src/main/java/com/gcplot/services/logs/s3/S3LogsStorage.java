@@ -42,7 +42,10 @@ public class S3LogsStorage implements LogsStorage {
             public LogHandle next() {
                 S3ObjectSummary s = i.next();
                 String key = s.getKey().replace(prefix, "");
-                String[] parts = key.substring(key.indexOf('/') + 1).split("/");
+                if (key.startsWith("-") || key.startsWith("/")) {
+                    key = key.substring(key.indexOf('/') + 1);
+                }
+                String[] parts = key.split("/");
                 if (parts.length == 4) {
                     return new LogHandle(parts[3], parts[0], parts[1], parts[2]);
                 } else {
@@ -51,7 +54,7 @@ public class S3LogsStorage implements LogsStorage {
             }
 
             private boolean loadIfRequired() {
-                if (result != null && result.isTruncated()) {
+                if (result != null && (result.isTruncated() || result.getContinuationToken() == null)) {
                     return false;
                 } else {
                     result = client().listObjectsV2(req);
@@ -74,7 +77,7 @@ public class S3LogsStorage implements LogsStorage {
     }
 
     protected String handlePath(LogHandle handle) {
-        return prefix + "/" +
+        return prefix +
                 esc(handle.getUsername()) + "/" + esc(handle.getAnalyzeId()) + "/" +
                 esc(handle.getJvmId()) + "/" + esc(handle.getName());
     }

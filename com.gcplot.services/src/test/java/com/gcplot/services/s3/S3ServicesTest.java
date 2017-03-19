@@ -2,16 +2,28 @@ package com.gcplot.services.s3;
 
 import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.Utils;
+import com.gcplot.fs.LogsStorage;
+import com.gcplot.logs.LogHandle;
+import com.gcplot.logs.LogSource;
+import com.gcplot.model.gc.SourceType;
 import com.gcplot.services.S3Connector;
+import com.gcplot.services.logs.DefaultLogsStorageProvider;
+import com.gcplot.services.resources.S3ResourceManager;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import io.findify.s3mock.S3Mock;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -42,14 +54,45 @@ public class S3ServicesTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws URISyntaxException, IOException {
         S3Connector connector = new S3Connector();
         connector.setEndpoint(endpoint);
+        connector.setBucket("gcplot");
         connector.init();
 
         connector.getClient().createBucket("gcplot");
+        S3ResourceManager rm = new S3ResourceManager();
+        rm.setConnector(connector);
 
-        
+        rm.upload(file("logs/3cbc9e4b0932ca6e745b3f344a27ff95.log"),
+                "connector-logs/admin/analyze/jvm");
+
+        DefaultLogsStorageProvider logsStorageProvider = new DefaultLogsStorageProvider();
+        logsStorageProvider.setPrefix("connector-logs");
+        logsStorageProvider.setInternalConnector(connector);
+        logsStorageProvider.init();
+
+        LogsStorage ls = logsStorageProvider.get(SourceType.INTERNAL, null);
+        List<LogHandle> lhl = Lists.newArrayList(ls.listAll());
+        Assert.assertEquals(lhl.size(), 1);
+        LogHandle lh = lhl.get(0);
+
+        Assert.assertEquals(lh.getName(), "3cbc9e4b0932ca6e745b3f344a27ff95.log");
+        Assert.assertEquals(lh.getUsername(), "admin");
+        Assert.assertEquals(lh.getAnalyzeId(), "analyze");
+        Assert.assertEquals(lh.getJvmId(), "jvm");
+
+        LogSource source = ls.get(lh);
+        Assert.assertEquals(source.localFile(), Optional.empty());
+        Assert.assertEquals(source.checksum(), "3cbc9e4b0932ca6e745b3f344a27ff95");
+        Assert.assertEquals(source.isGzipped(), false);
+        Assert.assertArrayEquals(IOUtils.toByteArray(source.logStream()),
+                IOUtils.toByteArray(new FileInputStream(file("logs/3cbc9e4b0932ca6e745b3f344a27ff95.log"))));
+    }
+
+    protected File file(String file) throws URISyntaxException {
+        return new File(Thread.currentThread().
+                getContextClassLoader().getResource(file).toURI());
     }
 
 }
