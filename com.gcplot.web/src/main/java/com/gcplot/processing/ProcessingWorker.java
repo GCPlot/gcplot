@@ -67,6 +67,8 @@ public class ProcessingWorker {
 
                                     logsProcessor.process(logSource, accountRepository.account(accountId).orElse(null),
                                             analyze, logHandle.getJvmId());
+                                    logsStorage.delete(logHandle);
+                                    clusterManager.completeTask(task);
                                 } else {
                                     LOG.debug("ProcessingWorker: {}: no storage for {} [{}]", analyze.id(), analyze.sourceType(), analyze.sourceConfig());
                                 }

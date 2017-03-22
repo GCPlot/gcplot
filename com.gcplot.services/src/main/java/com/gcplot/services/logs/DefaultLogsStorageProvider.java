@@ -16,6 +16,7 @@ public class DefaultLogsStorageProvider implements LogsStorageProvider {
     private static final String S3_BUCKET_NAME = "s3.bucket";
     private static final String S3_ACCESS_KEY = "s3.access_key";
     private static final String S3_SECRET_KEY = "s3.secret_key";
+    private static final String S3_REGION_ID = "s3.region.id";
     private static final String S3_PREFIX = "s3.prefix";
     private S3Connector internalConnector;
     private String prefix;
@@ -38,6 +39,7 @@ public class DefaultLogsStorageProvider implements LogsStorageProvider {
                 s3Connector.setBucket(config.getProperty(S3_BUCKET_NAME));
                 s3Connector.setAccessKey(config.getProperty(S3_ACCESS_KEY));
                 s3Connector.setSecretKey(config.getProperty(S3_SECRET_KEY));
+                s3Connector.setRegion(config.getProperty(S3_REGION_ID));
                 s3Connector.init();
 
                 S3LogsStorage storage = new S3LogsStorage();

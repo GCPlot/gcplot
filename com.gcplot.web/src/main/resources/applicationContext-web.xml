@@ -63,6 +63,7 @@
 
     <bean id="s3Connector" class="com.gcplot.services.S3Connector" init-method="init">
         <property name="accessKey" value="${s3.resource.access.key:}"/>
+        <property name="region" value="${s3.resource.region.id:eu-central-1}"/>
         <property name="secretKey" value="${s3.resource.secret.key:}"/>
         <property name="bucket" value="${s3.resource.bucket:}"/>
     </bean>
