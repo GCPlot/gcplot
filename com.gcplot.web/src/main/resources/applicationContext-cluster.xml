@@ -32,4 +32,28 @@
         <property name="syncElection" value="${cluster.election.sync:true}"/>
     </bean>
 
+    <bean id="logsStorageProvider" class="com.gcplot.services.logs.DefaultLogsStorageProvider"
+          init-method="init">
+        <property name="internalConnector" ref="s3Connector"/>
+        <property name="prefix" value="${s3.resource.offline.logs.prefix}"/>
+    </bean>
+
+    <bean id="masterTask" class="com.gcplot.processing.WorkerTaskDistributor"
+          init-method="init" destroy-method="destroy">
+        <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
+        <property name="clusterManager" ref="${cluster.manager}-cluster"/>
+        <property name="intervalMs" value="${worker.task.distributor.interval.ms}"/>
+        <property name="logsStorageProvider" ref="logsStorageProvider"/>
+    </bean>
+
+    <bean id="workerTask" class="com.gcplot.processing.ProcessingWorker"
+          init-method="init" destroy-method="destroy">
+        <property name="logsStorageProvider" ref="logsStorageProvider"/>
+        <property name="accountRepository" ref="accountRepository"/>
+        <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
+        <property name="clusterManager" ref="${cluster.manager}-cluster"/>
+        <property name="intervalMs" value="${worker.processing.interval.ms}"/>
+        <property name="logsProcessor" ref="logsProcessorService"/>
+    </bean>
+
 </beans>

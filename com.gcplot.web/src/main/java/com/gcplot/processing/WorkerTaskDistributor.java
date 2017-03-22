@@ -41,7 +41,7 @@ public class WorkerTaskDistributor {
         timer.scheduleAtFixedRate(this::scan, intervalMs, intervalMs, TimeUnit.MILLISECONDS);
     }
 
-    public void shutdown() throws Exception {
+    public void destroy() throws Exception {
         timer.shutdown();
         timer.awaitTermination(WAIT_SHUTDOWN_MINUTES, TimeUnit.MINUTES);
     }

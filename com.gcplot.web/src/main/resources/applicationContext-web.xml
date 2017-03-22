@@ -67,7 +67,7 @@
         <property name="bucket" value="${s3.resource.bucket:}"/>
     </bean>
 
-    <bean id="s3ResourceManager" class="com.gcplot.parser.S3ResourceManager">
+    <bean id="s3ResourceManager" class="com.gcplot.services.resources.S3ResourceManager">
         <property name="connector" ref="s3Connector"/>
     </bean>
 
