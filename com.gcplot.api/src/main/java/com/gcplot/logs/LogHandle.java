@@ -1,6 +1,7 @@
 package com.gcplot.logs;
 
 import com.gcplot.Identifier;
+import com.google.common.hash.Hashing;
 
 import java.util.Collections;
 import java.util.Map;
@@ -16,6 +17,7 @@ public class LogHandle {
     private final String analyzeId;
     private final String jvmId;
     private final Map<String, String> properties;
+    private final String hash;
 
     public String getName() {
         return name;
@@ -47,5 +49,10 @@ public class LogHandle {
         this.analyzeId = analyzeId;
         this.jvmId = jvmId;
         this.properties = Collections.unmodifiableMap(properties);
+        this.hash = Hashing.sha256().hashBytes((name + username + analyzeId + jvmId).getBytes()).toString();
+    }
+
+    public String hash() {
+        return hash;
     }
 }

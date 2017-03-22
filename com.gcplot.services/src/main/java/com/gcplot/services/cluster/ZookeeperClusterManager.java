@@ -59,7 +59,7 @@ public class ZookeeperClusterManager implements ClusterManager {
 
     @Override
     public boolean isMaster() {
-        return isMaster;
+        return isMaster && isConnected();
     }
 
     @Override

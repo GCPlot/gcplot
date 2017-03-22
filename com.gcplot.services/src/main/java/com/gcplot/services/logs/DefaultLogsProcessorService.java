@@ -99,35 +99,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
             } else {
                 analyze = analyseRepository.analyse(userId, analyzeId).orElse(null);
             }
-            LogProcessResult x = checkAnalyzeCorrect(analyzeId, jvmId, userId, analyze);
-            if (x != null) return x;
-
-            final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
-            Logger log = createLogger(logFile);
-
-            AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
-            ParseResult pr = parseAndPersist(source, jvmId, analyze, log, e -> {
-                if (!e.isOther() && (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred()))) {
-                    lastEventTime.set(e.occurred());
-                }
-                e.analyseId(analyzeId).jvmId(jvmId);
-            });
-
-            if (pr.isSuccessful()) {
-                updateAnalyzeInfo(analyzeId, jvmId, userId, lastEventTime, pr);
-                if (pr.getAgesStates().size() > 0) {
-                    persistObjectAges(analyzeId, jvmId, pr);
-                }
-            } else {
-                LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
-                log.error(pr.getException().get().getMessage(), pr.getException().get());
-                return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR));
-            }
-
-            truncateFile(logFile, getConfig().readLong(ConfigProperty.PARSE_LOG_MAX_FILE_SIZE));
-            uploadLogFile(sync, analyzeId, jvmId, account.username(), logFile);
-
-            return LogProcessResult.SUCCESS;
+            return processLog(source, account, jvmId, sync, analyze);
         } catch (Throwable t) {
             throw Exceptions.runtime(t);
         } finally {
@@ -136,6 +108,52 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
             }
             // TODO log file size processed per user
         }
+    }
+
+    @Override
+    public LogProcessResult process(LogSource source, Account account, GCAnalyse analyse, String jvmId) {
+        try {
+            return processLog(source, account, jvmId, false, analyse);
+        } catch (Throwable t) {
+            throw Exceptions.runtime(t);
+        } finally {
+            if (source.localFile().isPresent()) {
+                uploadLogFile(false, "gc-log", analyse.id(), jvmId, account.username(), source.localFile().get());
+            }
+            // TODO log file size processed per user
+        }
+    }
+
+    protected LogProcessResult processLog(LogSource source, Account account, String jvmId, boolean sync, GCAnalyse analyze) throws IOException {
+        LogProcessResult x = checkAnalyzeCorrect(analyze.id(), jvmId, account.id(), analyze);
+        if (x != null) return x;
+
+        final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
+        Logger log = createLogger(logFile);
+
+        AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
+        ParseResult pr = parseAndPersist(source, jvmId, analyze, log, e -> {
+            if (!e.isOther() && (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred()))) {
+                lastEventTime.set(e.occurred());
+            }
+            e.analyseId(analyze.id()).jvmId(jvmId);
+        });
+
+        if (pr.isSuccessful()) {
+            updateAnalyzeInfo(analyze.id(), jvmId, account.id(), lastEventTime, pr);
+            if (pr.getAgesStates().size() > 0) {
+                persistObjectAges(analyze.id(), jvmId, pr);
+            }
+        } else {
+            LOG.debug(pr.getException().get().getMessage(), pr.getException().get());
+            log.error(pr.getException().get().getMessage(), pr.getException().get());
+            return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR));
+        }
+
+        truncateFile(logFile, getConfig().readLong(ConfigProperty.PARSE_LOG_MAX_FILE_SIZE));
+        uploadLogFile(sync, analyze.id(), jvmId, account.username(), logFile);
+
+        return LogProcessResult.SUCCESS;
     }
 
     protected void updateAnalyzeInfo(String analyzeId, String jvmId, Identifier userId, AtomicReference<DateTime> lastEventTime, ParseResult pr) {

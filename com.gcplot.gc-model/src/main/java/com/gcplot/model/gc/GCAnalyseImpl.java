@@ -2,10 +2,12 @@ package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
+import com.google.common.base.Splitter;
 import org.joda.time.DateTime;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 public class GCAnalyseImpl implements GCAnalyse {
@@ -146,11 +148,21 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
+    public Properties sourceConfigProps() {
+        return sourceConfigProps;
+    }
+    @Override
     public String sourceConfig() {
         return sourceConfig;
     }
     public GCAnalyseImpl sourceConfig(String sourceConfig) {
         this.sourceConfig = sourceConfig;
+        Properties props = new Properties();
+        Splitter.on(";").split(sourceConfig).forEach(s -> {
+            String[] parts = s.split("=");
+            props.put(parts[0], parts[1]);
+        });
+        this.sourceConfigProps = props;
         return this;
     }
 
@@ -216,6 +228,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected Map<String, MemoryDetails> jvmMemoryDetails = Collections.emptyMap();
     protected SourceType sourceType;
     protected String sourceConfig;
+    protected Properties sourceConfigProps;
     protected Map<String, SourceType> sourceByJvm = Collections.emptyMap();
     protected Map<String, String> sourceConfigByJvm = Collections.emptyMap();
     protected String ext;

@@ -1,6 +1,7 @@
 package com.gcplot.logs;
 
 import com.gcplot.model.account.Account;
+import com.gcplot.model.gc.GCAnalyse;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -11,5 +12,7 @@ public interface LogsProcessorService {
 
     LogProcessResult process(LogSource log, Account account, String analyzeId, String jvmId,
                              boolean sync);
+
+    LogProcessResult process(LogSource log, Account account, GCAnalyse analyse, String jvmId);
 
 }

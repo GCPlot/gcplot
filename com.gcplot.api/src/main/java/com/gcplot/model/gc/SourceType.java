@@ -35,4 +35,8 @@ public enum SourceType {
         this.urn = urn;
     }
 
+    @Override
+    public String toString() {
+        return getUrn();
+    }
 }
