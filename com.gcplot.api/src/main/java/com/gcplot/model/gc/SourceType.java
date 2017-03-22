@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public enum SourceType {
 
-    INTERNAL("gcp"), S3("s3"), GCS("gcs");
+    NONE("none"), INTERNAL("gcp"), S3("s3"), GCS("gcs");
 
     private static final Map<String, SourceType> VALUES;
 

@@ -37,6 +37,14 @@ public interface GCAnalyse {
 
     Map<String, MemoryDetails> jvmMemoryDetails();
 
+    SourceType sourceType();
+
+    String sourceConfig();
+
+    Map<String, SourceType> sourceByJvm();
+
+    Map<String, String> sourceConfigByJvm();
+
     String ext();
 
 }

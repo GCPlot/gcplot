@@ -9,6 +9,7 @@ import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
+import com.gcplot.model.gc.SourceType;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.operations.analyse.*;
 import com.google.common.base.Preconditions;
@@ -87,6 +88,10 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                         transformValue(analyse.jvmVersions(), VMVersion::type) : Collections.emptyMap())
                 .value("jvm_gc_types", analyse.jvmGCTypes() != null ?
                         transformValue(analyse.jvmGCTypes(), GarbageCollectorType::type) : Collections.emptyMap())
+                .value("rc_source_type", analyse.sourceType().getUrn())
+                .value("rc_source_config_string", Strings.nullToEmpty(analyse.sourceConfig()))
+                .value("jvm_rc_source_type", processMap(analyse.sourceByJvm(), SourceType::getUrn))
+                .value("jvm_rc_source_config_string", processMap(analyse.sourceConfigByJvm(), Strings::nullToEmpty))
                 .value("jvm_ids", analyse.jvmIds() != null ? analyse.jvmIds() : Collections.emptySet())
                 .value("jvm_names", analyse.jvmNames() != null ? analyse.jvmNames() : Collections.emptyMap())
                 .value("jvm_headers", analyse.jvmHeaders() != null ? analyse.jvmHeaders() : Collections.emptyMap())

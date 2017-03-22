@@ -25,8 +25,8 @@ public class WorkerTask {
         return assigned;
     }
 
-    public Object getTask() {
-        return task;
+    public <T> T getTask() {
+        return (T) task;
     }
 
     @Override
