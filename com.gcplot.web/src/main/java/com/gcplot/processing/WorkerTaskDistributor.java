@@ -70,11 +70,14 @@ public class WorkerTaskDistributor {
                             Iterator<LogHandle> handles = logsStorage.listAll();
                             while (handles.hasNext()) {
                                 LogHandle logHandle = handles.next();
-                                if (clusterManager.isMaster() && !clusterManager.isTaskRegistered(logHandle.hash())) {
-                                    WorkerTask task = new WorkerTask(logHandle.hash(),
-                                            workers.get(r.nextInt(workers.size())), logHandle);
-                                    LOG.debug("Assigning task {} to worker {}", task.getId(), task.getAssigned().getHostname());
-                                    clusterManager.registerTask(task);
+                                if (logHandle != LogHandle.INVALID_LOG) {
+                                    LOG.debug("WorkerTaskDistributor: log handle {}", logHandle);
+                                    if (clusterManager.isMaster() && !clusterManager.isTaskRegistered(logHandle.hash())) {
+                                        WorkerTask task = new WorkerTask(logHandle.hash(),
+                                                workers.get(r.nextInt(workers.size())), logHandle);
+                                        LOG.debug("Assigning task {} to worker {}", task.getId(), task.getAssigned().getHostname());
+                                        clusterManager.registerTask(task);
+                                    }
                                 }
                             }
                         } else {

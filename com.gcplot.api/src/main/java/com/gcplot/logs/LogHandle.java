@@ -52,6 +52,19 @@ public class LogHandle {
         this.hash = Hashing.sha256().hashBytes((name + username + analyzeId + jvmId).getBytes()).toString();
     }
 
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("LogHandle{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", username='").append(username).append('\'');
+        sb.append(", analyzeId='").append(analyzeId).append('\'');
+        sb.append(", jvmId='").append(jvmId).append('\'');
+        sb.append(", properties=").append(properties);
+        sb.append(", hash='").append(hash).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
     public String hash() {
         return hash;
     }
