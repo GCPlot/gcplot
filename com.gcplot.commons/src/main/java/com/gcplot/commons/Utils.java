@@ -120,7 +120,7 @@ public abstract class Utils {
     }
 
     public static String esc(String username) {
-        return username.toLowerCase().replaceAll("[^a-zA-Z0-9.-]", "_");
+        return username.replaceAll("[^a-zA-Z0-9.-]", "_");
     }
 
     public static <T> T[] concat(T[] a, T[] b) {
