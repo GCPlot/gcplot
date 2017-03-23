@@ -88,7 +88,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                         transformValue(analyse.jvmVersions(), VMVersion::type) : Collections.emptyMap())
                 .value("jvm_gc_types", analyse.jvmGCTypes() != null ?
                         transformValue(analyse.jvmGCTypes(), GarbageCollectorType::type) : Collections.emptyMap())
-                .value("rc_source_type", analyse.sourceType().getUrn())
+                .value("rc_source_type", analyse.sourceType() == null ? SourceType.NONE.getUrn() : analyse.sourceType().getUrn())
                 .value("rc_source_config_string", Strings.nullToEmpty(analyse.sourceConfig()))
                 .value("jvm_rc_source_type", processMap(analyse.sourceByJvm(), SourceType::getUrn))
                 .value("jvm_rc_source_config_string", processMap(analyse.sourceConfigByJvm(), Strings::nullToEmpty))
