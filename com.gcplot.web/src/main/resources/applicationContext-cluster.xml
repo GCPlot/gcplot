@@ -23,6 +23,7 @@
 
     <bean id="single-cluster" class="com.gcplot.services.cluster.SingleNodeClusterManager">
         <property name="worker" ref="worker"/>
+        <property name="enabled" value="${worker.tasks.enabled}"/>
     </bean>
 
     <bean id="zookeeper-cluster" class="com.gcplot.services.cluster.ZookeeperClusterManager"

@@ -13,16 +13,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SingleNodeClusterManager implements ClusterManager {
     private Worker worker;
+    private boolean isEnabled;
     private Map<String, WorkerTask> tasks = new ConcurrentHashMap<>();
 
     @Override
     public boolean isConnected() {
-        return true;
+        return isEnabled;
     }
 
     @Override
     public boolean isMaster() {
-        return true;
+        return isEnabled;
     }
 
     @Override
@@ -52,5 +53,9 @@ public class SingleNodeClusterManager implements ClusterManager {
 
     public void setWorker(Worker worker) {
         this.worker = worker;
+    }
+
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 }
