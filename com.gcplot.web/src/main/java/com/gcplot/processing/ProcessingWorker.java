@@ -69,6 +69,7 @@ public class ProcessingWorker {
                                 if (logsStorage != null) {
                                     LogSource logSource = logsStorage.get(logHandle);
 
+                                    LOG.debug("ProcessingWorker: {}, process {}", analyze.id(), logHandle);
                                     logsProcessor.process(logSource, accountRepository.account(accountId).orElse(null),
                                             analyze, logHandle.getJvmId());
                                     logsStorage.delete(logHandle);
