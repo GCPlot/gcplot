@@ -18,12 +18,14 @@ public class DefaultGCAnalyseFactory implements GCAnalyseFactory {
                             Map<String, DateTime> firstEvent, Map<String, String> jvmHeaders,
                             Map<String, String> jvmNames, Map<String, VMVersion> jvmVersions,
                             Map<String, GarbageCollectorType> jvmGCTypes, Map<String, MemoryDetails> jvmMemoryDetails,
-                            String ext) {
+                            SourceType sourceType, String sourceConfig, Map<String, SourceType> sourceByJvm,
+                            Map<String, String> sourceConfigByJvm, String ext) {
         GCAnalyseImpl analyse = new GCAnalyseImpl();
         return analyse.id(id).accountId(accountId).name(name).timezone(tz).isContinuous(isContinuous)
                 .start(start).jvmIds(jvmIds).lastEvent(lastEvent).firstEvent(firstEvent).jvmHeaders(jvmHeaders)
                 .jvmNames(jvmNames).jvmVersions(jvmVersions).jvmGCTypes(jvmGCTypes).jvmMemoryDetails(jvmMemoryDetails)
-                .ext(ext);
+                .sourceType(sourceType).sourceConfig(sourceConfig).sourceByJvm(sourceByJvm)
+                .sourceConfigByJvm(sourceConfigByJvm).ext(ext);
     }
 
     @Override
@@ -31,7 +33,7 @@ public class DefaultGCAnalyseFactory implements GCAnalyseFactory {
                             DateTime start, String ext) {
         GCAnalyseImpl analyse = new GCAnalyseImpl();
         return analyse.id(id).accountId(accountId).name(name).timezone(tz).isContinuous(isContinuous)
-                .start(start).ext(ext);
+                .start(start).sourceType(SourceType.NONE).ext(ext);
     }
 
     @Override

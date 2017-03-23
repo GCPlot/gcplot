@@ -6,6 +6,7 @@ import com.gcplot.controllers.gc.EventsController;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;
+import com.gcplot.model.gc.SourceType;
 import com.google.common.collect.Sets;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
@@ -249,7 +250,7 @@ public class GCTests extends IntegrationTest {
     }
 
     private String createAnalyse(String token) throws Exception {
-        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "Africa/Harare", Collections.emptyList(), "");
+        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "Africa/Harare", Collections.emptyList(), SourceType.NONE, "", "");
         return r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");
     }
 

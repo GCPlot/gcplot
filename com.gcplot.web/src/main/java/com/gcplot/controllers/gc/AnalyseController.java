@@ -45,6 +45,7 @@ public class AnalyseController extends Controller {
         dispatcher.requireAuth().post("/analyse/jvm/update/version", UpdateJvmVersionRequest.class, this::updateJvmVersion);
         dispatcher.requireAuth().post("/analyse/jvm/update/info", UpdateJvmInfoRequest.class, this::updateJvmInfo);
         dispatcher.requireAuth().post("/analyse/jvm/update/bulk", BulkJvmsUpdateRequest.class, this::updateJvmBulk);
+        dispatcher.requireAuth().post("/analyse/update/source", UpdateAnalyzeSourceRequest.class, this::updateAnalyzeSource);
         dispatcher.requireAuth()
                 .filter(c -> c.hasParam("analyse_id"), "Param 'analyse_id' is missing.")
                 .filter(c -> c.hasParam("jvm_id"), "Param 'jvm_id' is missing.")
@@ -99,6 +100,17 @@ public class AnalyseController extends Controller {
     public void updateAnalyse(UpdateAnalyseRequest req, RequestContext ctx) {
         analyseRepository.perform(new UpdateAnalyseOperation(account(ctx).id(), req.id, req.name,
                 req.timezone, req.ext));
+        ctx.response(SUCCESS);
+    }
+
+    /**
+     * POST /analyse/update/source
+     * Require Auth (token)
+     * Body: UpdateAnalyzeSourceRequest (JSON)
+     * Responds: SUCCESS or ERROR
+     */
+    public void updateAnalyzeSource(UpdateAnalyzeSourceRequest req, RequestContext ctx) {
+        analyseRepository.perform(new UpdateAnalyzeSourceOperation(account(ctx).id(), req.id, req.sourceType, req.sourceConfig));
         ctx.response(SUCCESS);
     }
 
@@ -221,9 +233,11 @@ public class AnalyseController extends Controller {
      */
     public void newAnalyse(NewAnalyseRequest req, RequestContext ctx) {
         Identifier userId = account(ctx).id();
+        // FIXME redo to factory.
         GCAnalyseImpl analyse = new GCAnalyseImpl().name(req.name).isContinuous(req.isContinuous).accountId(userId)
                 .start(DateTime.now(DateTimeZone.UTC)).ext(req.ext).jvmHeaders(Collections.emptyMap())
-                .jvmMemoryDetails(Collections.emptyMap()).timezone(req.timezone);
+                .jvmMemoryDetails(Collections.emptyMap()).sourceType(req.sourceType).sourceConfig(req.sourceConfig)
+                .timezone(req.timezone);
         if (req.jvms == null || req.jvms.size() == 0) {
             analyse.jvmGCTypes(Collections.emptyMap()).jvmVersions(Collections.emptyMap())
                     .jvmIds(Collections.emptySet()).jvmNames(Collections.emptyMap());

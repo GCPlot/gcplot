@@ -17,7 +17,8 @@ public interface GCAnalyseFactory {
                      Set<String> jvmIds, Map<String, DateTime> lastEvent, Map<String, DateTime> firstEvent,
                      Map<String, String> jvmHeaders, Map<String, String> jvmNames, Map<String, VMVersion> jvmVersions,
                      Map<String, GarbageCollectorType> jvmGCTypes, Map<String, MemoryDetails> jvmMemoryDetails,
-                     String ext);
+                     SourceType sourceType, String sourceConfig, Map<String, SourceType> sourceByJvm,
+                     Map<String, String> sourceConfigByJvm, String ext);
 
     GCAnalyse create(String id, Identifier accountId, String name, String tz, boolean isContinuous, DateTime start,
                      String ext);

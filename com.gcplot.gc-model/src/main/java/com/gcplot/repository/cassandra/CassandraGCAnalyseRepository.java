@@ -155,6 +155,12 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                             ule.getFirstEvent(), ule.getLastEvent()));
                     break;
                 }
+                case UPDATE_ANALYZE_SOURCE: {
+                    UpdateAnalyzeSourceOperation opp = (UpdateAnalyzeSourceOperation) op;
+                    statements.add(updateSource(opp.accountId(), opp.analyseId(), opp.getSourceType(),
+                            opp.getSourceConfig()));
+                    break;
+                }
             }
         }
         if (statements.size() > 1) {
@@ -261,6 +267,12 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
             connector.session().execute(firstEventQuery);
         }
         return ule;
+    }
+
+    private RegularStatement updateSource(Identifier accId, String analyzeId, SourceType sourceType, String sourceConfig) {
+        return updateTable(accId, analyzeId).with(set("rc_source_type", sourceType.getUrn()))
+                .and(set("rc_source_config_string", sourceConfig));
+
     }
 
     private void insertMemoryDetails(Identifier accId, String jvmId, MemoryDetails memoryDetails, UUID uuid, List<RegularStatement> batch) {

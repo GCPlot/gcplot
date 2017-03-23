@@ -1,5 +1,7 @@
 package com.gcplot.model.gc;
 
+import com.google.common.base.Strings;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +25,7 @@ public enum SourceType {
     }
 
     public static SourceType by(String urn) {
-        return VALUES.get(urn);
+        return VALUES.get(Strings.nullToEmpty(urn).toLowerCase());
     }
 
     private String urn;

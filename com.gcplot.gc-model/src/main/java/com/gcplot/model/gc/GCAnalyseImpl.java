@@ -160,7 +160,9 @@ public class GCAnalyseImpl implements GCAnalyse {
         Properties props = new Properties();
         Splitter.on(";").split(sourceConfig).forEach(s -> {
             String[] parts = s.split("=");
-            props.put(parts[0], parts[1]);
+            if (parts.length == 2) {
+                props.put(parts[0], parts[1]);
+            }
         });
         this.sourceConfigProps = props;
         return this;
@@ -209,6 +211,10 @@ public class GCAnalyseImpl implements GCAnalyse {
         this.jvmVersions = other.jvmVersions();
         this.jvmGCTypes = other.jvmGCTypes();
         this.jvmMemoryDetails = other.jvmMemoryDetails();
+        this.sourceType = other.sourceType();
+        this.sourceConfig = other.sourceConfig();
+        this.sourceByJvm = other.sourceByJvm();
+        this.sourceConfigByJvm = other.sourceConfigByJvm();
         this.ext = other.ext();
     }
 
