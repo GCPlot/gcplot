@@ -158,12 +158,14 @@ public class GCAnalyseImpl implements GCAnalyse {
     public GCAnalyseImpl sourceConfig(String sourceConfig) {
         this.sourceConfig = sourceConfig;
         Properties props = new Properties();
-        Splitter.on(";").split(sourceConfig).forEach(s -> {
-            String[] parts = s.split("=");
-            if (parts.length == 2) {
-                props.put(parts[0], parts[1]);
-            }
-        });
+        if (sourceConfig != null) {
+            Splitter.on(";").split(sourceConfig).forEach(s -> {
+                String[] parts = s.split("=");
+                if (parts.length == 2) {
+                    props.put(parts[0], parts[1]);
+                }
+            });
+        }
         this.sourceConfigProps = props;
         return this;
     }
