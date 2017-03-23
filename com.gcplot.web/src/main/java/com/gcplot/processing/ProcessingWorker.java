@@ -89,6 +89,7 @@ public class ProcessingWorker {
                         LOG.debug("ProcessingWorker: account {} not found.", logHandle.getUsername());
                     }
                 } catch (Throwable t) {
+                    clusterManager.completeTask(task);
                     LOG.error(t.getMessage(), t);
                 }
             }
