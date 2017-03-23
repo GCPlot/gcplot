@@ -56,6 +56,10 @@ public class ProcessingWorker {
             for (WorkerTask task : tasks) {
                 try {
                     LogHandle logHandle = task.getTask();
+                    if (logHandle.equals(LogHandle.INVALID_LOG)) {
+                        clusterManager.completeTask(task);
+                        continue;
+                    }
                     Identifier accountId = accountRepository.map(logHandle.getUsername()).orElse(null);
                     if (accountId != null) {
                         GCAnalyse analyze = analyseRepository.analyse(accountId, logHandle.getAnalyzeId()).orElse(null);

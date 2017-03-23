@@ -70,7 +70,7 @@ public class WorkerTaskDistributor {
                             Iterator<LogHandle> handles = logsStorage.listAll();
                             while (handles.hasNext()) {
                                 LogHandle logHandle = handles.next();
-                                if (logHandle != LogHandle.INVALID_LOG) {
+                                if (!logHandle.equals(LogHandle.INVALID_LOG)) {
                                     LOG.debug("WorkerTaskDistributor: log handle {}", logHandle);
                                     if (clusterManager.isMaster() && !clusterManager.isTaskRegistered(logHandle.hash())) {
                                         WorkerTask task = new WorkerTask(logHandle.hash(),
