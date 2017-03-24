@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
+import com.google.common.base.Strings;
 import org.joda.time.DateTimeZone;
 
 import java.util.Collections;
@@ -31,6 +32,10 @@ public class AnalyseResponse {
     public Map<String, Long> firstEventUTC;
     @JsonProperty("last_utc")
     public Map<String, Long> lastEventUTC;
+    @JsonProperty("source_type")
+    public String sourceType;
+    @JsonProperty("source_config")
+    public String sourceConfig;
     @JsonProperty("jvm_hdrs")
     public Map<String, String> jvmHeaders;
     @JsonProperty("jvm_vers")
@@ -53,6 +58,8 @@ public class AnalyseResponse {
                            @JsonProperty("start_utc") long startUTC,
                            @JsonProperty("first_utc") Map<String, Long> firstEventUTC,
                            @JsonProperty("last_utc") Map<String, Long> lastEventUTC,
+                           @JsonProperty("source_type") String sourceType,
+                           @JsonProperty("source_config") String sourceConfig,
                            @JsonProperty("jvm_hdrs") Map<String, String> jvmHeaders,
                            @JsonProperty("jvm_vers") Map<String, Integer> jvmVersions,
                            @JsonProperty("jvm_gcts") Map<String, Integer> jvmGCTypes,
@@ -67,6 +74,8 @@ public class AnalyseResponse {
         this.startUTC = startUTC;
         this.firstEventUTC = firstEventUTC;
         this.lastEventUTC = lastEventUTC;
+        this.sourceType = sourceType;
+        this.sourceConfig = sourceConfig;
         this.jvmHeaders = jvmHeaders;
         this.jvmVersions = jvmVersions;
         this.jvmGCTypes = jvmGCTypes;
@@ -82,6 +91,8 @@ public class AnalyseResponse {
         this.timezone = analyse.timezone();
         this.continuous = analyse.isContinuous();
         this.startUTC = analyse.start().toDateTime(DateTimeZone.UTC).getMillis();
+        this.sourceType = analyse.sourceType().getUrn();
+        this.sourceConfig = Strings.nullToEmpty(analyse.sourceConfig());
         this.firstEventUTC = analyse.firstEvent() != null ? transformValue(analyse.firstEvent(),
                 v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap();
         this.lastEventUTC = analyse.lastEvent() != null ? transformValue(analyse.lastEvent(),

@@ -14,10 +14,10 @@ import com.gcplot.repository.GCAnalyseRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
+import java.util.concurrent.*;
 
 /**
  * TODO in future it should be event listener, not timer
@@ -30,27 +30,36 @@ public class ProcessingWorker {
     private static final long WAIT_SHUTDOWN_MINUTES = 10;
     private long intervalMs;
     private ScheduledExecutorService timer;
+    private ExecutorService executorService;
     private ClusterManager clusterManager;
     private AccountRepository accountRepository;
     private GCAnalyseRepository analyseRepository;
     private LogsStorageProvider logsStorageProvider;
     private LogsProcessorService logsProcessor;
+    private Set<String> inProgress = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public void init() {
         timer = Executors.newSingleThreadScheduledExecutor();
         timer.scheduleAtFixedRate(this::processOfflineLogs, intervalMs, intervalMs, TimeUnit.MILLISECONDS);
+        executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     }
 
-    public void destroy() throws InterruptedException {
-        timer.shutdown();
-        timer.awaitTermination(WAIT_SHUTDOWN_MINUTES, TimeUnit.MINUTES);
+    public void destroy() {
+        try {
+            timer.shutdown();
+            timer.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (Throwable ignored) {}
+        try {
+            executorService.shutdown();
+            executorService.awaitTermination(WAIT_SHUTDOWN_MINUTES, TimeUnit.MINUTES);
+        } catch (Throwable ignored) {}
     }
 
     /**
      * Entry point for processing logs from S3, GCS, etc.
      */
     public void processOfflineLogs() {
-        LOG.debug("ProcessingWorker: Starting offline logs processing.");
+        LOG.debug("Starting offline logs processing.");
         try {
             List<WorkerTask> tasks = clusterManager.retrieveTasks();
             for (WorkerTask task : tasks) {
@@ -60,33 +69,42 @@ public class ProcessingWorker {
                         clusterManager.completeTask(task);
                         continue;
                     }
-                    Identifier accountId = accountRepository.map(logHandle.getUsername()).orElse(null);
-                    if (accountId != null) {
-                        GCAnalyse analyze = analyseRepository.analyse(accountId, logHandle.getAnalyzeId()).orElse(null);
-                        if (analyze != null) {
-                            if (analyze.jvmIds().contains(logHandle.getJvmId())) {
-                                LogsStorage logsStorage = logsStorageProvider.get(analyze.sourceType(), analyze.sourceConfigProps());
-                                if (logsStorage != null) {
-                                    LogSource logSource = logsStorage.get(logHandle);
+                    if (inProgress.contains(logHandle.hash())) {
+                        continue;
+                    }
+                    Identifier accountId = Identifier.fromStr(logHandle.getAccountId());
+                    GCAnalyse analyze = analyseRepository.analyse(accountId, logHandle.getAnalyzeId()).orElse(null);
+                    if (analyze != null) {
+                        if (analyze.jvmIds().contains(logHandle.getJvmId())) {
+                            LogsStorage logsStorage = logsStorageProvider.get(analyze.sourceType(), analyze.sourceConfigProps());
+                            if (logsStorage != null) {
+                                LogSource logSource = logsStorage.get(logHandle);
 
-                                    LOG.debug("ProcessingWorker: {}, process {}", analyze.id(), logHandle);
-                                    logsProcessor.process(logSource, accountRepository.account(accountId).orElse(null),
-                                            analyze, logHandle.getJvmId());
-                                    logsStorage.delete(logHandle);
-                                    clusterManager.completeTask(task);
-                                } else {
-                                    LOG.debug("ProcessingWorker: {}: no storage for {} [{}]", analyze.id(), analyze.sourceType(), analyze.sourceConfig());
-                                }
+                                LOG.debug("Running {}, process {}", analyze.id(), logHandle);
+                                inProgress.add(logHandle.hash());
+                                executorService.submit(() -> {
+                                    LOG.debug("Processing {}, process {}", analyze.id(), logHandle);
+                                    try {
+                                        logsProcessor.process(logSource, accountRepository.account(accountId).orElse(null),
+                                                analyze, logHandle.getJvmId());
+                                        logsStorage.delete(logHandle);
+                                        clusterManager.completeTask(task);
+                                    } catch (Throwable t) {
+                                        LOG.error("ProcessingWorker: " + t.getMessage(), t);
+                                    } finally {
+                                        inProgress.remove(logHandle.hash());
+                                    }
+                                });
+
                             } else {
-                                LOG.debug("ProcessingWorker: JVM {} was not found in analyze {} for account [{}:{}]",
-                                        logHandle.getJvmId(), logHandle.getAnalyzeId(), accountId, logHandle.getUsername());
+                                LOG.debug("{}: no storage for {} [{}]", analyze.id(), analyze.sourceType(), analyze.sourceConfig());
                             }
                         } else {
-                            LOG.debug("ProcessingWorker: analyze {} not found for account [{}:{}]", logHandle.getAnalyzeId(),
-                                    accountId, logHandle.getUsername());
+                            LOG.debug("JVM {} was not found in analyze {} for account [{}]",
+                                    logHandle.getJvmId(), logHandle.getAnalyzeId(), accountId);
                         }
                     } else {
-                        LOG.debug("ProcessingWorker: account {} not found.", logHandle.getUsername());
+                        LOG.debug("Analyze {} not found for account [{}]", logHandle.getAnalyzeId(), accountId);
                     }
                 } catch (Throwable t) {
                     clusterManager.completeTask(task);

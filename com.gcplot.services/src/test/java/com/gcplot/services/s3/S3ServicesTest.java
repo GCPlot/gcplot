@@ -61,7 +61,7 @@ public class S3ServicesTest {
         rm.setConnector(connector);
 
         rm.upload(file("logs/3cbc9e4b0932ca6e745b3f344a27ff95.log"),
-                "connector-logs/admin/analyze/jvm");
+                "connector-logs/" + Utils.toBase64("#81:20") + "/analyze/jvm");
 
         DefaultLogsStorageProvider logsStorageProvider = new DefaultLogsStorageProvider();
         logsStorageProvider.setPrefix("connector-logs");
@@ -74,7 +74,7 @@ public class S3ServicesTest {
         LogHandle lh = lhl.get(0);
 
         Assert.assertEquals(lh.getName(), "3cbc9e4b0932ca6e745b3f344a27ff95.log");
-        Assert.assertEquals(lh.getUsername(), "admin");
+        Assert.assertEquals(lh.getAccountId(), "#81:20");
         Assert.assertEquals(lh.getAnalyzeId(), "analyze");
         Assert.assertEquals(lh.getJvmId(), "jvm");
 
@@ -90,7 +90,7 @@ public class S3ServicesTest {
         Assert.assertEquals(lhl.size(), 0);
 
         rm.upload(file("logs/3cbc9e4b0932ca6e745b3f344a27ff95.log.gz"),
-                "connector-logs/admin/analyze/jvm");
+                "connector-logs/" + Utils.toBase64("#81:20") + "/analyze/jvm");
         lhl = Lists.newArrayList(ls.listAll());
         Assert.assertEquals(lhl.size(), 1);
         lh = lhl.get(0);

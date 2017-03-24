@@ -47,13 +47,13 @@ public class WorkerTaskDistributor {
     }
 
     public void scan() {
-        LOG.debug("WorkerTaskDistributor: Starting job.");
+        LOG.debug("Starting job.");
         if (!clusterManager.isConnected()) {
-            LOG.info("WorkerTaskDistributor: Disconnected from cluster. Skipping job.");
+            LOG.info("Disconnected from cluster. Skipping job.");
             return;
         }
         if (!clusterManager.isMaster()) {
-            LOG.debug("WorkerTaskDistributor: Not a master. Quiting.");
+            LOG.debug("Not a master. Quiting.");
         }
         List<Worker> workers = new ArrayList<>(clusterManager.workers());
         SecureRandom r = new SecureRandom();
@@ -61,7 +61,7 @@ public class WorkerTaskDistributor {
             Iterator<GCAnalyse> i = analyseRepository.analyses(true).iterator();
             while (i.hasNext()) {
                 GCAnalyse analyze = i.next();
-                LOG.debug("WorkerTaskDistributor: Checking analyze {} with source {}", analyze.id(), analyze.sourceType());
+                LOG.debug("Checking analyze {} with source {}", analyze.id(), analyze.sourceType());
                 if (analyze.sourceType() != SourceType.NONE) {
                     try {
                         LogsStorage logsStorage =
@@ -71,7 +71,7 @@ public class WorkerTaskDistributor {
                             while (handles.hasNext()) {
                                 LogHandle logHandle = handles.next();
                                 if (!logHandle.equals(LogHandle.INVALID_LOG)) {
-                                    LOG.debug("WorkerTaskDistributor: log handle {}", logHandle);
+                                    LOG.debug("Checking log handle {}", logHandle);
                                     if (clusterManager.isMaster() && !clusterManager.isTaskRegistered(logHandle.hash())) {
                                         WorkerTask task = new WorkerTask(logHandle.hash(),
                                                 workers.get(r.nextInt(workers.size())), logHandle);
@@ -81,7 +81,7 @@ public class WorkerTaskDistributor {
                                 }
                             }
                         } else {
-                            LOG.debug("WorkerTaskDistributor: {}: no storage for {} [{}]", analyze.id(),
+                            LOG.debug("{}: no storage for {} [{}]", analyze.id(),
                                     analyze.sourceType(), analyze.sourceConfig());
                         }
                     } catch (Throwable t) {

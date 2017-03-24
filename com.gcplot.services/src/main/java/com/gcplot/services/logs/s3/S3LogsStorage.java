@@ -11,7 +11,8 @@ import com.gcplot.services.S3Connector;
 
 import java.util.Iterator;
 
-import static com.gcplot.commons.Utils.esc;
+import static com.gcplot.commons.Utils.toBase64;
+import static com.gcplot.commons.Utils.fromBase64;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -47,7 +48,7 @@ public class S3LogsStorage implements LogsStorage {
                 }
                 String[] parts = key.split("/");
                 if (parts.length == 4) {
-                    return new LogHandle(parts[3], parts[0], parts[1], parts[2]);
+                    return new LogHandle(parts[3], fromBase64(parts[0]), parts[1], parts[2]);
                 } else {
                     return LogHandle.INVALID_LOG;
                 }
@@ -77,9 +78,8 @@ public class S3LogsStorage implements LogsStorage {
     }
 
     protected String handlePath(LogHandle handle) {
-        return prefix +
-                esc(handle.getUsername()) + "/" + esc(handle.getAnalyzeId()) + "/" +
-                esc(handle.getJvmId()) + "/" + esc(handle.getName());
+        return prefix + toBase64(handle.getAccountId()) + "/" + handle.getAnalyzeId() + "/" + handle.getJvmId()
+                + "/" + handle.getName();
     }
 
     private AmazonS3 client() {

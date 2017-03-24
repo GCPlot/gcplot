@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
 import static com.gcplot.commons.CollectionUtils.cloneAndPut;
 import static com.gcplot.commons.Utils.esc;
+import static com.gcplot.commons.Utils.toBase64;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -305,7 +306,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                 try {
                     LOG.debug("Starting uploading {}", logFile);
                     resourceManager.upload(logFile,
-                            rootFolder + "/" + esc(username) + "/" + esc(analyseId) + "/" + esc(jvmId));
+                            rootFolder + "/" + esc(username) + "/" + analyseId + "/" + jvmId);
                 } catch (Throwable t) {
                     LOG.error(t.getMessage(), t);
                 } finally {
