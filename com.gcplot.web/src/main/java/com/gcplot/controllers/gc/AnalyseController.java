@@ -247,10 +247,11 @@ public class AnalyseController extends Controller {
             Map<String, GarbageCollectorType> jvmGCTypes = new HashMap<>();
             Map<String, VMVersion> jvmVersions = new HashMap<>();
             req.jvms.forEach(jvm -> {
-                jvmIds.add(jvm.jvmId);
-                jvmNames.put(jvm.jvmId, jvm.jvmName);
-                jvmGCTypes.put(jvm.jvmId, GarbageCollectorType.get(jvm.gcType));
-                jvmVersions.put(jvm.jvmId, VMVersion.get(jvm.vmVersion));
+                String jvmId = jvm.jvmId.toString();
+                jvmIds.add(jvmId);
+                jvmNames.put(jvmId, jvm.jvmName);
+                jvmGCTypes.put(jvmId, GarbageCollectorType.get(jvm.gcType));
+                jvmVersions.put(jvmId, VMVersion.get(jvm.vmVersion));
             });
             analyse.jvmGCTypes(jvmGCTypes).jvmVersions(jvmVersions).jvmIds(jvmIds).jvmNames(jvmNames);
         }

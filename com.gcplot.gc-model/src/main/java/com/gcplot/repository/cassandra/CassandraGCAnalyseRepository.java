@@ -184,10 +184,11 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         return query;
     }
 
-    private List<RegularStatement> addJvm(Identifier accId, String analyseId, String jvmId,
+    private List<RegularStatement> addJvm(Identifier accId, String analyseId, UUID jvmUUID,
                             String jvmName, VMVersion version, GarbageCollectorType type,
                             String headers, MemoryDetails memoryDetails) {
         UUID uuid = UUID.fromString(analyseId);
+        String jvmId = jvmUUID.toString();
         List<RegularStatement> batch = new ArrayList<>();
         batch.add(updateTable(accId, uuid).with(add("jvm_ids", jvmId)));
         batch.add(updateTable(accId, uuid).with(put("jvm_names", jvmId, jvmName)));

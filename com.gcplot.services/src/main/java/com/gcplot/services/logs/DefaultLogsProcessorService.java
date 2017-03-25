@@ -194,7 +194,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
     }
 
     protected GCAnalyse addJvmToAnalyze(LogSource source, String analyzeId, String jvmId, Identifier userId, GCAnalyse analyze, VMProperties props) {
-        analyseRepository.perform(new AddJvmOperation(userId, analyzeId, jvmId, source.handle().getName(),
+        analyseRepository.perform(new AddJvmOperation(userId, analyzeId, UUID.fromString(jvmId), source.handle().getName(),
                 props.getVersion(), props.getGcType(), "", null));
         analyze = analyseFactory.create(analyze, cloneAndAdd(analyze.jvmIds(), jvmId),
                 cloneAndPut(analyze.jvmNames(), jvmId, source.handle().getName()),
