@@ -83,8 +83,4 @@ public class TestGCViewerLogsParser {
         }
     }
 
-    protected Consumer<GCEvent> add(List<GCEvent> events) {
-        return e -> {if (e != null) events.add(e);};
-    }
-
 }
