@@ -66,7 +66,7 @@ public class ProcessingWorker {
                 try {
                     LogHandle logHandle = task.getTask();
                     if (logHandle.equals(LogHandle.INVALID_LOG)) {
-                        clusterManager.completeTask(task);
+                        complete(task);
                         continue;
                     }
                     if (inProgress.contains(logHandle.hash())) {
@@ -88,7 +88,7 @@ public class ProcessingWorker {
                                         logsProcessor.process(logSource, accountRepository.account(accountId).orElse(null),
                                                 analyze, logHandle.getJvmId());
                                         logsStorage.delete(logHandle);
-                                        clusterManager.completeTask(task);
+                                        complete(task);
                                     } catch (Throwable t) {
                                         LOG.error("ProcessingWorker: " + t.getMessage(), t);
                                     } finally {
@@ -97,22 +97,33 @@ public class ProcessingWorker {
                                 });
 
                             } else {
+                                complete(task);
                                 LOG.debug("{}: no storage for {} [{}]", analyze.id(), analyze.sourceType(), analyze.sourceConfig());
                             }
                         } else {
+                            complete(task);
                             LOG.debug("JVM {} was not found in analyze {} for account [{}]",
                                     logHandle.getJvmId(), logHandle.getAnalyzeId(), accountId);
                         }
                     } else {
+                        complete(task);
                         LOG.debug("Analyze {} not found for account [{}]", logHandle.getAnalyzeId(), accountId);
                     }
                 } catch (Throwable t) {
-                    clusterManager.completeTask(task);
+                    complete(task);
                     LOG.error(t.getMessage(), t);
                 }
             }
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
+        }
+    }
+
+    private void complete(WorkerTask task) {
+        try {
+            clusterManager.completeTask(task);
+        } catch (Throwable t) {
+            LOG.error("complete", t);
         }
     }
 
