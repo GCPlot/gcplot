@@ -49,8 +49,8 @@ public abstract class Mapper {
                 .timezone(op(row, "timezone", r -> r.getString("timezone")))
                 .jvmNames(row.getMap("jvm_names", String.class, String.class))
                 .jvmHeaders(row.getMap("jvm_headers", String.class, String.class))
-                .sourceType(dop(row, "rc_source_type", SourceType.NONE, r -> SourceType.by(r.getString("rc_source_type"))))
-                .sourceConfig(dop(row, "rc_source_config_string", "", r -> r.getString("rc_source_config_string")))
+                .sourceType(top(row, "rc_source_type", SourceType.NONE, SourceType::by))
+                .sourceConfig(top(row, "rc_source_config_string", "", (String r) -> r))
                 .ext(op(row, "ext", r -> r.getString("ext")));
         Map<String, MemoryDetails> memoryDetails = new HashMap<>();
         Map<String, Long> jvmPageSizes = row.getMap("jvm_md_page_size", String.class, Long.class);
@@ -109,7 +109,7 @@ public abstract class Mapper {
                     .totalCapacity(op(row, "total_capacity", r -> new Capacity(r.getList("total_capacity", Long.class))))
                     .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
                     .phase(op(row, "phase", r -> Phase.get(r.getInt("phase"))))
-                    .cause(dop(row, "cause", Cause.OTHER, r -> Cause.get(r.getInt("cause"))))
+                    .cause(top(row, "cause", Cause.OTHER, (Function<Integer, Cause>) Cause::get))
                     .properties(lop(row, "properties", r -> r.getLong("properties")))
                     .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
                     .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))));
@@ -169,9 +169,14 @@ public abstract class Mapper {
         }
     }
 
-    private static <T> T dop(Row row, String name, T def, Function<Row, T> f) {
+    private static <T, V> T top(Row row, String name, T def, Function<V, T> f) {
         if (row.getColumnDefinitions().contains(name)) {
-            return f.apply(row);
+            Object val = row.getObject(name);
+            if (val == null) {
+                return def;
+            } else {
+                return f.apply((V) val);
+            }
         } else {
             return def;
         }
