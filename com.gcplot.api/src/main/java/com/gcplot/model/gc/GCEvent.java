@@ -83,6 +83,10 @@ public interface GCEvent extends VMEvent, DatedEvent, IdentifiedEvent {
         return generations().size() == 1 && generations().contains(Generation.PERM);
     }
 
+    default boolean isOther() {
+        return generations().size() == 1 && generations().contains(Generation.OTHER);
+    }
+
     default boolean hasProperty(long prop) {
         return (properties() & prop) == prop;
     }

@@ -13,6 +13,7 @@ import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OSchema;
+import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
@@ -65,6 +66,18 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
         try (OObjectDatabaseTx db = db()) {
             List<Account> l = db.query(new OSQLSynchQuery<>(ALL_ACCOUNTS_QUERY));
             return l.stream().map(i -> (AccountImpl) db.detachAll(i, true)).collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public Optional<Identifier> map(String username) {
+        try (OObjectDatabaseTx db = db()) {
+            List<ODocument> o = db.query(new OSQLSynchQuery<>(String.format(MAP_ACCOUNT_QUERY, username)));
+            if (o.size() == 0) {
+                return Optional.empty();
+            } else {
+                return Optional.of(Identifier.fromStr(o.get(0).field("rid").toString()));
+            }
         }
     }
 
@@ -206,6 +219,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     protected static final Logger LOG = LoggerFactory.getLogger(AccountOrientDbRepository.class);
     private static final String ACCOUNT_DOCUMENT_NAME = AccountImpl.class.getSimpleName();
     private static final String ALL_ACCOUNTS_QUERY = "select from " + ACCOUNT_DOCUMENT_NAME;
+    private static final String MAP_ACCOUNT_QUERY = "select @rid.asString() from " + ACCOUNT_DOCUMENT_NAME + " where username=\"%s\"";
     private static final String ACCOUNT_BY_TOKEN_QUERY = "select from " + ACCOUNT_DOCUMENT_NAME + " where token = \"%s\"";
     private static final String FIND_ACCOUNT_BY_USERNAME = "select from " + ACCOUNT_DOCUMENT_NAME +
             " where %s = \"%s\"";

@@ -1,4 +1,4 @@
-package com.gcplot.resources;
+package com.gcplot.resource;
 
 import java.io.File;
 

@@ -1,4 +1,4 @@
-package com.gcplot.parser;
+package com.gcplot.model;
 
 import com.gcplot.model.gc.*;
 import org.joda.time.DateTime;

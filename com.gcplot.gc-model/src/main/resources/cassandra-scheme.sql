@@ -22,13 +22,16 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   jvm_md_phys_free map<varchar, bigint>,
   jvm_md_swap_total map<varchar, bigint>,
   jvm_md_swap_free map<varchar, bigint>,
-  rc_source_type int,
+  rc_source_type varchar,
   rc_source_config_string varchar,
+  jvm_rc_source_type map<varchar, varchar>,
+  jvm_rc_source_config_string map<varchar, varchar>,
   ext varchar,
   PRIMARY KEY (account_id, id)
 );
 
 CREATE INDEX IF NOT EXISTS analyse_ids ON gc_analyse( id );
+CREATE INDEX IF NOT EXISTS analyse_continuous ON gc_analyse( is_continuous );
 
 CREATE TABLE IF NOT EXISTS gc_event (
   id uuid,

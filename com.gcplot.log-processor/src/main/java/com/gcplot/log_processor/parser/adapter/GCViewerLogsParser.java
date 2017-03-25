@@ -1,7 +1,7 @@
 package com.gcplot.log_processor.parser.adapter;
 
 import com.gcplot.configuration.ConfigurationManager;
-import com.gcplot.log_processor.parser.ParseResult;
+import com.gcplot.logs.ParseResult;
 import com.gcplot.log_processor.parser.producers.v8.MetadataInfoProducer;
 import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.logs.LogsParser;
@@ -27,7 +27,7 @@ import java.util.function.Predicate;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         7/24/16
  */
-public class GCViewerLogsParser implements LogsParser<ParseResult> {
+public class GCViewerLogsParser implements LogsParser {
     protected ConfigurationManager configurationManager;
     protected GCEventFactory eventFactory;
     protected int batchSize = -1;
@@ -46,8 +46,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
     }
 
     @Override
-    public ParseResult parse(InputStream reader, Predicate<GCEvent> firstEventListener,
-                             Consumer<GCEvent> lastEventListener, Consumer<GCEvent> eventsConsumer,
+    public ParseResult parse(InputStream reader, Predicate<GCEvent> firstEventListener, Consumer<GCEvent> eventsConsumer,
                              ParserContext ctx) {
         SurvivorAgesInfoProducer agesInfoProducer = new SurvivorAgesInfoProducer();
         MetadataInfoProducer metadataInfoProducer = new MetadataInfoProducer();
@@ -56,7 +55,6 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         StreamDataReader dr;
         final DateTime now = DateTime.now(DateTimeZone.UTC).withDayOfYear(1).withTimeAtStartOfDay();
         GCEvent[] firstEvent = new GCEvent[1];
-        AbstractGCEvent<?>[] lastEvent = new AbstractGCEvent[1];
         Future[] lastFuture = new Future[1];
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
             if (l.size() > 0) {
@@ -69,7 +67,6 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                         }
                     }
                 }
-                lastEvent[0] = l.get(l.size() - 1);
                 lastFuture[0] = executor.submit(() -> {
                     try {
                         l.forEach(e -> map(now, ctx, e).forEach(eventsConsumer));
@@ -97,16 +94,11 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
         } catch (IOException e) {
             return ParseResult.failure(e);
         }
+
         if (lastFuture[0] != null) {
             try {
                 lastFuture[0].get();
             } catch (InterruptedException | ExecutionException ignored) {
-            }
-        }
-        if (lastEvent[0] != null) {
-            List<GCEvent> mapped = map(now, ctx, lastEvent[0]);
-            if (mapped.size() > 0) {
-                lastEventListener.accept(mapped.get(mapped.size() - 1));
             }
         }
         // temp stuff
@@ -200,7 +192,7 @@ public class GCViewerLogsParser implements LogsParser<ParseResult> {
                 }
             } else if (event.getGeneration() == AbstractGCEvent.Generation.ALL) {
                 if (capacityByGeneration.equals(Collections.emptyMap())) {
-                    capacityByGeneration = new IdentityHashMap<>(2);
+                    capacityByGeneration = new IdentityHashMap<>(3);
                 }
                 capacity = of(gcEvent);
 

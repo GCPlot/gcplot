@@ -79,6 +79,7 @@ dependencies {
     testCompile "org.springframework:spring-test:$springVersion"
     integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
     integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.2'
+    integrationTestCompile group: 'org.apache.zookeeper', name: 'zookeeper', version: "$zookeeperVersion"
     integrationTestCompile 'com.github.kirviq:dumbster:1.7'
 }
 

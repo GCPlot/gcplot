@@ -1,9 +1,6 @@
 package com.gcplot.commons;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.security.MessageDigest;
 
 public abstract class FileUtils {
@@ -37,15 +34,12 @@ public abstract class FileUtils {
         }
     }
 
-    public static String getFileChecksum(MessageDigest digest, File file) throws IOException
-    {
-        try (BufferedInputStream fis = new BufferedInputStream(new FileInputStream(file))) {
-            byte[] byteArray = new byte[8 * 1024];
-            int bytesCount = 0;
+    public static String getFileChecksum(MessageDigest digest, InputStream fis) throws IOException {
+        byte[] byteArray = new byte[8 * 1024];
+        int bytesCount = 0;
 
-            while ((bytesCount = fis.read(byteArray)) != -1) {
-                digest.update(byteArray, 0, bytesCount);
-            }
+        while ((bytesCount = fis.read(byteArray)) != -1) {
+            digest.update(byteArray, 0, bytesCount);
         }
         byte[] bytes = digest.digest();
 

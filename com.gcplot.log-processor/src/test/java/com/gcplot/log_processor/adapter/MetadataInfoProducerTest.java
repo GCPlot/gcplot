@@ -1,6 +1,6 @@
 package com.gcplot.log_processor.adapter;
 
-import com.gcplot.log_processor.LogMetadata;
+import com.gcplot.logs.LogMetadata;
 import com.gcplot.log_processor.parser.producers.v8.MetadataInfoProducer;
 import com.tagtraum.perf.gcviewer.imp.DataReaderSun1_6_0;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;

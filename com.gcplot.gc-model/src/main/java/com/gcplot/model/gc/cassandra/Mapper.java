@@ -49,6 +49,8 @@ public abstract class Mapper {
                 .timezone(op(row, "timezone", r -> r.getString("timezone")))
                 .jvmNames(row.getMap("jvm_names", String.class, String.class))
                 .jvmHeaders(row.getMap("jvm_headers", String.class, String.class))
+                .sourceType(dop(row, "rc_source_type", SourceType.NONE, r -> SourceType.by(r.getString("rc_source_type"))))
+                .sourceConfig(dop(row, "rc_source_config_string", "", r -> r.getString("rc_source_config_string")))
                 .ext(op(row, "ext", r -> r.getString("ext")));
         Map<String, MemoryDetails> memoryDetails = new HashMap<>();
         Map<String, Long> jvmPageSizes = row.getMap("jvm_md_page_size", String.class, Long.class);
@@ -56,18 +58,28 @@ public abstract class Mapper {
         Map<String, Long> jvmPhysFree = row.getMap("jvm_md_phys_free", String.class, Long.class);
         Map<String, Long> jvmSwapTotal = row.getMap("jvm_md_swap_total", String.class, Long.class);
         Map<String, Long> jvmSwapFree = row.getMap("jvm_md_swap_free", String.class, Long.class);
+        Map<String, String> sourceByJvmRaw = row.getMap("jvm_rc_source_type", String.class, String.class);
+        Map<String, String> sourceConfigByJvmRaw = row.getMap("jvm_rc_source_config_string", String.class, String.class);
+
+        Map<String, SourceType> sourceByJvm = new HashMap<>();
+        Map<String, String> sourceConfigByJvm = new HashMap<>();
         for (String jvm : gcAnalyse.jvmIds()) {
-            MemoryDetailsImpl details = new MemoryDetailsImpl();
-            details.pageSize(jvmPageSizes.getOrDefault(jvm, 0L));
-            details.physicalTotal(jvmPhysTotal.getOrDefault(jvm, 0L));
-            details.physicalFree(jvmPhysFree.getOrDefault(jvm, 0L));
-            details.swapTotal(jvmSwapTotal.getOrDefault(jvm, 0L));
-            details.swapFree(jvmSwapFree.getOrDefault(jvm, 0L));
+            MemoryDetails details = new MemoryDetails();
+            details.pageSize(jvmPageSizes.getOrDefault(jvm, 0L))
+                    .physicalTotal(jvmPhysTotal.getOrDefault(jvm, 0L))
+                    .physicalFree(jvmPhysFree.getOrDefault(jvm, 0L))
+                    .swapTotal(jvmSwapTotal.getOrDefault(jvm, 0L))
+                    .swapFree(jvmSwapFree.getOrDefault(jvm, 0L));
             if (!details.isEmpty()) {
                 memoryDetails.put(jvm, details);
             }
+            sourceByJvm.put(jvm, SourceType.by(sourceByJvmRaw.getOrDefault(jvm, SourceType.NONE.getUrn())));
+            sourceConfigByJvm.put(jvm, sourceConfigByJvmRaw.getOrDefault(jvm, ""));
         }
-        return gcAnalyse.jvmMemoryDetails(memoryDetails);
+        return gcAnalyse
+                .jvmMemoryDetails(memoryDetails)
+                .sourceByJvm(sourceByJvm)
+                .sourceConfigByJvm(sourceConfigByJvm);
     }
 
     public static List<GCEvent> eventsFrom(Iterator<Row> resultSet) {

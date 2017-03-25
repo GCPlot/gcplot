@@ -5,6 +5,7 @@ import com.gcplot.model.VMVersion;
 import org.joda.time.DateTime;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 public interface GCAnalyse {
@@ -36,6 +37,16 @@ public interface GCAnalyse {
     Map<String, GarbageCollectorType> jvmGCTypes();
 
     Map<String, MemoryDetails> jvmMemoryDetails();
+
+    SourceType sourceType();
+
+    String sourceConfig();
+
+    Properties sourceConfigProps();
+
+    Map<String, SourceType> sourceByJvm();
+
+    Map<String, String> sourceConfigByJvm();
 
     String ext();
 

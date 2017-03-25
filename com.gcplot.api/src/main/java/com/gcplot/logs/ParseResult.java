@@ -1,7 +1,6 @@
-package com.gcplot.log_processor.parser;
+package com.gcplot.logs;
 
-import com.gcplot.log_processor.LogMetadata;
-import com.gcplot.log_processor.survivor.AgesState;
+import com.gcplot.logs.survivor.AgesState;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.notifications.GCNotification;
 

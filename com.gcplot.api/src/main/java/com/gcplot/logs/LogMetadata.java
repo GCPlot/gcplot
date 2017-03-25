@@ -1,4 +1,4 @@
-package com.gcplot.log_processor;
+package com.gcplot.logs;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

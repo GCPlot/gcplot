@@ -6,19 +6,21 @@ import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
 import com.gcplot.repository.operations.OperationType;
 
+import java.util.UUID;
+
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         10/26/16
  */
 public class AddJvmOperation extends AnalyseOperationBase {
-    private final String jvmId;
+    private final UUID jvmId;
     private final String jvmName;
     private final VMVersion version;
     private final GarbageCollectorType type;
     private final String headers;
     private final MemoryDetails memoryDetails;
 
-    public String getJvmId() {
+    public UUID getJvmId() {
         return jvmId;
     }
 
@@ -42,7 +44,7 @@ public class AddJvmOperation extends AnalyseOperationBase {
         return memoryDetails;
     }
 
-    public AddJvmOperation(Identifier accountId, String analyseId, String jvmId,
+    public AddJvmOperation(Identifier accountId, String analyseId, UUID jvmId,
                            String jvmName, VMVersion version, GarbageCollectorType type,
                            String headers, MemoryDetails memoryDetails) {
         super(accountId, analyseId);

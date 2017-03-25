@@ -45,6 +45,7 @@ public class AnalyseController extends Controller {
         dispatcher.requireAuth().post("/analyse/jvm/update/version", UpdateJvmVersionRequest.class, this::updateJvmVersion);
         dispatcher.requireAuth().post("/analyse/jvm/update/info", UpdateJvmInfoRequest.class, this::updateJvmInfo);
         dispatcher.requireAuth().post("/analyse/jvm/update/bulk", BulkJvmsUpdateRequest.class, this::updateJvmBulk);
+        dispatcher.requireAuth().post("/analyse/update/source", UpdateAnalyzeSourceRequest.class, this::updateAnalyzeSource);
         dispatcher.requireAuth()
                 .filter(c -> c.hasParam("analyse_id"), "Param 'analyse_id' is missing.")
                 .filter(c -> c.hasParam("jvm_id"), "Param 'jvm_id' is missing.")
@@ -103,6 +104,17 @@ public class AnalyseController extends Controller {
     }
 
     /**
+     * POST /analyse/update/source
+     * Require Auth (token)
+     * Body: UpdateAnalyzeSourceRequest (JSON)
+     * Responds: SUCCESS or ERROR
+     */
+    public void updateAnalyzeSource(UpdateAnalyzeSourceRequest req, RequestContext ctx) {
+        analyseRepository.perform(new UpdateAnalyzeSourceOperation(account(ctx).id(), req.id, req.sourceType, req.sourceConfig));
+        ctx.response(SUCCESS);
+    }
+
+    /**
      * POST /analyse/jvm/add
      * Require Auth (token)
      * Body: AddJvmRequest (JSON)
@@ -112,7 +124,7 @@ public class AnalyseController extends Controller {
         Identifier userId = account(ctx).id();
         MemoryDetails md = null;
         if (req.memoryStatus != null) {
-            md = new MemoryDetailsImpl(req.memoryStatus.pageSize,
+            md = new MemoryDetails(req.memoryStatus.pageSize,
                     req.memoryStatus.physicalTotal, req.memoryStatus.physicalFree,
                     req.memoryStatus.swapTotal, req.memoryStatus.swapFree);
         }
@@ -221,9 +233,11 @@ public class AnalyseController extends Controller {
      */
     public void newAnalyse(NewAnalyseRequest req, RequestContext ctx) {
         Identifier userId = account(ctx).id();
+        // FIXME redo to factory.
         GCAnalyseImpl analyse = new GCAnalyseImpl().name(req.name).isContinuous(req.isContinuous).accountId(userId)
                 .start(DateTime.now(DateTimeZone.UTC)).ext(req.ext).jvmHeaders(Collections.emptyMap())
-                .jvmMemoryDetails(Collections.emptyMap()).timezone(req.timezone);
+                .jvmMemoryDetails(Collections.emptyMap()).sourceType(req.sourceType).sourceConfig(req.sourceConfig)
+                .timezone(req.timezone);
         if (req.jvms == null || req.jvms.size() == 0) {
             analyse.jvmGCTypes(Collections.emptyMap()).jvmVersions(Collections.emptyMap())
                     .jvmIds(Collections.emptySet()).jvmNames(Collections.emptyMap());
@@ -233,10 +247,11 @@ public class AnalyseController extends Controller {
             Map<String, GarbageCollectorType> jvmGCTypes = new HashMap<>();
             Map<String, VMVersion> jvmVersions = new HashMap<>();
             req.jvms.forEach(jvm -> {
-                jvmIds.add(jvm.jvmId);
-                jvmNames.put(jvm.jvmId, jvm.jvmName);
-                jvmGCTypes.put(jvm.jvmId, GarbageCollectorType.get(jvm.gcType));
-                jvmVersions.put(jvm.jvmId, VMVersion.get(jvm.vmVersion));
+                String jvmId = jvm.jvmId.toString();
+                jvmIds.add(jvmId);
+                jvmNames.put(jvmId, jvm.jvmName);
+                jvmGCTypes.put(jvmId, GarbageCollectorType.get(jvm.gcType));
+                jvmVersions.put(jvmId, VMVersion.get(jvm.vmVersion));
             });
             analyse.jvmGCTypes(jvmGCTypes).jvmVersions(jvmVersions).jvmIds(jvmIds).jvmNames(jvmNames);
         }

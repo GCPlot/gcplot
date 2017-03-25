@@ -1,20 +1,18 @@
 package com.gcplot.commons;
 
 import com.gcplot.commons.exceptions.Exceptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
@@ -119,6 +117,26 @@ public abstract class Utils {
         return result;
     }
 
+    public static String esc(String s) {
+        return s.toLowerCase().replaceAll("[^a-zA-Z0-9.-]", "_");
+    }
+
+    public static String toBase64(String s) {
+        try {
+            return Base64.getEncoder().encodeToString(s.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw Exceptions.runtime(e);
+        }
+    }
+
+    public static String fromBase64(String s) {
+        try {
+            return new String(Base64.getDecoder().decode(s), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw Exceptions.runtime(e);
+        }
+    }
+
     public static <T> T[] concat(T[] a, T[] b) {
         int aLen = a.length;
         int bLen = b.length;
@@ -130,8 +148,6 @@ public abstract class Utils {
 
         return c;
     }
-
-    private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
     public static class Port {
         public final int value;

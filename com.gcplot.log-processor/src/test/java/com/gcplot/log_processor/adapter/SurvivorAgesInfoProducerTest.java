@@ -1,7 +1,7 @@
 package com.gcplot.log_processor.adapter;
 
 import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
-import com.gcplot.log_processor.survivor.AgesState;
+import com.gcplot.logs.survivor.AgesState;
 import com.tagtraum.perf.gcviewer.imp.DataReaderSun1_6_0;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
 import com.tagtraum.perf.gcviewer.model.GCResource;

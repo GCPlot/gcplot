@@ -2,10 +2,12 @@ package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
+import com.google.common.base.Splitter;
 import org.joda.time.DateTime;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 public class GCAnalyseImpl implements GCAnalyse {
@@ -137,6 +139,56 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
+    public SourceType sourceType() {
+        return sourceType;
+    }
+    public GCAnalyseImpl sourceType(SourceType sourceType) {
+        this.sourceType = sourceType;
+        return this;
+    }
+
+    @Override
+    public Properties sourceConfigProps() {
+        return sourceConfigProps;
+    }
+    @Override
+    public String sourceConfig() {
+        return sourceConfig;
+    }
+    public GCAnalyseImpl sourceConfig(String sourceConfig) {
+        this.sourceConfig = sourceConfig;
+        Properties props = new Properties();
+        if (sourceConfig != null) {
+            Splitter.on(";").split(sourceConfig).forEach(s -> {
+                String[] parts = s.split("=");
+                if (parts.length == 2) {
+                    props.put(parts[0], parts[1]);
+                }
+            });
+        }
+        this.sourceConfigProps = props;
+        return this;
+    }
+
+    @Override
+    public Map<String, SourceType> sourceByJvm() {
+        return Collections.unmodifiableMap(sourceByJvm);
+    }
+    public GCAnalyseImpl sourceByJvm(Map<String, SourceType> sourceByJvm) {
+        this.sourceByJvm = sourceByJvm;
+        return this;
+    }
+
+    @Override
+    public Map<String, String> sourceConfigByJvm() {
+        return Collections.unmodifiableMap(sourceConfigByJvm);
+    }
+    public GCAnalyseImpl sourceConfigByJvm(Map<String, String> sourceConfigByJvm) {
+        this.sourceConfigByJvm = sourceConfigByJvm;
+        return this;
+    }
+
+    @Override
     public String ext() {
         return ext;
     }
@@ -161,6 +213,10 @@ public class GCAnalyseImpl implements GCAnalyse {
         this.jvmVersions = other.jvmVersions();
         this.jvmGCTypes = other.jvmGCTypes();
         this.jvmMemoryDetails = other.jvmMemoryDetails();
+        this.sourceType = other.sourceType();
+        this.sourceConfig = other.sourceConfig();
+        this.sourceByJvm = other.sourceByJvm();
+        this.sourceConfigByJvm = other.sourceConfigByJvm();
         this.ext = other.ext();
     }
 
@@ -178,6 +234,11 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected Map<String, VMVersion> jvmVersions = Collections.emptyMap();
     protected Map<String, GarbageCollectorType> jvmGCTypes = Collections.emptyMap();
     protected Map<String, MemoryDetails> jvmMemoryDetails = Collections.emptyMap();
+    protected SourceType sourceType;
+    protected String sourceConfig;
+    protected Properties sourceConfigProps;
+    protected Map<String, SourceType> sourceByJvm = Collections.emptyMap();
+    protected Map<String, String> sourceConfigByJvm = Collections.emptyMap();
     protected String ext;
 
     @Override
@@ -185,26 +246,30 @@ public class GCAnalyseImpl implements GCAnalyse {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        GCAnalyseImpl gcAnalyse = (GCAnalyseImpl) o;
+        GCAnalyseImpl analyse = (GCAnalyseImpl) o;
 
-        if (isContinuous != gcAnalyse.isContinuous) return false;
-        if (id != null ? !id.equals(gcAnalyse.id) : gcAnalyse.id != null) return false;
-        if (accountId != null ? !accountId.equals(gcAnalyse.accountId) : gcAnalyse.accountId != null) return false;
-        if (name != null ? !name.equals(gcAnalyse.name) : gcAnalyse.name != null) return false;
-        if (timezone != null ? !timezone.equals(gcAnalyse.timezone) : gcAnalyse.timezone != null) return false;
-        if (start != null ? !start.equals(gcAnalyse.start) : gcAnalyse.start != null) return false;
-        if (firstEvent != null ? !firstEvent.equals(gcAnalyse.firstEvent) : gcAnalyse.firstEvent != null) return false;
-        if (lastEvent != null ? !lastEvent.equals(gcAnalyse.lastEvent) : gcAnalyse.lastEvent != null) return false;
-        if (jvmHeaders != null ? !jvmHeaders.equals(gcAnalyse.jvmHeaders) : gcAnalyse.jvmHeaders != null) return false;
-        if (jvmIds != null ? !jvmIds.equals(gcAnalyse.jvmIds) : gcAnalyse.jvmIds != null) return false;
-        if (jvmNames != null ? !jvmNames.equals(gcAnalyse.jvmNames) : gcAnalyse.jvmNames != null) return false;
-        if (jvmVersions != null ? !jvmVersions.equals(gcAnalyse.jvmVersions) : gcAnalyse.jvmVersions != null)
+        if (isContinuous != analyse.isContinuous) return false;
+        if (id != null ? !id.equals(analyse.id) : analyse.id != null) return false;
+        if (accountId != null ? !accountId.equals(analyse.accountId) : analyse.accountId != null) return false;
+        if (name != null ? !name.equals(analyse.name) : analyse.name != null) return false;
+        if (timezone != null ? !timezone.equals(analyse.timezone) : analyse.timezone != null) return false;
+        if (start != null ? !start.equals(analyse.start) : analyse.start != null) return false;
+        if (firstEvent != null ? !firstEvent.equals(analyse.firstEvent) : analyse.firstEvent != null) return false;
+        if (lastEvent != null ? !lastEvent.equals(analyse.lastEvent) : analyse.lastEvent != null) return false;
+        if (jvmHeaders != null ? !jvmHeaders.equals(analyse.jvmHeaders) : analyse.jvmHeaders != null) return false;
+        if (jvmIds != null ? !jvmIds.equals(analyse.jvmIds) : analyse.jvmIds != null) return false;
+        if (jvmNames != null ? !jvmNames.equals(analyse.jvmNames) : analyse.jvmNames != null) return false;
+        if (jvmVersions != null ? !jvmVersions.equals(analyse.jvmVersions) : analyse.jvmVersions != null) return false;
+        if (jvmGCTypes != null ? !jvmGCTypes.equals(analyse.jvmGCTypes) : analyse.jvmGCTypes != null) return false;
+        if (jvmMemoryDetails != null ? !jvmMemoryDetails.equals(analyse.jvmMemoryDetails) : analyse.jvmMemoryDetails != null)
             return false;
-        if (jvmGCTypes != null ? !jvmGCTypes.equals(gcAnalyse.jvmGCTypes) : gcAnalyse.jvmGCTypes != null) return false;
-        if (jvmMemoryDetails != null ? !jvmMemoryDetails.equals(gcAnalyse.jvmMemoryDetails) : gcAnalyse.jvmMemoryDetails != null)
+        if (sourceType != analyse.sourceType) return false;
+        if (sourceConfig != null ? !sourceConfig.equals(analyse.sourceConfig) : analyse.sourceConfig != null)
             return false;
-        return ext != null ? ext.equals(gcAnalyse.ext) : gcAnalyse.ext == null;
-
+        if (sourceByJvm != null ? !sourceByJvm.equals(analyse.sourceByJvm) : analyse.sourceByJvm != null) return false;
+        if (sourceConfigByJvm != null ? !sourceConfigByJvm.equals(analyse.sourceConfigByJvm) : analyse.sourceConfigByJvm != null)
+            return false;
+        return ext != null ? ext.equals(analyse.ext) : analyse.ext == null;
     }
 
     @Override
@@ -223,6 +288,10 @@ public class GCAnalyseImpl implements GCAnalyse {
         result = 31 * result + (jvmVersions != null ? jvmVersions.hashCode() : 0);
         result = 31 * result + (jvmGCTypes != null ? jvmGCTypes.hashCode() : 0);
         result = 31 * result + (jvmMemoryDetails != null ? jvmMemoryDetails.hashCode() : 0);
+        result = 31 * result + (sourceType != null ? sourceType.hashCode() : 0);
+        result = 31 * result + (sourceConfig != null ? sourceConfig.hashCode() : 0);
+        result = 31 * result + (sourceByJvm != null ? sourceByJvm.hashCode() : 0);
+        result = 31 * result + (sourceConfigByJvm != null ? sourceConfigByJvm.hashCode() : 0);
         result = 31 * result + (ext != null ? ext.hashCode() : 0);
         return result;
     }
@@ -230,7 +299,8 @@ public class GCAnalyseImpl implements GCAnalyse {
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("GCAnalyseImpl{");
-        sb.append("id='").append(id).append('\'');
+        sb.append("continuous=").append(isContinuous());
+        sb.append(", id='").append(id).append('\'');
         sb.append(", accountId=").append(accountId);
         sb.append(", name='").append(name).append('\'');
         sb.append(", timezone='").append(timezone).append('\'');
@@ -244,6 +314,10 @@ public class GCAnalyseImpl implements GCAnalyse {
         sb.append(", jvmVersions=").append(jvmVersions);
         sb.append(", jvmGCTypes=").append(jvmGCTypes);
         sb.append(", jvmMemoryDetails=").append(jvmMemoryDetails);
+        sb.append(", sourceType=").append(sourceType);
+        sb.append(", sourceConfig='").append(sourceConfig).append('\'');
+        sb.append(", sourceByJvm=").append(sourceByJvm);
+        sb.append(", sourceConfigByJvm=").append(sourceConfigByJvm);
         sb.append(", ext='").append(ext).append('\'');
         sb.append('}');
         return sb.toString();

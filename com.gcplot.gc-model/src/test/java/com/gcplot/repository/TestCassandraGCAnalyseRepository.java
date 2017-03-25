@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.OptionalLong;
+import java.util.UUID;
 
 public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
 
@@ -81,17 +82,18 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
         Assert.assertEquals(rawAnalyse.lastEvent().get("jvm1"), newLastTime);
 
         MemoryDetails newMd = md(918, 3 * 1024, 2 * 1024, 17 * 1024, 9 * 1024);
-        r.perform(new AddJvmOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm3", "JVM 3", VMVersion.HOTSPOT_1_8,
+        String jvm3 = "9a57c7a8-7aea-4737-96ba-d50b0a157902";
+        r.perform(new AddJvmOperation(rawAnalyse.accountId(), rawAnalyse.id(), UUID.fromString(jvm3), "JVM 3", VMVersion.HOTSPOT_1_8,
                 GarbageCollectorType.ORACLE_G1, "header4,header10", newMd));
 
         rawAnalyse = r.analyse(accId, rawAnalyse.id()).get();
         Assert.assertEquals(3, rawAnalyse.jvmMemoryDetails().size());
-        Assert.assertEquals(rawAnalyse.jvmMemoryDetails().get("jvm3"), newMd);
-        Assert.assertEquals(rawAnalyse.jvmHeaders().get("jvm3"), "header4,header10");
-        Assert.assertEquals(rawAnalyse.jvmVersions().get("jvm3"), VMVersion.HOTSPOT_1_8);
-        Assert.assertEquals(rawAnalyse.jvmGCTypes().get("jvm3"), GarbageCollectorType.ORACLE_G1);
-        Assert.assertTrue(rawAnalyse.jvmIds().contains("jvm3"));
-        Assert.assertEquals(rawAnalyse.jvmNames().get("jvm3"), "JVM 3");
+        Assert.assertEquals(rawAnalyse.jvmMemoryDetails().get(jvm3), newMd);
+        Assert.assertEquals(rawAnalyse.jvmHeaders().get(jvm3), "header4,header10");
+        Assert.assertEquals(rawAnalyse.jvmVersions().get(jvm3), VMVersion.HOTSPOT_1_8);
+        Assert.assertEquals(rawAnalyse.jvmGCTypes().get(jvm3), GarbageCollectorType.ORACLE_G1);
+        Assert.assertTrue(rawAnalyse.jvmIds().contains(jvm3));
+        Assert.assertEquals(rawAnalyse.jvmNames().get(jvm3), "JVM 3");
 
         r.perform(new RemoveJvmOperation(rawAnalyse.accountId(), rawAnalyse.id(), "jvm2"));
 
@@ -113,7 +115,7 @@ public class TestCassandraGCAnalyseRepository extends BaseCassandraTest {
 
     private static MemoryDetails md(long pageSize, long physicalTotal, long physicalFree,
                                    long swapTotal, long swapFree) {
-        return new MemoryDetailsImpl().pageSize(pageSize).physicalTotal(physicalTotal)
+        return new MemoryDetails().pageSize(pageSize).physicalTotal(physicalTotal)
                 .physicalFree(physicalFree).swapTotal(swapTotal).swapFree(swapFree);
     }
 

@@ -1,4 +1,4 @@
-package com.gcplot.log_processor.survivor;
+package com.gcplot.logs.survivor;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.Pair;

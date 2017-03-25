@@ -13,7 +13,7 @@ import java.io.FileOutputStream;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/18/16
  */
-public class Server {
+public class CassandraServer {
     protected static File storagedir;
     protected static File tempDir;
     protected static File commitLog;
@@ -33,7 +33,7 @@ public class Server {
         ports = Utils.getFreePorts(4);
         synchronized (CassandraConnector.class) {
             System.setProperty("cassandra.storagedir", storagedir.getAbsolutePath());
-            String str = IOUtils.toString(Server.class.getClassLoader().getResourceAsStream("cassandra.yaml"), "UTF-8");
+            String str = IOUtils.toString(CassandraServer.class.getClassLoader().getResourceAsStream("cassandra.yaml"), "UTF-8");
             str = str.replace("{COMMIT_LOG}", commitLog.getAbsolutePath())
                     .replace("{SAVED_CACHES}", savedCaches.getAbsolutePath())
                     .replace("{DATA_FILES}", dataFiles.getAbsolutePath())

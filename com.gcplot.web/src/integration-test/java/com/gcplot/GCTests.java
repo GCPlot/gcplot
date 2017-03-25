@@ -6,6 +6,7 @@ import com.gcplot.controllers.gc.EventsController;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;
+import com.gcplot.model.gc.SourceType;
 import com.google.common.collect.Sets;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
@@ -59,9 +60,11 @@ public class GCTests extends IntegrationTest {
         get("/analyse/get?id=123", token, ErrorMessages.INTERNAL_ERROR);
         get("/analyse/get?id=" + UUID.randomUUID().toString(), token, ErrorMessages.RESOURCE_NOT_FOUND_RESPONSE);
 
-        post("/analyse/jvm/add", new AddJvmRequest("jvm1", analyseId, "JVM 1", VMVersion.HOTSPOT_1_9.type(),
+        String jvm1 = "3bb13695-7cbb-44b4-bc8a-5d1f2f687cc0";
+        String jvm2 = "7acada7b-e109-4d11-ac01-b3521d9d58c3";
+        post("/analyse/jvm/add", new AddJvmRequest(UUID.fromString(jvm1), analyseId, "JVM 1", VMVersion.HOTSPOT_1_9.type(),
                 GarbageCollectorType.ORACLE_SERIAL.type(), "h1,h2", null), token, success());
-        post("/analyse/jvm/add", new AddJvmRequest("jvm2", analyseId, "JVM 2", VMVersion.HOTSPOT_1_3_1.type(),
+        post("/analyse/jvm/add", new AddJvmRequest(UUID.fromString(jvm2), analyseId, "JVM 2", VMVersion.HOTSPOT_1_3_1.type(),
                 GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), null, new MemoryStatus(1,2,3,4,5)),
                 token, success());
 
@@ -69,50 +72,50 @@ public class GCTests extends IntegrationTest {
         Assert.assertEquals(analyseId, ar.id);
         Assert.assertEquals("anan", ar.name);
         Assert.assertEquals("Europe/Moscow", ar.timezone);
-        Assert.assertEquals(Sets.newHashSet("jvm1", "jvm2"), ar.jvmIds);
-        Assert.assertEquals("JVM 1", ar.jvmNames.get("jvm1"));
-        Assert.assertEquals("JVM 2", ar.jvmNames.get("jvm2"));
-        Assert.assertEquals(VMVersion.HOTSPOT_1_9.type(), (int) ar.jvmVersions.get("jvm1"));
-        Assert.assertEquals(VMVersion.HOTSPOT_1_3_1.type(), (int) ar.jvmVersions.get("jvm2"));
-        Assert.assertEquals(GarbageCollectorType.ORACLE_SERIAL.type(), (int) ar.jvmGCTypes.get("jvm1"));
-        Assert.assertEquals(GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), (int) ar.jvmGCTypes.get("jvm2"));
-        Assert.assertEquals("h1,h2", ar.jvmHeaders.get("jvm1"));
-        Assert.assertNull(ar.jvmHeaders.get("jvm2"));
-        Assert.assertEquals(new MemoryStatus(1,2,3,4,5), ar.memory.get("jvm2"));
-        Assert.assertNull(ar.memory.get("jvm1"));
+        Assert.assertEquals(Sets.newHashSet(jvm1, jvm2), ar.jvmIds);
+        Assert.assertEquals("JVM 1", ar.jvmNames.get(jvm1));
+        Assert.assertEquals("JVM 2", ar.jvmNames.get(jvm2));
+        Assert.assertEquals(VMVersion.HOTSPOT_1_9.type(), (int) ar.jvmVersions.get(jvm1));
+        Assert.assertEquals(VMVersion.HOTSPOT_1_3_1.type(), (int) ar.jvmVersions.get(jvm2));
+        Assert.assertEquals(GarbageCollectorType.ORACLE_SERIAL.type(), (int) ar.jvmGCTypes.get(jvm1));
+        Assert.assertEquals(GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), (int) ar.jvmGCTypes.get(jvm2));
+        Assert.assertEquals("h1,h2", ar.jvmHeaders.get(jvm1));
+        Assert.assertNull(ar.jvmHeaders.get(jvm2));
+        Assert.assertEquals(new MemoryStatus(1,2,3,4,5), ar.memory.get(jvm2));
+        Assert.assertNull(ar.memory.get(jvm1));
 
-        post("/analyse/jvm/update/info", new UpdateJvmInfoRequest(analyseId, "jvm2", null,
+        post("/analyse/jvm/update/info", new UpdateJvmInfoRequest(analyseId, jvm2, null,
                 new MemoryStatus(11,12,13,14,15)), token, success());
         ar = getAnalyse(token, analyseId);
-        Assert.assertNull(ar.jvmHeaders.get("jvm2"));
-        Assert.assertEquals(new MemoryStatus(11,12,13,14,15), ar.memory.get("jvm2"));
-        Assert.assertNull(ar.memory.get("jvm1"));
+        Assert.assertNull(ar.jvmHeaders.get(jvm2));
+        Assert.assertEquals(new MemoryStatus(11,12,13,14,15), ar.memory.get(jvm2));
+        Assert.assertNull(ar.memory.get(jvm1));
 
-        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", "JVM N", null,
+        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, jvm1, "JVM N", null,
                 GarbageCollectorType.ORACLE_G1.type()), token, success());
         ar = getAnalyse(token, analyseId);
-        Assert.assertEquals(GarbageCollectorType.ORACLE_G1.type(), (int) ar.jvmGCTypes.get("jvm1"));
-        Assert.assertEquals(GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), (int) ar.jvmGCTypes.get("jvm2"));
-        Assert.assertEquals("JVM N", ar.jvmNames.get("jvm1"));
-        Assert.assertEquals("JVM 2", ar.jvmNames.get("jvm2"));
+        Assert.assertEquals(GarbageCollectorType.ORACLE_G1.type(), (int) ar.jvmGCTypes.get(jvm1));
+        Assert.assertEquals(GarbageCollectorType.ORACLE_PAR_OLD_GC.type(), (int) ar.jvmGCTypes.get(jvm2));
+        Assert.assertEquals("JVM N", ar.jvmNames.get(jvm1));
+        Assert.assertEquals("JVM 2", ar.jvmNames.get(jvm2));
 
-        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", null, VMVersion.HOTSPOT_1_2_2.type(),
+        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, jvm1, null, VMVersion.HOTSPOT_1_2_2.type(),
                 null), token, success());
         ar = getAnalyse(token, analyseId);
-        Assert.assertEquals(VMVersion.HOTSPOT_1_2_2.type(), (int) ar.jvmVersions.get("jvm1"));
-        Assert.assertEquals(VMVersion.HOTSPOT_1_3_1.type(), (int) ar.jvmVersions.get("jvm2"));
-        Assert.assertEquals("JVM N", ar.jvmNames.get("jvm1"));
-        Assert.assertEquals("JVM 2", ar.jvmNames.get("jvm2"));
+        Assert.assertEquals(VMVersion.HOTSPOT_1_2_2.type(), (int) ar.jvmVersions.get(jvm1));
+        Assert.assertEquals(VMVersion.HOTSPOT_1_3_1.type(), (int) ar.jvmVersions.get(jvm2));
+        Assert.assertEquals("JVM N", ar.jvmNames.get(jvm1));
+        Assert.assertEquals("JVM 2", ar.jvmNames.get(jvm2));
 
-        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, "jvm1", null, null, null), token, ErrorMessages.INTERNAL_ERROR);
+        post("/analyse/jvm/update/version", new UpdateJvmVersionRequest(analyseId, jvm1, null, null, null), token, ErrorMessages.INTERNAL_ERROR);
 
-        Assert.assertEquals(1, (int) r(delete("/analyse/jvm/delete?analyse_id=" + analyseId + "&jvm_id=jvm1", token)).getInteger("success"));
+        Assert.assertEquals(1, (int) r(delete("/analyse/jvm/delete?analyse_id=" + analyseId + "&jvm_id=" + jvm1, token)).getInteger("success"));
         ar = getAnalyse(token, analyseId);
         Assert.assertEquals(analyseId, ar.id);
-        Assert.assertEquals(Sets.newHashSet("jvm2"), ar.jvmIds);
-        Assert.assertEquals(new MemoryStatus(11,12,13,14,15), ar.memory.get("jvm2"));
-        Assert.assertNull(ar.jvmNames.get("jvm1"));
-        Assert.assertEquals("JVM 2", ar.jvmNames.get("jvm2"));
+        Assert.assertEquals(Sets.newHashSet(jvm2), ar.jvmIds);
+        Assert.assertEquals(new MemoryStatus(11,12,13,14,15), ar.memory.get(jvm2));
+        Assert.assertNull(ar.jvmNames.get(jvm1));
+        Assert.assertEquals("JVM 2", ar.jvmNames.get(jvm2));
 
         delete("/analyse/delete?id=" + UUID.randomUUID().toString(), token);
         get("/analyse/all", token, j -> r(j).getJsonArray("analyses").size() == 1);
@@ -124,8 +127,8 @@ public class GCTests extends IntegrationTest {
     public void simpleLogsUploadTest() throws Exception {
         String token = login();
         String analyseId = createAnalyse(token);
-        String jvmId = "jvm1";
-        post("/analyse/jvm/add", new AddJvmRequest(jvmId, analyseId, "JVM 1", VMVersion.HOTSPOT_1_8.type(),
+        String jvmId = "3bb13695-7cbb-44b4-bc8a-5d1f2f687cc0";
+        post("/analyse/jvm/add", new AddJvmRequest(UUID.fromString(jvmId), analyseId, "JVM 1", VMVersion.HOTSPOT_1_8.type(),
                 GarbageCollectorType.ORACLE_CMS.type(), null, null), token, success());
         JsonObject resp = processGCLogFile(token, analyseId, jvmId, "hs18_log_cms.log");
         Assert.assertTrue(success().test(resp));
@@ -249,7 +252,7 @@ public class GCTests extends IntegrationTest {
     }
 
     private String createAnalyse(String token) throws Exception {
-        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "Africa/Harare", Collections.emptyList(), "");
+        NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "Africa/Harare", Collections.emptyList(), SourceType.NONE, "", "");
         return r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");
     }
 

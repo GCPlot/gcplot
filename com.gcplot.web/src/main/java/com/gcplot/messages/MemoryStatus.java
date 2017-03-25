@@ -2,7 +2,6 @@ package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.gc.MemoryDetails;
-import com.gcplot.model.gc.MemoryDetailsImpl;
 import com.google.common.base.MoreObjects;
 
 /**
@@ -42,7 +41,7 @@ public class MemoryStatus {
     }
 
     public MemoryDetails toDetails() {
-        return new MemoryDetailsImpl(pageSize, physicalTotal, physicalFree, swapTotal, swapFree);
+        return new MemoryDetails(pageSize, physicalTotal, physicalFree, swapTotal, swapFree);
     }
 
     @Override
