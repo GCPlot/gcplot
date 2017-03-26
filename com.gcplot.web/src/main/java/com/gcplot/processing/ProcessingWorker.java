@@ -72,6 +72,7 @@ public class ProcessingWorker {
                     if (inProgress.contains(logHandle.hash())) {
                         continue;
                     }
+                    LOG.debug("Processing handle: {}", logHandle);
                     Identifier accountId = Identifier.fromStr(logHandle.getAccountId());
                     GCAnalyse analyze = analyseRepository.analyse(accountId, logHandle.getAnalyzeId()).orElse(null);
                     if (analyze != null) {
