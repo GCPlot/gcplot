@@ -24,6 +24,10 @@ public class S3Connector {
     private AmazonS3 client;
 
     public void init() {
+        init(false);
+    }
+
+    public void init(boolean connect) {
         AWSCredentials credentials;
         if (!Strings.isNullOrEmpty(accessKey) || !Strings.isNullOrEmpty(secretKey)) {
             credentials = new BasicAWSCredentials(accessKey, secretKey);
@@ -42,8 +46,10 @@ public class S3Connector {
             builder = builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, null));
         }
         this.client = builder.build();
-        // testing connection
-        this.client.listObjects(bucket);
+        if (connect) {
+            // testing connection
+            this.client.listObjects(bucket);
+        }
     }
 
     public AmazonS3 getClient() {

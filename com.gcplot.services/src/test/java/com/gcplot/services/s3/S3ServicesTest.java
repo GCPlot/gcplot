@@ -105,7 +105,7 @@ public class S3ServicesTest {
         S3Connector connector = new S3Connector();
         connector.setEndpoint(endpoint);
         connector.setBucket("gcplot");
-        connector.init();
+        connector.init(false);
 
         connector.getClient().createBucket("gcplot");
         return connector;

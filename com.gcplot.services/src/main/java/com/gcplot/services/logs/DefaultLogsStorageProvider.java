@@ -40,7 +40,7 @@ public class DefaultLogsStorageProvider implements LogsStorageProvider {
                 s3Connector.setAccessKey(config.getProperty(S3_ACCESS_KEY));
                 s3Connector.setSecretKey(config.getProperty(S3_SECRET_KEY));
                 s3Connector.setRegion(config.getProperty(S3_REGION_ID));
-                s3Connector.init();
+                s3Connector.init(true);
 
                 S3LogsStorage storage = new S3LogsStorage();
                 storage.setConnector(s3Connector);

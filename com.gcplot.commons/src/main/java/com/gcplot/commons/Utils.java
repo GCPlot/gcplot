@@ -125,7 +125,7 @@ public abstract class Utils {
 
     public static String toBase64(String s) {
         try {
-            return Base64.getEncoder().encodeToString(s.getBytes("UTF-8"));
+            return Base64.getEncoder().withoutPadding().encodeToString(s.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
             throw Exceptions.runtime(e);
         }
