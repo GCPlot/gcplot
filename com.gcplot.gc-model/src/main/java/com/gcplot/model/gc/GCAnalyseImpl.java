@@ -1,6 +1,7 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
+import com.gcplot.commons.Utils;
 import com.gcplot.model.VMVersion;
 import com.google.common.base.Splitter;
 import org.joda.time.DateTime;
@@ -157,16 +158,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
     public GCAnalyseImpl sourceConfig(String sourceConfig) {
         this.sourceConfig = sourceConfig;
-        Properties props = new Properties();
-        if (sourceConfig != null) {
-            Splitter.on(";").split(sourceConfig).forEach(s -> {
-                String[] parts = s.split("=");
-                if (parts.length == 2) {
-                    props.put(parts[0], parts[1]);
-                }
-            });
-        }
-        this.sourceConfigProps = props;
+        this.sourceConfigProps = Utils.fromString(sourceConfig);
         return this;
     }
 

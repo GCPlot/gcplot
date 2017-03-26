@@ -1,9 +1,13 @@
 package com.gcplot.controllers.gc;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.gcplot.Identifier;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
+import com.gcplot.commons.Utils;
 import com.gcplot.controllers.Controller;
+import com.gcplot.fs.LogsStorage;
+import com.gcplot.fs.LogsStorageProvider;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
@@ -110,7 +114,16 @@ public class AnalyseController extends Controller {
      * Responds: SUCCESS or ERROR
      */
     public void updateAnalyzeSource(UpdateAnalyzeSourceRequest req, RequestContext ctx) {
-        analyseRepository.perform(new UpdateAnalyzeSourceOperation(account(ctx).id(), req.id, req.sourceType, req.sourceConfig));
+        try {
+            logsStorageProvider.get(req.sourceType, Utils.fromString(req.sourceConfig));
+        } catch (AmazonS3Exception t) {
+            ctx.finish(ErrorMessages.buildJson(ErrorMessages.GC_ANALYZE_SOURCE_ERROR, t.getMessage()));
+            return;
+        } catch (Throwable t) {
+            LOG.info(t.getMessage(), t);
+        } finally {
+            analyseRepository.perform(new UpdateAnalyzeSourceOperation(account(ctx).id(), req.id, req.sourceType, req.sourceConfig));
+        }
         ctx.response(SUCCESS);
     }
 
@@ -262,4 +275,6 @@ public class AnalyseController extends Controller {
 
     @Autowired
     protected GCAnalyseRepository analyseRepository;
+    @Autowired
+    protected LogsStorageProvider logsStorageProvider;
 }

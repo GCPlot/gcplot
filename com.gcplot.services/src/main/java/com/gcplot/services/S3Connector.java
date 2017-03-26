@@ -41,6 +41,8 @@ public class S3Connector {
             builder = builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, null));
         }
         this.client = builder.build();
+        // testing connection
+        this.client.getUrl(bucket, "/");
     }
 
     public AmazonS3 getClient() {

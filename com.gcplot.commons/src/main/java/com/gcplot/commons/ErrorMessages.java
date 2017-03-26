@@ -23,9 +23,10 @@ public class ErrorMessages {
 
     public static final long RESOURCE_NOT_FOUND_RESPONSE = 0x197;
 
-    public static final long UNKNOWN_GC_ANALYSE = 0x201;
+    public static final long UNKNOWN_GC_ANALYZE = 0x201;
     public static final long UNKNOWN_JVM_ID = 0x202;
     public static final long LOG_FILE_UNDETECTABLE = 0x203;
+    public static final long GC_ANALYZE_SOURCE_ERROR = 0x204;
 
     public static final long INVALID_REQUEST_PARAM = 0x301;
     public static final long SERVING_IS_DISABLED = 0x999;

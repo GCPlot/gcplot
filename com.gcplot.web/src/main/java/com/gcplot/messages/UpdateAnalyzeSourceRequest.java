@@ -1,13 +1,7 @@
 package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gcplot.model.gc.SourceType;
-
-import java.io.IOException;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

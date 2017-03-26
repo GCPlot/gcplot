@@ -38,7 +38,6 @@ import java.util.function.Consumer;
 import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
 import static com.gcplot.commons.CollectionUtils.cloneAndPut;
 import static com.gcplot.commons.Utils.esc;
-import static com.gcplot.commons.Utils.toBase64;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -209,7 +208,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
     protected LogProcessResult checkAnalyzeCorrect(String analyzeId, String jvmId, Identifier userId, GCAnalyse analyze) {
         if (analyze == null) {
-            return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYSE, analyzeId));
+            return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYZE, analyzeId));
         }
         if (!jvmBelongsAnalyze(jvmId, analyze)) {
             return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_JVM_ID, jvmId));

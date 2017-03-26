@@ -1,6 +1,7 @@
 package com.gcplot.commons;
 
 import com.gcplot.commons.exceptions.Exceptions;
+import com.google.common.base.Splitter;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
@@ -147,6 +149,19 @@ public abstract class Utils {
         System.arraycopy(b, 0, c, aLen, bLen);
 
         return c;
+    }
+
+    public static Properties fromString(String sourceConfig) {
+        Properties props = new Properties();
+        if (sourceConfig != null) {
+            Splitter.on(";").split(sourceConfig).forEach(s -> {
+                String[] parts = s.split("=");
+                if (parts.length == 2) {
+                    props.put(parts[0], parts[1]);
+                }
+            });
+        }
+        return props;
     }
 
     public static class Port {

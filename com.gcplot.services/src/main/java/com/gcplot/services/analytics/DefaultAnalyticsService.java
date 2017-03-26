@@ -52,7 +52,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
                                EnumSet<GCEventFeature> features, Consumer<IdentifiedEvent> listener) {
         Optional<GCAnalyse> oa = analyseRepository.analyse(accountId, analyseId);
         if (!oa.isPresent()) {
-            return new EventsResult(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYSE, "Unknown Analyse " + analyseId));
+            return new EventsResult(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYZE, "Unknown Analyse " + analyseId));
         }
         GCAnalyse analyse = oa.get();
         Range range = Range.of(interval);
