@@ -155,9 +155,11 @@ public abstract class Utils {
         Properties props = new Properties();
         if (sourceConfig != null) {
             Splitter.on(";").split(sourceConfig).forEach(s -> {
-                String[] parts = s.split("=");
-                if (parts.length == 2) {
-                    props.put(parts[0], parts[1]);
+                int index = s.indexOf('=');
+                if (index != -1) {
+                    String key = s.substring(0, index);
+                    String value = s.substring(index + 1);
+                    props.put(key, value);
                 }
             });
         }
