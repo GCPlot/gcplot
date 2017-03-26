@@ -8,6 +8,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.google.common.base.Strings;
 
 /**
@@ -42,7 +43,7 @@ public class S3Connector {
         }
         this.client = builder.build();
         // testing connection
-        this.client.getUrl(bucket, "/");
+        this.client.listObjects(bucket);
     }
 
     public AmazonS3 getClient() {
