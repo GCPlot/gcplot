@@ -94,6 +94,9 @@ public class S3LogsStorage implements LogsStorage {
         if (!prefix.endsWith("/")) {
             prefix += '/';
         }
+        while (prefix.startsWith("/")) {
+            prefix = prefix.substring(1);
+        }
         this.prefix = prefix;
     }
 }
