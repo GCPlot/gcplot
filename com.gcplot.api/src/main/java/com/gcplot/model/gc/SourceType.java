@@ -36,9 +36,4 @@ public enum SourceType {
     SourceType(String urn) {
         this.urn = urn;
     }
-
-    @Override
-    public String toString() {
-        return getUrn();
-    }
 }
