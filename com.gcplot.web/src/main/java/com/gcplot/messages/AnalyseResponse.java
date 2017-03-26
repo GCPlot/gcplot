@@ -91,7 +91,7 @@ public class AnalyseResponse {
         this.timezone = analyse.timezone();
         this.continuous = analyse.isContinuous();
         this.startUTC = analyse.start().toDateTime(DateTimeZone.UTC).getMillis();
-        this.sourceType = analyse.sourceType().getUrn();
+        this.sourceType = analyse.sourceType().toString();
         this.sourceConfig = Strings.nullToEmpty(analyse.sourceConfig());
         this.firstEventUTC = analyse.firstEvent() != null ? transformValue(analyse.firstEvent(),
                 v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap();
