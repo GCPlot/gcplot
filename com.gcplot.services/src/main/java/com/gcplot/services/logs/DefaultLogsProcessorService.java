@@ -246,10 +246,12 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                 if (e != null) {
                     enricher.accept(e);
                     if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                            e.timestamp() && (!forbidOtherGen || !e.isOther())) {
+                            e.timestamp() && !isOtherGeneration(forbidOtherGen, e)) {
+                        // we will want to omit cross-rows inserts in the same batch - they are slow
+                        boolean isInOtherMonthBucket = lastMonth[0] != e.occurred().getMonthOfYear();
                         if (events.size() > 0 &&
                                 (events.size() % batchSize == 0
-                                        || (lastMonth[0] != e.occurred().getMonthOfYear())
+                                        || isInOtherMonthBucket
                                         || (e.occurred().equals(lastOccurred[0])))) {
                             persist(events);
                         }
@@ -265,8 +267,12 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return pr;
     }
 
+    private boolean isOtherGeneration(boolean forbidOtherGen, GCEvent e) {
+        return forbidOtherGen && e.isOther();
+    }
+
     private void persist(List<GCEvent> events) {
-        eventRepository.addAsync(events);
+        eventRepository.add(events);
         events.clear();
     }
 
