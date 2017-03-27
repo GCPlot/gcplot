@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -33,6 +34,7 @@ public class GCViewerLogsParser implements LogsParser {
     protected int batchSize = -1;
     protected int threadPoolSize = Runtime.getRuntime().availableProcessors() * 8;
     protected ExecutorService executor;
+    protected volatile DateTimeZone tz;
 
     public void init() {
         executor = Executors.newFixedThreadPool(threadPoolSize);
@@ -59,9 +61,9 @@ public class GCViewerLogsParser implements LogsParser {
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
             if (l.size() > 0) {
                 if (firstEvent[0] == null) {
-                    List<GCEvent> map = map(now, ctx, l.get(0));
-                    if (map.size() > 0) {
-                        firstEvent[0] = map.get(0);
+                    GCEvent event = map(now, ctx, l.get(0));
+                    if (event != null) {
+                        firstEvent[0] = event;
                         if (!firstEventListener.test(firstEvent[0])) {
                             firstEvent[0] = null;
                         }
@@ -69,7 +71,12 @@ public class GCViewerLogsParser implements LogsParser {
                 }
                 lastFuture[0] = executor.submit(() -> {
                     try {
-                        l.forEach(e -> map(now, ctx, e).forEach(eventsConsumer));
+                        l.forEach(e -> {
+                            GCEvent event = map(now, ctx, e);
+                            if (event != null) {
+                                eventsConsumer.accept(event);
+                            }
+                        });
                         eventsConsumer.accept(null);
                     } catch (Throwable t) {
                         ctx.logger().error(t.getMessage(), t);
@@ -133,8 +140,7 @@ public class GCViewerLogsParser implements LogsParser {
         }
     }
 
-    public List<GCEvent> map(DateTime now, ParserContext ctx, AbstractGCEvent<?> event) {
-        ArrayList<GCEvent> events = new ArrayList<>(1);
+    public GCEvent map(DateTime now, ParserContext ctx, AbstractGCEvent<?> event) {
         String description = event.getTypeAsString();
         VMEventType vmEventType = VMEventType.GARBAGE_COLLECTION;
         if (event.isVmEvent()) {
@@ -149,9 +155,11 @@ public class GCViewerLogsParser implements LogsParser {
         if (event.getDatestamp() == null) {
             datestamp = now.plusMillis((int)(event.getTimestamp() * 1000));
         } else {
-            TimeZone timeZone = TimeZone.getTimeZone(event.getDatestamp().getZone().getId());
-            DateTimeZone z = DateTimeZone.forTimeZone(timeZone);
-            datestamp = new DateTime(new DateTime(event.getDatestamp().toInstant().toEpochMilli(), z), DateTimeZone.UTC);
+            if (tz == null) {
+                TimeZone timeZone = TimeZone.getTimeZone(event.getDatestamp().getZone().getId());
+                tz = DateTimeZone.forTimeZone(timeZone);
+            }
+            datestamp = new DateTime(new DateTime(event.getDatestamp().toInstant().toEpochMilli(), tz), DateTimeZone.UTC);
         }
         double pause = event.getPause();
         if (event.isConcurrent()) {
@@ -160,7 +168,7 @@ public class GCViewerLogsParser implements LogsParser {
                 generations.add(Generation.TENURED);
                 pause = concurrentGCEvent.getDuration();
             } else {
-                return Collections.emptyList();
+                return null;
             }
         } else if (event.isVmEvent()) {
             generations = EnumSet.of(Generation.OTHER);
@@ -221,10 +229,8 @@ public class GCViewerLogsParser implements LogsParser {
         Phase phase = detectPhase(ctx, event);
         Cause cause = detectCause(event);
         long properties = detectProperties(event);
-        events.add(eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
-                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, cause, properties, concurrency, capacityByGeneration, ""));
-
-        return events;
+        return eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
+                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, cause, properties, concurrency, capacityByGeneration, "");
     }
 
     private long detectProperties(AbstractGCEvent<?> event) {
