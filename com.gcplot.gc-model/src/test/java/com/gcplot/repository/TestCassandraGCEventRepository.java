@@ -45,7 +45,7 @@ public class TestCassandraGCEventRepository extends BaseCassandraTest {
         Assert.assertNull(ge.bucketId());
         Assert.assertNull(ge.description());
         Assert.assertEquals(ge.occurred(), event.occurred().toDateTime(DateTimeZone.UTC));
-        Assert.assertEquals(ge.vmEventType(), event.vmEventType());
+        Assert.assertNull(ge.vmEventType());
         Assert.assertEquals(ge.capacity(), event.capacity());
         Assert.assertEquals(ge.timestamp(), event.timestamp(), 0.0001);
         Assert.assertEquals(ge.totalCapacity(), new Capacity(event.totalCapacity()));
