@@ -245,8 +245,8 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                 List<GCEvent> events = es.get();
                 if (e != null) {
                     enricher.accept(e);
-                    if (firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                            e.timestamp() && !isOtherGeneration(forbidOtherGen, e)) {
+                    if ((firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
+                            e.timestamp()) && !isOtherGeneration(forbidOtherGen, e)) {
                         // we will want to omit cross-rows inserts in the same batch - they are slow
                         boolean isInOtherMonthBucket = lastMonth[0] != e.occurred().getMonthOfYear();
                         if (events.size() > 0 &&
