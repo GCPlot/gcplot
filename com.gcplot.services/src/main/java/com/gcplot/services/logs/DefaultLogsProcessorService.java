@@ -133,7 +133,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
         AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
         ParseResult pr = parseAndPersist(source, jvmId, analyze, log, e -> {
-            if (!e.isOther() && (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred()))) {
+            if (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred())) {
                 lastEventTime.set(e.occurred());
             }
             e.analyseId(analyze.id()).jvmId(jvmId);
@@ -244,9 +244,9 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
             }, e -> {
                 List<GCEvent> events = es.get();
                 if (e != null) {
-                    enricher.accept(e);
                     if ((firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
                             e.timestamp()) && !isOtherGeneration(forbidOtherGen, e)) {
+                        enricher.accept(e);
                         // we will want to omit cross-rows inserts in the same batch - they are slow
                         boolean isInOtherMonthBucket = lastMonth[0] != e.occurred().getMonthOfYear();
                         if (events.size() > 0 &&
