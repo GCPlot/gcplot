@@ -1,7 +1,10 @@
 package com.gcplot.controllers;
 
+import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.messages.ConnectorSettingsMessage;
 import com.gcplot.web.RequestContext;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 
@@ -10,6 +13,8 @@ import javax.annotation.PostConstruct;
  *         3/28/17
  */
 public class ConnectorController extends Controller {
+    @Autowired
+    private ConfigurationManager config;
     private String connectorS3Base;
     private String connectorS3Bucket;
     private String connectorS3AccessKey;
@@ -19,6 +24,15 @@ public class ConnectorController extends Controller {
     public void init() {
         dispatcher.requireAuth()
                 .get("/connector/internal/settings", this::getInternalConnectorSettings);
+        dispatcher.noAuth()
+                .get("/connector/version/latest", this::getLatestConnectorVersion);
+    }
+
+    /**
+     * GET /connector/version/latest
+     */
+    private void getLatestConnectorVersion(RequestContext ctx) {
+        ctx.write(config.readString(ConfigProperty.CONNECTOR_LATEST_VERSION));
     }
 
     /**
