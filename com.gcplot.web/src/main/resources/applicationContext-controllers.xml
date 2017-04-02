@@ -19,6 +19,7 @@
         <property name="connectorS3Bucket" value="${s3.connector.bucket:}"/>
         <property name="connectorS3AccessKey" value="${s3.connector.access.key:}"/>
         <property name="connectorS3SecretKey" value="${s3.connector.secret.key:}"/>
+        <property name="connectorS3Region" value="${s3.connector.region.id:}"/>
     </bean>
 
 </beans>
