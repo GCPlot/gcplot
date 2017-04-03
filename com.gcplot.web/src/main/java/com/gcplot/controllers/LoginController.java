@@ -36,7 +36,7 @@ public class LoginController extends Controller {
         dispatcher.requireAuth().allowNotConfirmed().filter(c -> c.hasParam("salt"),
                 "Salt should be provided!").get("/user/confirm", this::confirm);
         dispatcher.requireAuth()
-                .get("/admin/account/id", this::getCurrentAccountId);
+                .get("/user/account/id", this::getCurrentAccountId);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
         dispatcher.requireAuth().allowNotConfirmed()
