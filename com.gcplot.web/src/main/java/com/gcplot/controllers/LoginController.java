@@ -35,6 +35,8 @@ public class LoginController extends Controller {
         dispatcher.requireAuth().allowNotConfirmed().get("/user/info", this::userInfo);
         dispatcher.requireAuth().allowNotConfirmed().filter(c -> c.hasParam("salt"),
                 "Salt should be provided!").get("/user/confirm", this::confirm);
+        dispatcher.requireAuth()
+                .get("/admin/account/id", this::getCurrentAccountId);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
         dispatcher.requireAuth().allowNotConfirmed()
@@ -64,6 +66,14 @@ public class LoginController extends Controller {
         } else {
             request.write(ErrorMessages.buildJson(ErrorMessages.WRONG_CREDENTIALS));
         }
+    }
+
+    /**
+     * GET /admin/account/id
+     * Require Auth (token)
+     */
+    public void getCurrentAccountId(RequestContext ctx) {
+        ctx.response(ctx.loginInfo().get().getAccount().id().toString());
     }
 
     /**

@@ -39,8 +39,6 @@ public class AdminController extends Controller {
                 .filter(c -> c.hasParam("account_id"), "Param 'account_id' is missing.")
                 .get("/admin/account/info", this::getAccountInfo);
         dispatcher.requireAuth()
-                .get("/admin/account/id", this::getCurrentAccountId);
-        dispatcher.requireAuth()
                 .filter(this::hasNonRestrictiveRole, MESSAGE)
                 .post("/admin/configs/put", PutConfigMessage.class, this::putConfig);
     }
@@ -64,14 +62,6 @@ public class AdminController extends Controller {
                 ctx.response(SUCCESS);
             }
         }
-    }
-
-    /**
-     * GET /admin/account/id
-     * Require Auth (token)
-     */
-    public void getCurrentAccountId(RequestContext ctx) {
-        ctx.response(ctx.loginInfo().get().getAccount().id().toString());
     }
 
     /**
