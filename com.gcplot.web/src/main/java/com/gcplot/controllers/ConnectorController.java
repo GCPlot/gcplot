@@ -33,7 +33,7 @@ public class ConnectorController extends Controller {
      * GET /connector/version/latest
      */
     private void getLatestConnectorVersion(RequestContext ctx) {
-        ctx.write(config.readString(ConfigProperty.CONNECTOR_LATEST_VERSION));
+        ctx.response(config.readString(ConfigProperty.CONNECTOR_LATEST_VERSION));
     }
 
     /**
