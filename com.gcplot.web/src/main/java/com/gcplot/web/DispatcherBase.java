@@ -3,9 +3,11 @@ package com.gcplot.web;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.configuration.ConfigurationManager;
+import com.gcplot.model.account.Account;
 import com.gcplot.repository.AccountRepository;
 import com.google.common.base.Strings;
-import io.vertx.ext.web.RoutingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -17,6 +19,7 @@ import java.util.function.Supplier;
  *         12/4/16
  */
 public class DispatcherBase {
+    private static final Logger LOG = LoggerFactory.getLogger(DispatcherBase.class);
     protected volatile boolean isOpen = false;
     protected boolean blocking = false;
     protected boolean requireAuth = true;
@@ -33,9 +36,9 @@ public class DispatcherBase {
     protected String host;
     protected int port;
 
-    protected void preHandle(BiConsumer<RoutingContext, RequestContext> handler, boolean auth,
+    protected <T> void preHandle(BiConsumer<T, RequestContext> handler, boolean auth,
                              boolean allowNotConfirmed, Predicate<RequestContext> filter, Supplier<String> fm,
-                             RoutingContext rc, RequestContext c) {
+                             T rc, RequestContext c) {
         if (preHandler.test(c)) {
             if (c.loginInfo().isPresent() && c.loginInfo().get().getAccount().isBlocked()) {
                 c.finish(ErrorMessages.buildJson(ErrorMessages.USER_IS_BLOCKED));
@@ -48,12 +51,22 @@ public class DispatcherBase {
                         c.finish(ErrorMessages.buildJson(ErrorMessages.ACCOUNT_NOT_CONFIRMED));
                     } else if (filter == null || filter.test(c)) {
                         handler.accept(rc, c);
-                    } else if (!rc.response().ended()) {
+                    } else if (!c.isFinished()) {
                         c.finish(ErrorMessages.buildJson(ErrorMessages.REQUEST_FILTERED,
                                 Strings.nullToEmpty(fm != null ? fm.get() : "")));
                     }
                 }
             }
+        }
+        try {
+            if (c.loginInfo().isPresent()) {
+                Account account = c.loginInfo().get().getAccount();
+                if (!account.ips().contains(c.getIp())) {
+                    accountRepository.attachNewIp(account, c.getIp());
+                }
+            }
+        } catch (Throwable t) {
+            LOG.error("IP Attach Failed: " + t.getMessage(), t);
         }
     }
 

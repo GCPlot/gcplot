@@ -180,6 +180,14 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
+    public void attachNewIp(Account account, String ip) {
+        if (account.ips().size() == 0) {
+            execute(String.format(UPDATE_IP_FIELD_COMMAND, account.id().toString()));
+        }
+        execute(String.format(ATTACH_IP_COMMAND, account.id().toString(), ip));
+    }
+
+    @Override
     public void attachRole(Account account, Role role) {
         ((AccountImpl)account).addRole((RoleImpl) role);
         updateRoles(((AccountImpl)account).rolesImpl(), account);
@@ -235,6 +243,8 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
             " set roles=[%s] LOCK RECORD";
     private static final String UPDATE_INFO_COMMAND = "update %s" +
             " set username=\"%s\", email=\"%s\", firstName=\"%s\", lastName=\"%s\" LOCK RECORD";
+    private static final String UPDATE_IP_FIELD_COMMAND = "UPDATE %s SET ips = []";
+    private static final String ATTACH_IP_COMMAND = "update %s add ips = '%s'";
     private static final String UPDATE_PASSWORD_COMMAND = "update %s set passHash=\"%s\" LOCK RECORD";
     private static final String UPDATE_USERNAME_COMMAND = "update %s set username=\"%s\" LOCK RECORD";
     private static final String UPDATE_ROLE_MANAGEMENT_COMMAND = "update %s set roleManagement=%s LOCK RECORD";

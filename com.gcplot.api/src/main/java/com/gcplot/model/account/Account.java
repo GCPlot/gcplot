@@ -5,6 +5,7 @@ import com.gcplot.model.role.Role;
 import org.joda.time.DateTime;
 
 import java.util.List;
+import java.util.Set;
 
 public interface Account {
 
@@ -21,6 +22,8 @@ public interface Account {
     String token();
 
     String passHash();
+
+    Set<String> ips();
 
     boolean isConfirmed();
 

@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -105,7 +106,7 @@ public class LoginController extends Controller {
             Account newAccount = AccountImpl.createNew(request.username, request.firstName, request.lastName,
                     request.email, DigestUtils.sha256Hex(Utils.getRandomIdentifier()),
                     hashPass(request.password), DigestUtils.sha256Hex(Utils.getRandomIdentifier()), new ArrayList<>(),
-                    DateTime.now(DateTimeZone.UTC));
+                    DateTime.now(DateTimeZone.UTC), new HashSet<>());
             try {
                 getAccountRepository().insert(newAccount);
             } catch (NotUniqueException e) {

@@ -8,10 +8,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Table(name = "Account", uniqueConstraints =
         @UniqueConstraint(columnNames={"username", "email", "token"}))
@@ -75,6 +72,14 @@ public class AccountImpl implements Account {
     }
     public void setPassHash(String passHash) {
         this.passHash = passHash;
+    }
+
+    @Override
+    public Set<String> ips() {
+        return ips == null ? Collections.emptySet() : Collections.unmodifiableSet(ips);
+    }
+    public void setIps(Set<String> ips) {
+        this.ips = ips;
     }
 
     @Override
@@ -157,7 +162,7 @@ public class AccountImpl implements Account {
     protected AccountImpl(String username, String firstName, String lastName,
                           String email, String token,
                           String passHash, boolean confirmed, String confirmationSalt,
-                          ArrayList<RoleImpl> roles, DateTime registrationTime) {
+                          ArrayList<RoleImpl> roles, DateTime registrationTime, Set<String> ips) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -168,15 +173,16 @@ public class AccountImpl implements Account {
         this.confirmationSalt = confirmationSalt;
         this.roles = roles;
         this.registrationTime = registrationTime.toDate();
+        this.ips = ips;
     }
 
     public static AccountImpl createNew(String username,
                                         String firstName, String lastName,
                                         String email, String token, String passHash,
                                         String confirmationSalt, ArrayList<RoleImpl> roles,
-                                        DateTime registrationTime) {
+                                        DateTime registrationTime, Set<String> ips) {
         return new AccountImpl(username, firstName, lastName,
-                email, token, passHash, false, confirmationSalt, roles, registrationTime);
+                email, token, passHash, false, confirmationSalt, roles, registrationTime, ips);
     }
 
     @Override
@@ -233,6 +239,7 @@ public class AccountImpl implements Account {
                 .add("roles", roles)
                 .add("version", version)
                 .add("registrationTime", registrationTime)
+                .add("ips", ips)
                 .toString();
     }
 
@@ -251,6 +258,8 @@ public class AccountImpl implements Account {
     protected String confirmationSalt;
     protected boolean roleManagement;
     protected Date registrationTime;
+
+    protected Set<String> ips;
     @OneToMany(targetEntity = RoleImpl.class)
     protected ArrayList<? super RoleImpl> roles;
 }

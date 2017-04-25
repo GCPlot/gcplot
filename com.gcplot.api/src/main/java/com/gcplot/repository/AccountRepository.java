@@ -39,6 +39,8 @@ public interface AccountRepository {
 
     void unblock(String username);
 
+    void attachNewIp(Account account, String ip);
+
     void attachRole(Account account, Role role);
 
     void detachRole(Account account, Role role);
