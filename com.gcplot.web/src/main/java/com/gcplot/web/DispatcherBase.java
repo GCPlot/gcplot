@@ -27,7 +27,7 @@ public class DispatcherBase {
     protected Consumer<RequestContext> postHandler = r -> {};
     protected Predicate<RequestContext> filter;
     protected Supplier<String> filterMessage;
-    protected int maxUploadSize;
+    protected long maxUploadSize;
     protected AccountRepository accountRepository;
     protected ConfigurationManager config;
     protected String host;
@@ -94,10 +94,10 @@ public class DispatcherBase {
         this.config = config;
     }
 
-    public int getMaxUploadSize() {
+    public long getMaxUploadSize() {
         return maxUploadSize;
     }
-    public void setMaxUploadSize(int maxUploadSize) {
+    public void setMaxUploadSize(long maxUploadSize) {
         this.maxUploadSize = maxUploadSize;
     }
 }
