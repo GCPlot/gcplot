@@ -6,6 +6,7 @@ import ch.qos.logback.core.FileAppender;
 import com.gcplot.Identifier;
 import com.gcplot.commons.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
+import com.gcplot.commons.FileUtils;
 import com.gcplot.commons.LazyVal;
 import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.configuration.ConfigurationManager;
@@ -133,6 +134,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
         AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
         ParseResult pr = parseAndPersist(source, jvmId, analyze, log, e -> {
+            // TODO concurrency issue here
             if (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred())) {
                 lastEventTime.set(e.occurred());
             }
@@ -308,14 +310,19 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                                String analyseId, String jvmId, String username, File logFile) {
         if (!resourceManager.isDisabled()) {
             Future f = uploadExecutor.submit(() -> {
+                File logFileGz = null;
                 try {
-                    LOG.debug("Starting uploading {}", logFile);
-                    resourceManager.upload(logFile,
+                    logFileGz = FileUtils.gzip(logFile);
+                    LOG.debug("Starting uploading {}", logFileGz);
+                    resourceManager.upload(logFileGz,
                             rootFolder + "/" + esc(username) + "/" + analyseId + "/" + jvmId);
                 } catch (Throwable t) {
                     LOG.error(t.getMessage(), t);
                 } finally {
                     org.apache.commons.io.FileUtils.deleteQuietly(logFile);
+                    if (logFileGz != null) {
+                        org.apache.commons.io.FileUtils.deleteQuietly(logFileGz);
+                    }
                 }
             });
             if (isSync) {

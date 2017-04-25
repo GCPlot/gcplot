@@ -1,9 +1,14 @@
 package com.gcplot.commons;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.security.MessageDigest;
+import java.util.zip.GZIPOutputStream;
 
 public abstract class FileUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(FileUtils.class);
 
     public static void deleteSilent(File f) {
         try {
@@ -50,6 +55,33 @@ public abstract class FileUtils {
 
         //return complete hash
         return sb.toString();
+    }
+
+    public static File gzip(File file) {
+        byte[] buffer = new byte[8 * 1024];
+        File result = null;
+        try {
+            result = new File(file.getParentFile(), file.getName() + ".gz");
+            if (!result.exists()) {
+                result.createNewFile();
+            }
+            try (FileInputStream fos = new FileInputStream(file)) {
+                try (GZIPOutputStream gzos = new GZIPOutputStream(new FileOutputStream(result))) {
+                    int len;
+                    while ((len = fos.read(buffer)) > 0) {
+                        gzos.write(buffer, 0, len);
+                    }
+                    gzos.finish();
+                }
+            }
+            return result;
+        } catch (Throwable t) {
+            LOG.error(t.getMessage(), t);
+            if (result != null) {
+                FileUtils.deleteSilent(result);
+            }
+            return file;
+        }
     }
 
 }
