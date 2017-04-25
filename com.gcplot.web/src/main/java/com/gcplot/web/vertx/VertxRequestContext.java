@@ -142,6 +142,10 @@ public class VertxRequestContext implements RequestContext {
 
     @Override
     public String getIp() {
+        String xRealIp = context.request().getHeader("X-Real-IP");
+        if (!Strings.isNullOrEmpty(xRealIp)) {
+            return xRealIp;
+        }
         return context.request().remoteAddress().host();
     }
 
