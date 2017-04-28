@@ -13,10 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -62,24 +59,12 @@ public class WorkerTaskDistributor {
             while (i.hasNext()) {
                 GCAnalyse analyze = i.next();
                 LOG.debug("Checking analyze {} with source {}", analyze.id(), analyze.sourceType());
-                if (analyze.sourceType() != SourceType.NONE) {
+                if (analyze.sourceType() != SourceType.NONE && analyze.sourceType() != SourceType.INTERNAL) {
                     try {
                         LogsStorage logsStorage =
                                 logsStorageProvider.get(analyze.sourceType(), analyze.sourceConfigProps());
                         if (logsStorage != null) {
-                            Iterator<LogHandle> handles = logsStorage.listAll();
-                            while (handles.hasNext()) {
-                                LogHandle logHandle = handles.next();
-                                if (!logHandle.equals(LogHandle.INVALID_LOG)) {
-                                    LOG.debug("Checking log handle {}", logHandle);
-                                    if (clusterManager.isMaster() && !clusterManager.isTaskRegistered(logHandle.hash())) {
-                                        WorkerTask task = new WorkerTask(logHandle.hash(),
-                                                workers.get(r.nextInt(workers.size())), logHandle);
-                                        LOG.debug("Assigning task {} to worker {}", task.getId(), task.getAssigned().getHostname());
-                                        clusterManager.registerTask(task);
-                                    }
-                                }
-                            }
+                            processLogs(workers, r, logsStorage);
                         } else {
                             LOG.debug("{}: no storage for {} [{}]", analyze.id(),
                                     analyze.sourceType(), analyze.sourceConfig());
@@ -88,9 +73,27 @@ public class WorkerTaskDistributor {
                         LOG.error(analyze.id() + ": " + t.getMessage(), t);
                     }
                 }
+                LogsStorage logsStorage = logsStorageProvider.get(SourceType.INTERNAL, null);
+                processLogs(workers, r, logsStorage);
             }
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
+        }
+    }
+
+    private void processLogs(List<Worker> workers, SecureRandom r, LogsStorage logsStorage) {
+        Iterator<LogHandle> handles = logsStorage.listAll();
+        while (handles.hasNext()) {
+            LogHandle logHandle = handles.next();
+            if (!logHandle.equals(LogHandle.INVALID_LOG)) {
+                LOG.debug("Checking log handle {}", logHandle);
+                if (clusterManager.isMaster() && !clusterManager.isTaskRegistered(logHandle.hash())) {
+                    WorkerTask task = new WorkerTask(logHandle.hash(),
+                            workers.get(r.nextInt(workers.size())), logHandle);
+                    LOG.debug("Assigning task {} to worker {}", task.getId(), task.getAssigned().getHostname());
+                    clusterManager.registerTask(task);
+                }
+            }
         }
     }
 

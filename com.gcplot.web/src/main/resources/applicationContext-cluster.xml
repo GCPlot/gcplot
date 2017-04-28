@@ -55,6 +55,7 @@
         <property name="clusterManager" ref="${cluster.manager}-cluster"/>
         <property name="intervalMs" value="${worker.processing.interval.ms}"/>
         <property name="logsProcessor" ref="logsProcessorService"/>
+        <property name="metrics" ref="metrics"/>
     </bean>
 
 </beans>

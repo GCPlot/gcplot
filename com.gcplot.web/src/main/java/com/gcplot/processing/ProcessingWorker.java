@@ -1,8 +1,10 @@
 package com.gcplot.processing;
 
+import com.codahale.metrics.MetricRegistry;
 import com.gcplot.Identifier;
 import com.gcplot.cluster.ClusterManager;
 import com.gcplot.cluster.WorkerTask;
+import com.gcplot.commons.Metrics;
 import com.gcplot.fs.LogsStorage;
 import com.gcplot.fs.LogsStorageProvider;
 import com.gcplot.logs.LogHandle;
@@ -26,6 +28,9 @@ import java.util.concurrent.*;
  *         3/19/17
  */
 public class ProcessingWorker {
+    private static final String CHECKED_TASKS = Metrics.name(ProcessingWorker.class, "tasks");
+    private static final String PROCESSED_METRIC = Metrics.name(ProcessingWorker.class, "processed");
+    private static final String PROCESSED_ERROR_METRIC = Metrics.name(ProcessingWorker.class, "processed", "errors");
     private static final Logger LOG = LoggerFactory.getLogger(ProcessingWorker.class);
     private static final long WAIT_SHUTDOWN_MINUTES = 10;
     private long intervalMs;
@@ -36,6 +41,7 @@ public class ProcessingWorker {
     private GCAnalyseRepository analyseRepository;
     private LogsStorageProvider logsStorageProvider;
     private LogsProcessorService logsProcessor;
+    private MetricRegistry metrics;
     private Set<String> inProgress = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public void init() {
@@ -72,6 +78,7 @@ public class ProcessingWorker {
                     if (inProgress.contains(logHandle.hash())) {
                         continue;
                     }
+                    metrics.meter(CHECKED_TASKS).mark();
                     LOG.debug("Processing handle: {}", logHandle);
                     Identifier accountId = Identifier.fromStr(logHandle.getAccountId());
                     GCAnalyse analyze = analyseRepository.analyse(accountId, logHandle.getAnalyzeId()).orElse(null);
@@ -90,7 +97,9 @@ public class ProcessingWorker {
                                                 analyze, logHandle.getJvmId());
                                         logsStorage.delete(logHandle);
                                         complete(task);
+                                        metrics.meter(PROCESSED_METRIC).mark();
                                     } catch (Throwable t) {
+                                        metrics.meter(PROCESSED_ERROR_METRIC).mark();
                                         LOG.error("ProcessingWorker: " + t.getMessage(), t);
                                     } finally {
                                         inProgress.remove(logHandle.hash());
@@ -112,10 +121,12 @@ public class ProcessingWorker {
                     }
                 } catch (Throwable t) {
                     complete(task);
+                    metrics.meter(PROCESSED_ERROR_METRIC).mark();
                     LOG.error(t.getMessage(), t);
                 }
             }
         } catch (Throwable t) {
+            metrics.meter(PROCESSED_ERROR_METRIC).mark();
             LOG.error(t.getMessage(), t);
         }
     }
@@ -146,6 +157,10 @@ public class ProcessingWorker {
 
     public void setAccountRepository(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
+    }
+
+    public void setMetrics(MetricRegistry metrics) {
+        this.metrics = metrics;
     }
 
     public void setLogsProcessor(LogsProcessorService logsProcessor) {
