@@ -42,6 +42,8 @@ public class LoginController extends Controller {
                 .post("/user/change_password", ChangePasswordRequest.class, this::changePassword);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
+        dispatcher.requireAuth().allowNotConfirmed()
+                .post("/user/change_email", ChangeEmailRequest.class, this::changeEmail);
         dispatcher.allowNotConfirmed().requireAuth().get("/user/send/confirmation", this::sendConfirmation);
         dispatcher.noAuth().allowNotConfirmed().post("/user/send/new_password", SendNewPassRequest.class,
                 this::sendNewPass);
@@ -207,10 +209,28 @@ public class LoginController extends Controller {
                             "User with email '" + req.email + "' not found."));
                 }
             } else {
-                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Please enter valid email."));
+                c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Please enter a valid email."));
             }
         } else {
             c.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Email can't be empty!"));
+        }
+    }
+
+    /**
+     * POST /user/change_email
+     * Require Auth (token)
+     * Body: ChangeEmailRequest (JSON)
+     */
+    private void changeEmail(ChangeEmailRequest req, RequestContext ctx) {
+        Account account = account(ctx);
+        if (Strings.isNullOrEmpty(req.newEmail) || !EMAIL_PATTERN.matcher(req.newEmail).matches()) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Please enter a valid email."));
+        } else {
+            accountRepository.changeEmail(account, req.newEmail);
+            if (!account.isConfirmed()) {
+                mailService.sendConfirmationFor(account);
+            }
+            ctx.response(SUCCESS);
         }
     }
 

@@ -164,6 +164,12 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
+    public boolean changeEmail(Account account, String newEmail) {
+        metrics.meter(ACCOUNT_NEW_EMAIL_METRIC).mark();
+        return execute(String.format(UPDATE_EMAIL_COMMAND, account.id().toString(), newEmail));
+    }
+
+    @Override
     public boolean confirm(String token, String salt) {
         metrics.meter(ACCOUNT_CONFIRM_METRIC).mark();
         return execute(String.format(CONFIRM_ACCOUNT_QUERY, token, salt));
@@ -247,6 +253,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String ATTACH_IP_COMMAND = "update %s add ips = '%s'";
     private static final String UPDATE_PASSWORD_COMMAND = "update %s set passHash=\"%s\" LOCK RECORD";
     private static final String UPDATE_USERNAME_COMMAND = "update %s set username=\"%s\" LOCK RECORD";
+    private static final String UPDATE_EMAIL_COMMAND = "update %s set email=\"%s\" LOCK RECORD";
     private static final String UPDATE_ROLE_MANAGEMENT_COMMAND = "update %s set roleManagement=%s LOCK RECORD";
 
     private static final String ALL_ACCOUNTS_METRIC = Metrics.name(AccountOrientDbRepository.class, "all_accounts");
@@ -259,5 +266,6 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String ACCOUNT_NEW_TOKEN_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "new_token");
     private static final String ACCOUNT_NEW_PASSWORD_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "new_password");
     private static final String ACCOUNT_NEW_USERNAME_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "new_username");
+    private static final String ACCOUNT_NEW_EMAIL_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "new_email");
     private static final String ACCOUNT_CONFIRM_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "confirm");
 }

@@ -2,10 +2,7 @@ package com.gcplot;
 
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Utils;
-import com.gcplot.messages.ChangePasswordRequest;
-import com.gcplot.messages.ChangeUsernameRequest;
-import com.gcplot.messages.RegisterRequest;
-import com.gcplot.messages.SendNewPassRequest;
+import com.gcplot.messages.*;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -79,6 +76,14 @@ public class LoginTests extends IntegrationTest {
         r = new ChangeUsernameRequest("admin2");
         post("/user/change_username?token=" +
                 jo.getString("token"), r, success());
+
+        ChangeEmailRequest cer = new ChangeEmailRequest("artem2@gcplot.com");
+        post("/user/change_email?token=" + jo.getString("token"), cer, success());
+
+        request.email = "artem2@gcplot.com";
+        request.username = null;
+        jo = login(request);
+        Assert.assertEquals(jo.getString("email"), request.email);
     }
 
     @Test

@@ -328,7 +328,7 @@ public abstract class IntegrationTest {
     }
 
     protected JsonObject login(RegisterRequest request) throws Exception {
-        return login(request.username, request.password);
+        return login(request.username == null ? request.email : request.username, request.password);
     }
 
     protected JsonObject login(String username, String password) throws Exception {

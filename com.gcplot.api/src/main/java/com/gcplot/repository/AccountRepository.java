@@ -33,6 +33,8 @@ public interface AccountRepository {
 
     boolean changeUsername(Account account, String newUsername);
 
+    boolean changeEmail(Account account, String newEmail);
+
     boolean confirm(String token, String salt);
 
     void block(String username);
