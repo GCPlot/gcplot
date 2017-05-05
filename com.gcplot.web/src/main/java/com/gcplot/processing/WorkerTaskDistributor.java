@@ -73,9 +73,9 @@ public class WorkerTaskDistributor {
                         LOG.error(analyze.id() + ": " + t.getMessage(), t);
                     }
                 }
-                LogsStorage logsStorage = logsStorageProvider.get(SourceType.INTERNAL, null);
-                processLogs(workers, r, logsStorage);
             }
+            LogsStorage logsStorage = logsStorageProvider.get(SourceType.INTERNAL, null);
+            processLogs(workers, r, logsStorage);
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
         }
