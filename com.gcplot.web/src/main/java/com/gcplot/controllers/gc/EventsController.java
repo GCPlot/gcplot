@@ -343,8 +343,13 @@ public class EventsController extends Controller {
             }
             this.analyseId = ctx.param("analyse_id");
             this.jvmId = ctx.param("jvm_id");
-            this.interval = new Interval(new DateTime(Long.parseLong(ctx.param("from")), tz),
-                    new DateTime(Long.parseLong(ctx.param("to")), tz));
+            try {
+                this.interval = new Interval(new DateTime(Long.parseLong(ctx.param("from")), tz),
+                        new DateTime(Long.parseLong(ctx.param("to")), tz));
+            } catch (IllegalArgumentException e) {
+                ctx.finish(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Invalid interval selected."));
+                throw Exceptions.runtime(e);
+            }
             this.delimit = Boolean.parseBoolean(ctx.param("delimit", "false"));
             this.stats = Boolean.parseBoolean(ctx.param("stats", "false"));
         }
