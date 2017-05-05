@@ -226,11 +226,15 @@ public class LoginController extends Controller {
         if (Strings.isNullOrEmpty(req.newEmail) || !EMAIL_PATTERN.matcher(req.newEmail).matches()) {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Please enter a valid email."));
         } else {
-            accountRepository.changeEmail(account, req.newEmail);
-            if (!account.isConfirmed()) {
-                mailService.sendConfirmationFor(account);
+            if (!accountRepository.changeEmail(account, req.newEmail)) {
+                ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Unable to change e-mail. " +
+                        "Possibly it's already taken, please try again."));
+            } else {
+                if (!account.isConfirmed()) {
+                    mailService.sendConfirmationFor(account);
+                }
+                ctx.response(SUCCESS);
             }
-            ctx.response(SUCCESS);
         }
     }
 
