@@ -234,8 +234,8 @@ public class GCViewerLogsParser implements LogsParser {
                 generations, phase, cause, properties, concurrency, capacityByGeneration, "");
     }
 
-    private double nonNuN(double user) {
-        return Double.isNaN(user) ? 0.0 : user;
+    private double nonNuN(double v) {
+        return Double.isNaN(v) ? -1.0 : v;
     }
 
     private long detectProperties(AbstractGCEvent<?> event) {

@@ -169,14 +169,11 @@ public class GCEventResponse {
                 }
                 sb.append("}");
             }
-            if (!DoubleMath.fuzzyEquals(event.user(), 0.0, TOLERANCE)) {
+            if (event.user() >= 0.0) {
                 sb.append(",\"u\":").append(FORMAT.format(event.user()));
             }
-            if (!DoubleMath.fuzzyEquals(event.sys(), 0.0, TOLERANCE)) {
+            if (event.sys() >= 0.0) {
                 sb.append(",\"s\":").append(FORMAT.format(event.sys()));
-            }
-            if (!DoubleMath.fuzzyEquals(event.real(), 0.0, TOLERANCE)) {
-                sb.append(",\"r\":").append(FORMAT.format(event.real()));
             }
             if (!Strings.isNullOrEmpty(event.ext())) {
                 sb.append(",\"e\":").append("\"").append(event.ext()).append("\"");

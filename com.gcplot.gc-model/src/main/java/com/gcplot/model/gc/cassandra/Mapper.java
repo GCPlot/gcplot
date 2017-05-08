@@ -111,7 +111,6 @@ public abstract class Mapper {
                     .totalCapacity(new Capacity(row.getList("total_capacity", Long.class)))
                     .user(row.getDouble("user_time"))
                     .sys(row.getDouble("sys_time"))
-                    .real(row.getDouble("real_time"))
                     .cause(_top(row, "cause", Cause.OTHER, (Function<Integer, Cause>) Cause::get))
                     .properties(row.getLong("properties"));
 
@@ -138,7 +137,6 @@ public abstract class Mapper {
                     .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
                     .user(dop(row, "user_time", r -> r.getDouble("user_time")))
                     .sys(dop(row, "sys_time", r -> r.getDouble("sys_time")))
-                    .real(dop(row, "real_time", r -> r.getDouble("real_time")))
                     .phase(op(row, "phase", r -> Phase.get(r.getInt("phase"))))
                     .cause(top(row, "cause", Cause.OTHER, (Function<Integer, Cause>) Cause::get))
                     .properties(lop(row, "properties", r -> r.getLong("properties")))
