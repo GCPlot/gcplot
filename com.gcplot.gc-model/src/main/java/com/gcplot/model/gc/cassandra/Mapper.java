@@ -107,7 +107,7 @@ public abstract class Mapper {
                     .generations(EnumSetUtils.decode(row.getLong("generations"), Generation.class))
                     .concurrency(EventConcurrency.get(row.getInt("concurrency")))
                     .phase(Phase.get(row.getInt("phase")))
-                    .capacity(new Capacity(row.getList("total_capacity", Long.class)))
+                    .capacity(new Capacity(row.getList("capacity", Long.class)))
                     .totalCapacity(new Capacity(row.getList("total_capacity", Long.class)))
                     .user(row.getDouble("user_time"))
                     .sys(row.getDouble("sys_time"))
@@ -157,7 +157,7 @@ public abstract class Mapper {
         Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
         if (gcEvent.generations().size() > 1 && (!checkContains || (row.getColumnDefinitions().contains("gen_cap_before") &&
                 row.getColumnDefinitions().contains("gen_cap_after") && row.getColumnDefinitions().contains("gen_cap_total")))) {
-            capacityByGeneration = new IdentityHashMap<>(2);
+            capacityByGeneration = new IdentityHashMap<>(3);
             Map<Integer, Long> before = row.getMap("gen_cap_before", Integer.class, Long.class);
             Map<Integer, Long> after = row.getMap("gen_cap_after", Integer.class, Long.class);
             Map<Integer, Long> total = row.getMap("gen_cap_total", Integer.class, Long.class);
