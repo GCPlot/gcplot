@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 import static com.gcplot.commons.CollectionUtils.processKeyMap;
 import static com.gcplot.model.gc.cassandra.Mapper.eventFrom;
+import static com.gcplot.model.gc.cassandra.Mapper.lazyEventFrom;
 import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 
 public class CassandraGCEventRepository extends AbstractVMEventsCassandraRepository<GCEvent> implements GCEventRepository {
@@ -36,7 +37,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
     protected static final String DATE_PATTERN = "yyyy-MM";
     public static final String[] NON_KEY_FIELDS = new String[] {
             "occurred", "pause_mu", "tmstm", "generations",
-            "concurrency", "phase", "capacity", "total_capacity",
+            "concurrency", "phase", "capacity", "total_capacity", "user_time", "sys_time", "real_time",
             "gen_cap_before", "gen_cap_after", "gen_cap_total", "cause", "properties"};
     public static final String[] LAST_EVENT_FIELDS = Utils.concat(NON_KEY_FIELDS, new String[] { "bucket_id" });
     public static final String[] PAUSE_EVENT_FIELDS = new String[] { "occurred", "vm_event_type", "pause_mu", "tmstm",
@@ -68,7 +69,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
 
             @Override
             public GCEvent next() {
-                return eventFrom(i.next());
+                return lazyEventFrom(i.next());
             }
         };
     }
@@ -202,6 +203,9 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
                 .value("capacity", Arrays.asList(event.capacity().usedBefore(), event.capacity().usedAfter(), event.capacity().total()))
                 .value("total_capacity", Arrays.asList(event.totalCapacity().usedBefore(), event.totalCapacity().usedAfter(), event.totalCapacity().total()))
                 .value("pause_mu", event.pauseMu())
+                .value("user_time", event.user())
+                .value("sys_time", event.sys())
+                .value("real_time", event.real())
                 .value("phase", event.phase().type())
                 .value("generations", EnumSetUtils.encode(event.generations()))
                 .value("concurrency", event.concurrency().type())

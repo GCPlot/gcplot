@@ -6,8 +6,10 @@ import com.gcplot.commons.CollectionUtils;
 import com.gcplot.commons.enums.TypedEnum;
 import com.gcplot.model.gc.*;
 import com.google.common.base.Strings;
+import com.google.common.math.DoubleMath;
 
 import javax.annotation.concurrent.NotThreadSafe;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,15 @@ import java.util.stream.Collectors;
  */
 @NotThreadSafe
 public class GCEventResponse {
+    private static final Double TOLERANCE = Math.pow(10, -6);
+    private static final DecimalFormat FORMAT;
+
+    static {
+        DecimalFormat df = new DecimalFormat("#.######");
+        df.setMaximumFractionDigits(6);
+        FORMAT = df;
+    }
+
     @JsonProperty("p")
     public long pauseMu;
     @JsonProperty("d")
@@ -37,6 +48,15 @@ public class GCEventResponse {
     @JsonProperty(value = "pp", defaultValue = "0")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public long properties;
+    @JsonProperty(value = "u", defaultValue = "0")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public double user;
+    @JsonProperty(value = "s", defaultValue = "0")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public double sys;
+    @JsonProperty(value = "r", defaultValue = "0")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public double real;
     @JsonProperty("cp")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CapacityResponse capacity;
@@ -55,6 +75,12 @@ public class GCEventResponse {
                            @JsonProperty("ph") @JsonInclude(JsonInclude.Include.NON_DEFAULT) int phase,
                            @JsonProperty(value = "cs", defaultValue = "0") @JsonInclude(JsonInclude.Include.NON_DEFAULT) int cause,
                            @JsonProperty(value = "pp", defaultValue = "0") @JsonInclude(JsonInclude.Include.NON_DEFAULT) long properties,
+                           @JsonProperty(value = "u", defaultValue = "0")
+                           @JsonInclude(JsonInclude.Include.NON_DEFAULT) double user,
+                           @JsonProperty(value = "s", defaultValue = "0")
+                           @JsonInclude(JsonInclude.Include.NON_DEFAULT) double sys,
+                           @JsonProperty(value = "r", defaultValue = "0")
+                           @JsonInclude(JsonInclude.Include.NON_DEFAULT) double real,
                            @JsonProperty("cp")
                            @JsonInclude(JsonInclude.Include.NON_EMPTY) CapacityResponse capacity,
                            @JsonProperty("tc")
@@ -70,6 +96,9 @@ public class GCEventResponse {
         this.phase = phase;
         this.cause = cause;
         this.properties = properties;
+        this.user = user;
+        this.sys = sys;
+        this.real = real;
         this.capacity = capacity;
         this.totalCapacity = totalCapacity;
         this.capacityByGeneration = capacityByGeneration;
@@ -86,12 +115,13 @@ public class GCEventResponse {
                 Collections.emptyMap();
         return new GCEventResponse(event.pauseMu(), event.occurred().getMillis(),
                 gens, event.concurrency().type(), event.phase().type(), event.cause().type(),
-                event.properties(), CapacityResponse.from(event.capacity()),
+                event.properties(), event.user(), event.sys(), event.real(), CapacityResponse.from(event.capacity()),
                 CapacityResponse.from(event.totalCapacity()), cbg, event.ext());
     }
 
     private static ThreadLocal<StringBuilder> stringBuilder = ThreadLocal.withInitial(
-            () -> new StringBuilder(156));
+            () -> new StringBuilder(256));
+
     public static String toJson(GCEvent event) {
         StringBuilder sb = stringBuilder.get();
         try {
@@ -138,6 +168,15 @@ public class GCEventResponse {
                     c++;
                 }
                 sb.append("}");
+            }
+            if (!DoubleMath.fuzzyEquals(event.user(), 0.0, TOLERANCE)) {
+                sb.append(",\"u\":").append(FORMAT.format(event.user()));
+            }
+            if (!DoubleMath.fuzzyEquals(event.sys(), 0.0, TOLERANCE)) {
+                sb.append(",\"s\":").append(FORMAT.format(event.sys()));
+            }
+            if (!DoubleMath.fuzzyEquals(event.real(), 0.0, TOLERANCE)) {
+                sb.append(",\"r\":").append(FORMAT.format(event.real()));
             }
             if (!Strings.isNullOrEmpty(event.ext())) {
                 sb.append(",\"e\":").append("\"").append(event.ext()).append("\"");

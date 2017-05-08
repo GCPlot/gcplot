@@ -38,6 +38,12 @@ public interface GCEvent extends VMEvent, DatedEvent, IdentifiedEvent {
      */
     long pauseMu();
 
+    double user();
+
+    double sys();
+
+    double real();
+
     /**
      * Generations, affected by this event.
      */

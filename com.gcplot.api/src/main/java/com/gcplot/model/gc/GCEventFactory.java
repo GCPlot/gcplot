@@ -11,10 +11,10 @@ import java.util.Map;
  */
 public interface GCEventFactory {
 
-    GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description,
-                   VMEventType vmEventType, Capacity capacity, Capacity totalCapacity, double timestamp,
-                   long pauseMu, EnumSet<Generation> generations, Phase phase, Cause cause, long properties,
-                   EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap, String ext);
+    GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description, VMEventType vmEventType,
+                   Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, double user, double sys, double real,
+                   EnumSet<Generation> generations, Phase phase, Cause cause, long properties, EventConcurrency concurrency,
+                   Map<Generation, Capacity> generationCapacityMap, String ext);
 
     GCEvent create(GCEvent event);
 

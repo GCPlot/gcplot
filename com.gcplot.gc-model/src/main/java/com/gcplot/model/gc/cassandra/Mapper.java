@@ -95,6 +95,34 @@ public abstract class Mapper {
         return events;
     }
 
+    public static GCEvent lazyEventFrom(Row row) {
+        if (row == null) {
+            return null;
+        }
+        GCEventImpl gcEvent = new GCEventImpl();
+        try {
+            gcEvent.occurred(new DateTime(row.getTimestamp("occurred"), DateTimeZone.UTC))
+                    .pauseMu(row.getLong("pause_mu"))
+                    .timestamp(row.getDouble("tmstm"))
+                    .generations(EnumSetUtils.decode(row.getLong("generations"), Generation.class))
+                    .concurrency(EventConcurrency.get(row.getInt("concurrency")))
+                    .phase(Phase.get(row.getInt("phase")))
+                    .capacity(new Capacity(row.getList("total_capacity", Long.class)))
+                    .totalCapacity(new Capacity(row.getList("total_capacity", Long.class)))
+                    .user(row.getDouble("user_time"))
+                    .sys(row.getDouble("sys_time"))
+                    .real(row.getDouble("real_time"))
+                    .cause(_top(row, "cause", Cause.OTHER, (Function<Integer, Cause>) Cause::get))
+                    .properties(row.getLong("properties"));
+
+            mapGenerations(row, gcEvent, false);
+        } catch (Throwable t) {
+            LOG.error(t.getMessage() + " | " + row.toString());
+            return null;
+        }
+        return gcEvent;
+    }
+
     public static GCEvent eventFrom(Row row) {
         if (row == null) {
             return null;
@@ -108,34 +136,41 @@ public abstract class Mapper {
                     .capacity(op(row, "capacity", r -> new Capacity(r.getList("capacity", Long.class))))
                     .totalCapacity(op(row, "total_capacity", r -> new Capacity(r.getList("total_capacity", Long.class))))
                     .pauseMu(lop(row, "pause_mu", r -> r.getLong("pause_mu")))
+                    .user(dop(row, "user_time", r -> r.getDouble("user_time")))
+                    .sys(dop(row, "sys_time", r -> r.getDouble("sys_time")))
+                    .real(dop(row, "real_time", r -> r.getDouble("real_time")))
                     .phase(op(row, "phase", r -> Phase.get(r.getInt("phase"))))
                     .cause(top(row, "cause", Cause.OTHER, (Function<Integer, Cause>) Cause::get))
                     .properties(lop(row, "properties", r -> r.getLong("properties")))
                     .generations(op(row, "generations", r -> EnumSetUtils.decode(r.getLong("generations"), Generation.class)))
                     .concurrency(op(row, "concurrency", r -> EventConcurrency.get(r.getInt("concurrency"))));
 
-            Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
-            if (gcEvent.generations().size() > 1 && row.getColumnDefinitions().contains("gen_cap_before") &&
-                    row.getColumnDefinitions().contains("gen_cap_after") && row.getColumnDefinitions().contains("gen_cap_total")) {
-                capacityByGeneration = new IdentityHashMap<>(2);
-                Map<Integer, Long> before = row.getMap("gen_cap_before", Integer.class, Long.class);
-                Map<Integer, Long> after = row.getMap("gen_cap_after", Integer.class, Long.class);
-                Map<Integer, Long> total = row.getMap("gen_cap_total", Integer.class, Long.class);
-
-                for (Generation g : gcEvent.generations()) {
-                    capacityByGeneration.put(g, Capacity.of(
-                            before.getOrDefault(g.type(), 0L),
-                            after.getOrDefault(g.type(), 0L),
-                            total.getOrDefault(g.type(), 0L)));
-                }
-            }
-
-            gcEvent.capacityByGeneration(capacityByGeneration);
+            mapGenerations(row, gcEvent, true);
         } catch (Throwable t) {
             LOG.error(t.getMessage() + " | " + row.toString());
             return null;
         }
         return gcEvent;
+    }
+
+    private static void mapGenerations(Row row, GCEventImpl gcEvent, boolean checkContains) {
+        Map<Generation, Capacity> capacityByGeneration = Collections.emptyMap();
+        if (gcEvent.generations().size() > 1 && (!checkContains || (row.getColumnDefinitions().contains("gen_cap_before") &&
+                row.getColumnDefinitions().contains("gen_cap_after") && row.getColumnDefinitions().contains("gen_cap_total")))) {
+            capacityByGeneration = new IdentityHashMap<>(2);
+            Map<Integer, Long> before = row.getMap("gen_cap_before", Integer.class, Long.class);
+            Map<Integer, Long> after = row.getMap("gen_cap_after", Integer.class, Long.class);
+            Map<Integer, Long> total = row.getMap("gen_cap_total", Integer.class, Long.class);
+
+            for (Generation g : gcEvent.generations()) {
+                capacityByGeneration.put(g, Capacity.of(
+                        before.getOrDefault(g.type(), 0L),
+                        after.getOrDefault(g.type(), 0L),
+                        total.getOrDefault(g.type(), 0L)));
+            }
+        }
+
+        gcEvent.capacityByGeneration(capacityByGeneration);
     }
 
     public static List<ObjectsAges> objectsAgesFrom(ResultSet resultSet) {
@@ -171,14 +206,18 @@ public abstract class Mapper {
 
     private static <T, V> T top(Row row, String name, T def, Function<V, T> f) {
         if (row.getColumnDefinitions().contains(name)) {
-            Object val = row.getObject(name);
-            if (val == null) {
-                return def;
-            } else {
-                return f.apply((V) val);
-            }
+            return _top(row, name, def, f);
         } else {
             return def;
+        }
+    }
+
+    private static <T, V> T _top(Row row, String name, T def, Function<V, T> f) {
+        Object val = row.getObject(name);
+        if (val == null) {
+            return def;
+        } else {
+            return f.apply((V) val);
         }
     }
 

@@ -16,9 +16,9 @@ public class TestGCEventFactory implements GCEventFactory {
 
     @Override
     public GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description, VMEventType vmEventType,
-                          Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, EnumSet<Generation> generations,
-                          Phase phase, Cause cause, long properties, EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap,
-                          String ext) {
+                          Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, double user, double sys, double real,
+                          EnumSet<Generation> generations, Phase phase, Cause cause, long properties, EventConcurrency concurrency,
+                          Map<Generation, Capacity> generationCapacityMap, String ext) {
         return new GCEvent() {
             @Override
             public String id() {
@@ -81,6 +81,21 @@ public class TestGCEventFactory implements GCEventFactory {
             }
 
             @Override
+            public double user() {
+                return user;
+            }
+
+            @Override
+            public double sys() {
+                return sys;
+            }
+
+            @Override
+            public double real() {
+                return real;
+            }
+
+            @Override
             public EnumSet<Generation> generations() {
                 return generations;
             }
@@ -140,6 +155,9 @@ public class TestGCEventFactory implements GCEventFactory {
                 sb.append(", totalCapacity=").append(totalCapacity());
                 sb.append(", timestamp=").append(timestamp());
                 sb.append(", pauseMu=").append(pauseMu());
+                sb.append(", user=").append(user());
+                sb.append(", sys=").append(sys());
+                sb.append(", real=").append(real());
                 sb.append(", generations=").append(generations());
                 sb.append(", concurrency=").append(concurrency());
                 sb.append(", ext='").append(ext()).append('\'');

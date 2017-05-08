@@ -230,7 +230,12 @@ public class GCViewerLogsParser implements LogsParser {
         Cause cause = detectCause(event);
         long properties = detectProperties(event);
         return eventFactory.create(null, null, ctx.streamChecksum(), datestamp, description, vmEventType, capacity, totalCapacity,
-                event.getTimestamp(), (long)(pause * 1_000_000), generations, phase, cause, properties, concurrency, capacityByGeneration, "");
+                event.getTimestamp(), (long)(pause * 1_000_000), nonNuN(event.getUser()), nonNuN(event.getSys()), nonNuN(event.getReal()),
+                generations, phase, cause, properties, concurrency, capacityByGeneration, "");
+    }
+
+    private double nonNuN(double user) {
+        return Double.isNaN(user) ? 0.0 : user;
     }
 
     private long detectProperties(AbstractGCEvent<?> event) {

@@ -25,7 +25,7 @@ public enum ConfigProperty {
 
     TEST1_CONFIG("test.config.1", "test"),
 
-    BATCH_PUT_GC_EVENT_SIZE("batch.put.gc.event.size", 30),
+    BATCH_PUT_GC_EVENT_SIZE("batch.put.gc.event.size", 5),
     USER_ANALYSIS_COUNT_CACHE_SIZE("user.analysis.cache.size", 5_000L),
     USER_ANALYSIS_COUNT_CACHE_SECONDS("user.analysis.cache.min", 120L),
     ANALYSIS_STATISTIC_CACHE_SIZE("analysis.stats.cache.size", 10_000L),

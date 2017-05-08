@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS gc_event (
   gen_cap_before map<int, bigint>,
   gen_cap_after map<int, bigint>,
   gen_cap_total map<int, bigint>,
+  user_time double,
+  sys_time double,
+  real_time double,
   ext varchar,
   PRIMARY KEY ((analyse_id, jvm_id, date), written_at)
 ) WITH CLUSTERING ORDER BY (written_at DESC);

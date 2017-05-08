@@ -13,11 +13,10 @@ import java.util.Map;
 public class DefaultGCEventFactory implements GCEventFactory {
 
     @Override
-    public GCEvent create(String id, String parentId, String bucketId, DateTime occurred,
-                          String description, VMEventType vmEventType, Capacity capacity,
-                          Capacity totalCapacity, double timestamp, long pauseMu,
-                          EnumSet<Generation> generations, Phase phase, Cause cause, long properties,
-                          EventConcurrency concurrency, Map<Generation, Capacity> generationCapacityMap, String ext) {
+    public GCEvent create(String id, String parentId, String bucketId, DateTime occurred, String description, VMEventType vmEventType,
+                          Capacity capacity, Capacity totalCapacity, double timestamp, long pauseMu, double user, double sys, double real,
+                          EnumSet<Generation> generations, Phase phase, Cause cause, long properties, EventConcurrency concurrency,
+                          Map<Generation, Capacity> generationCapacityMap, String ext) {
         GCEventImpl event = new GCEventImpl();
         event.id(id);
         event.parentEvent(parentId);
@@ -32,6 +31,7 @@ public class DefaultGCEventFactory implements GCEventFactory {
         event.generations(generations);
         event.phase(phase);
         event.cause(cause);
+        event.user(user).sys(sys).real(real);
         event.properties(properties);
         event.concurrency(concurrency);
         event.capacityByGeneration(generationCapacityMap);

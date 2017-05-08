@@ -145,6 +145,33 @@ public class GCEventImpl implements GCEvent {
     }
 
     @Override
+    public double user() {
+        return user;
+    }
+    public GCEventImpl user(double user) {
+        this.user = user;
+        return this;
+    }
+
+    @Override
+    public double sys() {
+        return sys;
+    }
+    public GCEventImpl sys(double sys) {
+        this.sys = sys;
+        return this;
+    }
+
+    @Override
+    public double real() {
+        return real;
+    }
+    public GCEventImpl real(double real) {
+        this.real = real;
+        return this;
+    }
+
+    @Override
     public EnumSet<Generation> generations() {
         return generations;
     }
@@ -199,6 +226,9 @@ public class GCEventImpl implements GCEvent {
         this.capacity = other.capacity();
         this.totalCapacity = other.totalCapacity();
         this.pauseMu = other.pauseMu();
+        this.user = other.user();
+        this.sys = other.sys();
+        this.real = other.real();
         this.generations = other.generations();
         this.concurrency = other.concurrency();
         this.capacityByGeneration = other.capacityByGeneration();
@@ -220,6 +250,9 @@ public class GCEventImpl implements GCEvent {
     protected Capacity capacity;
     protected Capacity totalCapacity;
     protected long pauseMu;
+    protected double user;
+    protected double sys;
+    protected double real;
     protected EnumSet<Generation> generations;
     protected EventConcurrency concurrency;
     protected String ext;
@@ -235,13 +268,16 @@ public class GCEventImpl implements GCEvent {
         if (Double.compare(gcEvent.timestamp, timestamp) != 0) return false;
         if (properties != gcEvent.properties) return false;
         if (pauseMu != gcEvent.pauseMu) return false;
+        if (Double.compare(gcEvent.user, user) != 0) return false;
+        if (Double.compare(gcEvent.sys, sys) != 0) return false;
+        if (Double.compare(gcEvent.real, real) != 0) return false;
         if (id != null ? !id.equals(gcEvent.id) : gcEvent.id != null) return false;
         if (jvmId != null ? !jvmId.equals(gcEvent.jvmId) : gcEvent.jvmId != null) return false;
         if (bucketId != null ? !bucketId.equals(gcEvent.bucketId) : gcEvent.bucketId != null) return false;
         if (parentEvent != null ? !parentEvent.equals(gcEvent.parentEvent) : gcEvent.parentEvent != null) return false;
         if (analyseId != null ? !analyseId.equals(gcEvent.analyseId) : gcEvent.analyseId != null) return false;
         if (description != null ? !description.equals(gcEvent.description) : gcEvent.description != null) return false;
-        if (!occurred.equals(gcEvent.occurred)) return false;
+        if (occurred != null ? !occurred.equals(gcEvent.occurred) : gcEvent.occurred != null) return false;
         if (vmEventType != gcEvent.vmEventType) return false;
         if (phase != gcEvent.phase) return false;
         if (cause != gcEvent.cause) return false;
@@ -263,7 +299,7 @@ public class GCEventImpl implements GCEvent {
         result = 31 * result + (parentEvent != null ? parentEvent.hashCode() : 0);
         result = 31 * result + (analyseId != null ? analyseId.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + occurred.hashCode();
+        result = 31 * result + (occurred != null ? occurred.hashCode() : 0);
         temp = Double.doubleToLongBits(timestamp);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (vmEventType != null ? vmEventType.hashCode() : 0);
@@ -273,6 +309,12 @@ public class GCEventImpl implements GCEvent {
         result = 31 * result + (capacity != null ? capacity.hashCode() : 0);
         result = 31 * result + (totalCapacity != null ? totalCapacity.hashCode() : 0);
         result = 31 * result + (int) (pauseMu ^ (pauseMu >>> 32));
+        temp = Double.doubleToLongBits(user);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(sys);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(real);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (generations != null ? generations.hashCode() : 0);
         result = 31 * result + (concurrency != null ? concurrency.hashCode() : 0);
         result = 31 * result + (ext != null ? ext.hashCode() : 0);
@@ -297,6 +339,9 @@ public class GCEventImpl implements GCEvent {
         sb.append(", capacity=").append(capacity);
         sb.append(", totalCapacity=").append(totalCapacity);
         sb.append(", pauseMu=").append(pauseMu);
+        sb.append(", user=").append(user);
+        sb.append(", sys=").append(sys);
+        sb.append(", real=").append(real);
         sb.append(", generations=").append(generations);
         sb.append(", concurrency=").append(concurrency);
         sb.append(", ext='").append(ext).append('\'');
