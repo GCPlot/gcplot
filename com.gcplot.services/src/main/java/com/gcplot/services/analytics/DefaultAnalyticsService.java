@@ -30,18 +30,18 @@ import java.util.function.Consumer;
  */
 public class DefaultAnalyticsService implements AnalyticsService {
     private static final Long2LongMap PERIOD_SAMPLING_BUCKETS = new Long2LongLinkedOpenHashMap() {{
-        put(3600L, 15L); /* 1 hours -> 15 seconds */
-        put(7200L, 30L); /* 2 hours -> 30 seconds */
-        put(21600L, 60L); /* 6 hours -> 1 minute */
-        put(43200L, 120L); /* 12 hours -> 2 minutes */
-        put(86400L, 240L); /* 24 hours -> 4 minutes */
-        put(172800L, 600L); /* 2 days -> 10 minutes */
-        put(345600L, 1200L); /* 4 days -> 20 minutes */
-        put(604800L, 1800L); /* 7 days -> 30 minutes */
-        put(1209600L, 3000L); /* 14 days -> 50 minutes */
-        put(2592000L, 7200L); /* 30 days -> 2 hours */
-        put(5184000L, 14400L); /* 60 days -> 4 hours */
-        put(7776000L, 18000L); /* 90 days -> 5 hours */
+        put(3600L, 30L); /* 1 hours -> 15 seconds */
+        put(7200L, 60L); /* 2 hours -> 30 seconds */
+        put(21600L, 120L); /* 6 hours -> 1 minute */
+        put(43200L, 240L); /* 12 hours -> 2 minutes */
+        put(86400L, 600L); /* 24 hours -> 4 minutes */
+        put(172800L, 1200L); /* 2 days -> 10 minutes */
+        put(345600L, 1800L); /* 4 days -> 20 minutes */
+        put(604800L, 3000L); /* 7 days -> 30 minutes */
+        put(1209600L, 7200L); /* 14 days -> 50 minutes */
+        put(2592000L, 14400L); /* 30 days -> 2 hours */
+        put(5184000L, 18000L); /* 60 days -> 4 hours */
+        put(7776000L, 32000L); /* 90 days -> 5 hours */
     }};
     private GCAnalyseRepository analyseRepository;
     private GCEventRepository eventRepository;
