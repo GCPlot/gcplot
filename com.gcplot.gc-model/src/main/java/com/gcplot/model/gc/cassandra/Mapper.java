@@ -95,24 +95,37 @@ public abstract class Mapper {
         return events;
     }
 
+    /**
+     * !!!! WARNING !!!! Very dangerous perfomance optimization, all indexes linked to
+     * CassandraGCEventRepository.NON_KEY_FIELDS
+     */
     public static GCEvent lazyEventFrom(Row row) {
         if (row == null) {
             return null;
         }
         GCEventImpl gcEvent = new GCEventImpl();
         try {
-            gcEvent.occurred(new DateTime(row.getTimestamp("occurred"), DateTimeZone.UTC))
-                    .pauseMu(row.getLong("pause_mu"))
-                    .timestamp(row.getDouble("tmstm"))
-                    .generations(EnumSetUtils.decode(row.getLong("generations"), Generation.class))
-                    .concurrency(EventConcurrency.get(row.getInt("concurrency")))
-                    .phase(Phase.get(row.getInt("phase")))
-                    .capacity(new Capacity(row.getList("capacity", Long.class)))
-                    .totalCapacity(new Capacity(row.getList("total_capacity", Long.class)))
-                    .user(row.getDouble("user_time"))
-                    .sys(row.getDouble("sys_time"))
-                    .cause(_top(row, "cause", Cause.OTHER, (Function<Integer, Cause>) Cause::get))
-                    .properties(row.getLong("properties"));
+            gcEvent.occurred(new DateTime(row.getTimestamp(0), DateTimeZone.UTC))
+                    .pauseMu(row.getLong(1))
+                    .timestamp(row.getDouble(2))
+                    .generations(EnumSetUtils.decode(row.getLong(3), Generation.class))
+                    .concurrency(EventConcurrency.get(row.getInt(4)))
+                    .phase(Phase.get(row.getInt(5)))
+                    .capacity(new Capacity(row.getList(6, Long.class)))
+                    .totalCapacity(new Capacity(row.getList(7, Long.class)))
+                    .cause(_top(row, 11, Cause.OTHER, (Function<Integer, Cause>) Cause::get))
+                    .properties(row.getLong(12));
+
+            if (!row.isNull(13)) {
+                gcEvent.user(row.getDouble(13));
+            } else {
+                gcEvent.user(-1);
+            }
+            if (!row.isNull(14)) {
+                gcEvent.sys(row.getDouble(14));
+            } else {
+                gcEvent.sys(-1);
+            }
 
             mapGenerations(row, gcEvent, false);
         } catch (Throwable t) {
@@ -156,9 +169,12 @@ public abstract class Mapper {
         if (gcEvent.generations().size() > 1 && (!checkContains || (row.getColumnDefinitions().contains("gen_cap_before") &&
                 row.getColumnDefinitions().contains("gen_cap_after") && row.getColumnDefinitions().contains("gen_cap_total")))) {
             capacityByGeneration = new IdentityHashMap<>(3);
-            Map<Integer, Long> before = row.getMap("gen_cap_before", Integer.class, Long.class);
-            Map<Integer, Long> after = row.getMap("gen_cap_after", Integer.class, Long.class);
-            Map<Integer, Long> total = row.getMap("gen_cap_total", Integer.class, Long.class);
+            Map<Integer, Long> before = checkContains ? row.getMap("gen_cap_before", Integer.class, Long.class) :
+                    row.getMap(8, Integer.class, Long.class);
+            Map<Integer, Long> after = checkContains ? row.getMap("gen_cap_after", Integer.class, Long.class) :
+                    row.getMap(9, Integer.class, Long.class);
+            Map<Integer, Long> total = checkContains ? row.getMap("gen_cap_total", Integer.class, Long.class) :
+                    row.getMap(10, Integer.class, Long.class);
 
             for (Generation g : gcEvent.generations()) {
                 capacityByGeneration.put(g, Capacity.of(
@@ -212,6 +228,15 @@ public abstract class Mapper {
 
     private static <T, V> T _top(Row row, String name, T def, Function<V, T> f) {
         Object val = row.getObject(name);
+        if (val == null) {
+            return def;
+        } else {
+            return f.apply((V) val);
+        }
+    }
+
+    private static <T, V> T _top(Row row, int idx, T def, Function<V, T> f) {
+        Object val = row.getObject(idx);
         if (val == null) {
             return def;
         } else {
