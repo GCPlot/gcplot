@@ -30,6 +30,7 @@ import java.util.function.Consumer;
  */
 public class DefaultAnalyticsService implements AnalyticsService {
     private static final Long2LongMap PERIOD_SAMPLING_BUCKETS = new Long2LongLinkedOpenHashMap() {{
+        put(420L, 5L); /* 7 minutes -> 5 seconds */
         put(900L, 10L); /* 15 minutes -> 10 seconds */
         put(1800L, 15L); /* 30 minutes -> 15 seconds */
         put(3600L, 30L); /* 1 hours -> 30 seconds */
