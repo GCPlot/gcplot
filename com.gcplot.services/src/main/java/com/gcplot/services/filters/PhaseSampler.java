@@ -3,10 +3,7 @@ package com.gcplot.services.filters;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.Phase;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -15,7 +12,7 @@ import java.util.function.Predicate;
  */
 public class PhaseSampler extends Sampler {
     private Predicate<GCEvent> filter;
-    private Map<Phase, EventsBundle> events = new HashMap<>();
+    private Map<Phase, EventsBundle> events = new IdentityHashMap<>();
 
     public PhaseSampler(int sampleSeconds, Predicate<GCEvent> filter) {
         super(sampleSeconds, null);
