@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -123,14 +124,19 @@ public class GCEventResponse {
     public static String toJson(GCEvent event) {
         StringBuilder sb = stringBuilder.get();
         try {
-            int[] gens = event.generations().stream().mapToInt(TypedEnum::type).toArray();
             sb.append("{").append("\"p\":").append(event.pauseMu()).append(",")
                     .append("\"d\":").append(event.occurred().getMillis());
-            if (gens.length != 1 || gens[0] != Generation.YOUNG.type()) {
+            if (event.generations().size() == 1) {
+                Generation g = event.generations().iterator().next();
+                if (g != Generation.YOUNG) {
+                    sb.append(",").append("\"g\":[").append(g.type()).append("]");
+                }
+            } if (event.generations().size() > 1) {
                 sb.append(",").append("\"g\":[");
-                for (int i = 0; i < gens.length; i++) {
-                    sb.append(gens[i]);
-                    if (i < gens.length - 1) {
+                int c = 0;
+                for (Generation gen : event.generations()) {
+                    sb.append(gen.type());
+                    if (c++ < event.generations().size() - 1) {
                         sb.append(",");
                     }
                 }
