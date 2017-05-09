@@ -6,7 +6,6 @@ import com.gcplot.commons.CollectionUtils;
 import com.gcplot.commons.enums.TypedEnum;
 import com.gcplot.model.gc.*;
 import com.google.common.base.Strings;
-import com.google.common.math.DoubleMath;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.text.DecimalFormat;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
  */
 @NotThreadSafe
 public class GCEventResponse {
-    private static final Double TOLERANCE = Math.pow(10, -6);
     private static final DecimalFormat FORMAT;
 
     static {
