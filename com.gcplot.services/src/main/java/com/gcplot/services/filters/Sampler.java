@@ -1,6 +1,7 @@
 package com.gcplot.services.filters;
 
 import com.gcplot.model.gc.GCEvent;
+import com.gcplot.model.gc.GCEvents;
 import com.gcplot.services.EventInterceptor;
 import org.joda.time.DateTime;
 
@@ -50,7 +51,7 @@ public class Sampler implements EventInterceptor<GCEvent> {
                 b.setMin(event);
             } else if (event.pauseMu() > b.getMax().pauseMu()) {
                 b.setMax(event);
-            } else if (b.getRest() == null) {
+            } else if (b.getRest() == null || b.getRest() == b.getMin() || b.getRest() == b.getMax()) {
                 b.setRest(event);
             }
         } else {
@@ -76,14 +77,14 @@ public class Sampler implements EventInterceptor<GCEvent> {
     protected List<GCEvent> writeAndReset(EventsBundle b) {
         if (b.isEmpty()) return Collections.emptyList();
         List<GCEvent> events = new ArrayList<>(3);
-        if (!b.getMin().equals(b.getMax())) {
+        if (!GCEvents.lightEquals(b.getMin(), b.getMax())) {
             events.add(b.getMin());
             events.add(b.getMax());
         } else {
             events.add(b.getMin());
         }
-        if (b.getRest() != null && (!(b.getMin().equals(b.getRest())
-                || b.getMax().equals(b.getRest())))) {
+        if (b.getRest() != null && (!(GCEvents.lightEquals(b.getMin(), b.getRest())
+                || GCEvents.lightEquals(b.getMax(), b.getRest())))) {
             events.add(b.getRest());
         }
         b.setMin(null);
