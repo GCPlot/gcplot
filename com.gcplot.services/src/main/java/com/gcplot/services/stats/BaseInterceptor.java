@@ -25,18 +25,20 @@ public class BaseInterceptor {
                     ratePreviousEvent.capacityByGeneration().get(Generation.YOUNG);
             long period = Math.abs(ratePreviousEvent.occurred().getMillis() - event.occurred().getMillis());
             long allocated = Math.abs(prevCapacity.usedBefore() - capacity.usedAfter());
-            allocatedSum += allocated;
-            allocationRateSum += ((1000 * allocated) / period);
-            allocationRateCount++;
+            if (period > 0) {
+                allocatedSum += allocated;
+                allocationRateSum += ((1000 * allocated) / period);
+                allocationRateCount++;
 
-            long youngDecreased = Math.abs(capacity.usedBefore() - capacity.usedAfter());
-            long totalDecreased = Math.abs(event.totalCapacity().usedBefore() - event.totalCapacity().usedAfter());
-            // it's not a promotion when TOTAL heap decreased more than YOUNG
-            if (!event.hasProperty(Property.G1_MIXED) && totalDecreased < youngDecreased) {
-                long promoted = Math.abs(totalDecreased - youngDecreased);
-                promotedSum += promoted;
-                promotionRateSum += ((1000 * promoted) / period);
-                promotionRateCount++;
+                long youngDecreased = Math.abs(capacity.usedBefore() - capacity.usedAfter());
+                long totalDecreased = Math.abs(event.totalCapacity().usedBefore() - event.totalCapacity().usedAfter());
+                // it's not a promotion when TOTAL heap decreased more than YOUNG
+                if (!event.hasProperty(Property.G1_MIXED) && totalDecreased < youngDecreased) {
+                    long promoted = Math.abs(totalDecreased - youngDecreased);
+                    promotedSum += promoted;
+                    promotionRateSum += ((1000 * promoted) / period);
+                    promotionRateCount++;
+                }
             }
         }
         ratePreviousEvent = event;
