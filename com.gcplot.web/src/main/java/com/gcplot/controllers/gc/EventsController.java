@@ -160,37 +160,41 @@ public class EventsController extends Controller {
      * GET /gc/jvm/events/full/sample/stream
      */
     public void fullJvmSampleEventsStream(RequestContext ctx) {
-        PeriodParams pp = new PeriodParams(ctx);
+        try {
+            PeriodParams pp = new PeriodParams(ctx);
 
-        checkPeriodAndExecute(pp, ctx, () -> {
-            ctx.setChunked(true);
-            EnumSet<GCEventFeature> features = pp.isStats() ? GCEventFeature.getAll() : GCEventFeature.getSamplers();
-            StatisticAggregateInterceptor cached = analyseStatsCache.get(statsKey(pp), k -> null);
-            if (cached != null) {
-                features = EnumSet.copyOf(features);
-                features.remove(GCEventFeature.CALC_STATISTIC);
-            }
+            checkPeriodAndExecute(pp, ctx, () -> {
+                ctx.setChunked(true);
+                EnumSet<GCEventFeature> features = pp.isStats() ? GCEventFeature.getAll() : GCEventFeature.getSamplers();
+                StatisticAggregateInterceptor cached = analyseStatsCache.get(statsKey(pp), k -> null);
+                if (cached != null) {
+                    features = EnumSet.copyOf(features);
+                    features.remove(GCEventFeature.CALC_STATISTIC);
+                }
 
-            EventsResult r = analyticsService.events(account(ctx).id(), pp.getAnalyseId(), pp.getJvmId(), pp.getInterval(),
-                    features, e -> {
-                        if (e.isGCEvent()) {
-                            ctx.write(GCEventResponse.toJson((GCEvent) e));
-                        } else if (e.isRate()) {
-                            ctx.write(GCRateResponse.toJson((GCRate) e));
-                        } else if (e.isStatistic()) {
-                            analyseStatsCache.put(statsKey(pp), (StatisticAggregateInterceptor) e);
-                            ctx.write(JsonSerializer.serialize(e));
-                        }
-                        delimit(ctx, pp);
-                    });
-            if (!r.isSuccess()) {
-                ctx.write(r.getErrorMessage());
-                delimit(ctx, pp);
-            } else if (cached != null) {
-                ctx.write(JsonSerializer.serialize(cached));
-                delimit(ctx, pp);
-            }
-        });
+                EventsResult r = analyticsService.events(account(ctx).id(), pp.getAnalyseId(), pp.getJvmId(), pp.getInterval(),
+                        features, e -> {
+                            if (e.isGCEvent()) {
+                                ctx.write(GCEventResponse.toJson((GCEvent) e));
+                            } else if (e.isRate()) {
+                                ctx.write(GCRateResponse.toJson((GCRate) e));
+                            } else if (e.isStatistic()) {
+                                analyseStatsCache.put(statsKey(pp), (StatisticAggregateInterceptor) e);
+                                ctx.write(JsonSerializer.serialize(e));
+                            }
+                            delimit(ctx, pp);
+                        });
+                if (!r.isSuccess()) {
+                    ctx.write(r.getErrorMessage());
+                    delimit(ctx, pp);
+                } else if (cached != null) {
+                    ctx.write(JsonSerializer.serialize(cached));
+                    delimit(ctx, pp);
+                }
+            });
+        } catch (Throwable t) {
+            LOG.error(t.getMessage(), t);
+        }
     }
 
     private Triple statsKey(PeriodParams pp) {
