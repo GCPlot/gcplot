@@ -38,17 +38,16 @@ public class PipeEventProcessor {
 
     public void init() {
         disruptor = new Disruptor<>(GCEventBundle::new, 16 * 1024, new ThreadFactoryBuilder()
-                .setDaemon(false).setNameFormat("ds-").build(), ProducerType.SINGLE, new BlockingWaitStrategy());
+                .setDaemon(false).setNameFormat("ds-").build(), ProducerType.MULTI, new BlockingWaitStrategy());
         EventHandlerGroup group = null;
         if (eventMapper != Mapper.EMPTY) {
-            long mapperCount = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
+            final long mapperCount = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
             EventHandler<GCEventBundle>[] mapperHandlers = new EventHandler[(int) mapperCount];
             for (int i = 0; i < mapperCount; i++) {
                 final long s = i;
                 mapperHandlers[i] = (e, sequence, endOfBatch) -> {
                     if (sequence % mapperCount == s) {
                         try {
-                            e.wasHandled = true;
                             e.event = eventMapper.map(e.parserContext, e.rawEvent);
                             if (e.event == null) {
                                 e.ignore();
@@ -77,7 +76,7 @@ public class PipeEventProcessor {
                     }
                 }
             } catch (Throwable t) {
-                LOG.error(e.wasHandled + " " + e.event + " " + e.isIgnore + "|" + t.getMessage(), t);
+                LOG.error(t.getMessage(), t);
                 e.ignore();
             }
         };
