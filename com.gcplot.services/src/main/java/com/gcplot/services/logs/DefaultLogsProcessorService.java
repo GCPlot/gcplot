@@ -65,7 +65,7 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
     public void init() {
         uploadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8);
-        pipeEventProcessor = new PipeEventProcessor(eventRepository::add, logsParser.getMapper());
+        pipeEventProcessor = new PipeEventProcessor(eventRepository::add, eventRepository::add, logsParser.getMapper());
         pipeEventProcessor.init();
     }
 

@@ -14,6 +14,8 @@ import com.lmax.disruptor.dsl.ProducerType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -24,21 +26,24 @@ import java.util.function.Consumer;
  */
 public class PipeEventProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(PipeEventProcessor.class);
-    private final Consumer<GCEvent> persister;
+    private final Consumer<List<GCEvent>> persister;
+    private final Consumer<GCEvent> singlePersister;
     private final Mapper eventMapper;
     private Disruptor<GCEventBundle> disruptor;
 
-    public PipeEventProcessor(Consumer<GCEvent> persister, Mapper eventMapper) {
+    public PipeEventProcessor(Consumer<List<GCEvent>> persister, Consumer<GCEvent> singlePresister,
+                              Mapper eventMapper) {
         this.persister = persister;
+        this.singlePersister = singlePresister;
         this.eventMapper = eventMapper;
     }
 
     public void init() {
-        disruptor = new Disruptor<>(GCEventBundle::new, 16 * 1024, new ThreadFactoryBuilder()
+        disruptor = new Disruptor<>(GCEventBundle::new, 32 * 1024, new ThreadFactoryBuilder()
                 .setDaemon(false).setNameFormat("ds-").build(), ProducerType.SINGLE, new BlockingWaitStrategy());
         EventHandlerGroup group = null;
         if (eventMapper != Mapper.EMPTY) {
-            int mapperCount = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
+            int mapperCount = Math.max(Runtime.getRuntime().availableProcessors() / 3, 1);
             EventHandler<GCEventBundle>[] mapperHandlers = new EventHandler[mapperCount];
             for (int i = 0; i < mapperCount; i++) {
                 mapperHandlers[i] = (e, sequence, endOfBatch) -> {
@@ -74,18 +79,39 @@ public class PipeEventProcessor {
         } else {
             group = disruptor.handleEventsWith(eventHandler);
         }
-        int persisterCount = Runtime.getRuntime().availableProcessors() * 4;
+        int persisterCount = Runtime.getRuntime().availableProcessors() * 2;
         EventHandler<GCEventBundle>[] persisterHandlers = new EventHandler[persisterCount];
         for (int i = 0; i < persisterCount; i++) {
-            persisterHandlers[i] = (e, sequence, endOfBatch) -> {
-                try {
-                    if (!e.isIgnore) {
-                        persister.accept(e.event);
+            persisterHandlers[i] = new EventHandler<GCEventBundle>() {
+                private static final int MAX_BATCH_SIZE = 5;
+                private List<GCEvent> batch = new ArrayList<>(MAX_BATCH_SIZE);
+                private int monthsSum;
+
+                @Override
+                public void onEvent(GCEventBundle e, long sequence, boolean endOfBatch) throws Exception {
+                    try {
+                        if (batch.size() > 0 && (batch.size() == MAX_BATCH_SIZE || endOfBatch)) {
+                            if (monthsSum % batch.get(0).occurred().getMonthOfYear() != 0) {
+                                batch.forEach(singlePersister);
+                            } else {
+                                persister.accept(new ArrayList<>(batch));
+                            }
+                            batch.clear();
+                            monthsSum = 0;
+                        }
+                        if (!e.isIgnore) {
+                            if (endOfBatch) {
+                                singlePersister.accept(e.event);
+                            } else {
+                                batch.add(e.event);
+                                monthsSum += e.event.occurred().getMonthOfYear();
+                            }
+                        }
+                    } catch (Throwable t) {
+                        LOG.error(t.getMessage(), t);
+                    } finally {
+                        e.future.complete(e.rawEvent);
                     }
-                } catch (Throwable t) {
-                    LOG.error(t.getMessage(), t);
-                } finally {
-                    e.future.complete(e.rawEvent);
                 }
             };
         }
