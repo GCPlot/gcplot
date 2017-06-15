@@ -1,4 +1,4 @@
-package com.gcplot.commons;
+package com.gcplot.configuration;
 
 import java.util.HashMap;
 import java.util.Map;

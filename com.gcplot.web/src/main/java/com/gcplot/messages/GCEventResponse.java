@@ -2,8 +2,8 @@ package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gcplot.commons.CollectionUtils;
-import com.gcplot.commons.enums.TypedEnum;
+import com.gcplot.utils.CollectionUtils;
+import com.gcplot.utils.enums.TypedEnum;
 import com.gcplot.model.gc.*;
 import com.google.common.base.Strings;
 
@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

@@ -1,6 +1,6 @@
 package com.gcplot.commons.serialization;
 
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;
 import io.protostuff.Schema;

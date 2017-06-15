@@ -1,7 +1,7 @@
 package com.gcplot;
 
 import com.gcplot.commons.ErrorMessages;
-import com.gcplot.commons.Utils;
+import com.gcplot.utils.Utils;
 import com.gcplot.messages.*;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;

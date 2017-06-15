@@ -4,11 +4,10 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.FileAppender;
 import com.gcplot.Identifier;
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.FileUtils;
-import com.gcplot.commons.LazyVal;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.logs.*;
 import com.gcplot.logs.survivor.AgesState;
@@ -25,6 +24,7 @@ import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.resource.ResourceManager;
 import com.gcplot.services.logs.disruptor.ParsingState;
+import com.gcplot.services.logs.disruptor.PipeEventProcessor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -35,14 +35,11 @@ import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.function.Consumer;
 
-import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
-import static com.gcplot.commons.CollectionUtils.cloneAndPut;
-import static com.gcplot.commons.Utils.esc;
+import static com.gcplot.utils.CollectionUtils.cloneAndAdd;
+import static com.gcplot.utils.CollectionUtils.cloneAndPut;
+import static com.gcplot.utils.Utils.esc;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -64,15 +61,19 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
     private GCAnalyseFactory analyseFactory;
     private ObjectsAgesFactory objectsAgesFactory;
     private ConfigurationManager config;
+    private PipeEventProcessor pipeEventProcessor;
 
     public void init() {
         uploadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8);
+        pipeEventProcessor = new PipeEventProcessor(eventRepository::add, logsParser.getMapper());
+        pipeEventProcessor.init();
     }
 
     public void destroy() {
         try {
             uploadExecutor.shutdownNow();
             uploadExecutor.awaitTermination(1, TimeUnit.MINUTES);
+            pipeEventProcessor.shutdown();
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
         }
@@ -224,58 +225,19 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
     private Pair<ParseResult, ParsingState> parseAndPersist(LogSource source, String jvmId, GCAnalyse analyse, Logger log) throws IOException {
         ParserContext ctx = new ParserContext(log, source.checksum(), analyse.jvmGCTypes().get(jvmId),
                 analyse.jvmVersions().get(jvmId), jvmId, analyse.id());
-        final GCEvent[] firstParsed = new GCEvent[1];
-        final AtomicIntegerArray lastMonth = new AtomicIntegerArray(1);
-        final AtomicReferenceArray<DateTime> lastOccurred = new AtomicReferenceArray<>(1);
-        final boolean forbidOtherGen = config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION);
-        final int batchSize = config.readInt(ConfigProperty.BATCH_PUT_GC_EVENT_SIZE);
-        final ThreadLocal<List<GCEvent>> es = ThreadLocal.withInitial(() -> new ArrayList<>(batchSize));
-        LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
-                eventRepository.lastEvent(analyse.id(), jvmId, source.checksum(), firstParsed[0].occurred().minusDays(1)));
+
         ParseResult pr;
-        ParsingState ps = new ParsingState(lastPersistedEvent);
+        ParsingState ps = new ParsingState(ctx, eventRepository, source.checksum());
+        AtomicReference<Future> lastFuture = new AtomicReference<>();
         try (InputStream fis = source.logStream()) {
-            pr = logsParser.parse(fis, /*first -> {
-                if (!first.isOther()) {
-                    firstParsed[0] = first;
-                    lastPersistedEvent.get();
-                    return true;
-                } else {
-                    return false;
-                }
-            },*/ e -> {
-                /*
-                List<GCEvent> events = es.get();
-                if (e != null) {
-                    if ((firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                            e.timestamp()) && !isOtherGeneration(forbidOtherGen, e)) {
-                        enricher.accept(e);
-                        // we will want to omit cross-rows inserts in the same batch - they are slow
-                        boolean isInOtherMonthBucket =
-                                lastMonth.getAndSet(0, e.occurred().getMonthOfYear()) != e.occurred().getMonthOfYear();
-                        if (events.size() > 0 &&
-                                (events.size() % batchSize == 0
-                                        || isInOtherMonthBucket
-                                        || (e.occurred().equals(lastOccurred.getAndSet(0, e.occurred()))))) {
-                            persist(events);
-                        }
-                        events.add(e);
-                    }
-                } else if (events.size() > 0) {
-                    persist(events);
-                }*/
-            }, ctx);
+            pr = logsParser.parse(fis, e -> lastFuture.set(pipeEventProcessor.processNext(e, ctx, ps)), ctx);
+        }
+        if (lastFuture.get() != null) {
+            try {
+                lastFuture.get().get();
+            } catch (Throwable ignore) {}
         }
         return Pair.of(pr, ps);
-    }
-
-    private boolean isOtherGeneration(boolean forbidOtherGen, GCEvent e) {
-        return forbidOtherGen && e.isOther();
-    }
-
-    private void persist(List<GCEvent> events) {
-        eventRepository.add(events);
-        events.clear();
     }
 
     private Logger createLogger(File logFile) {

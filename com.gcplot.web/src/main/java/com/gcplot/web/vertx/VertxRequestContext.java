@@ -1,6 +1,6 @@
 package com.gcplot.web.vertx;
 
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.messages.Wrapper;
 import com.gcplot.model.account.Account;

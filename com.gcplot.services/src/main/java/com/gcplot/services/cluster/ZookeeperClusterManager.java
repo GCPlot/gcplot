@@ -3,7 +3,7 @@ package com.gcplot.services.cluster;
 import com.gcplot.cluster.ClusterManager;
 import com.gcplot.cluster.WorkerTask;
 import com.gcplot.cluster.Worker;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.commons.serialization.ProtostuffSerializer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.zookeeper.CreateMode;

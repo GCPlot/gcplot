@@ -20,9 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -40,7 +38,6 @@ public class GCViewerLogsParser implements LogsParser<AbstractGCEvent> {
         GCResource gcResource = new GCResource("default");
         gcResource.setLogger(ctx.logger());
         StreamDataReader dr;
-        final DateTime now = DateTime.now(DateTimeZone.UTC).withDayOfYear(1).withTimeAtStartOfDay();
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
             if (l.size() > 0) {
                 l.forEach(eventsConsumer);

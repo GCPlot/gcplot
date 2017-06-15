@@ -2,11 +2,10 @@ package com.gcplot.controllers.gc;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.gcplot.Identifier;
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
-import com.gcplot.commons.Utils;
+import com.gcplot.utils.Utils;
 import com.gcplot.controllers.Controller;
-import com.gcplot.fs.LogsStorage;
 import com.gcplot.fs.LogsStorageProvider;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;

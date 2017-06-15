@@ -1,6 +1,6 @@
-package com.gcplot.commons;
+package com.gcplot.utils;
 
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.google.common.base.Splitter;
 
 import java.io.File;

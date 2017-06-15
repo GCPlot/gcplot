@@ -1,6 +1,6 @@
 package com.gcplot.services;
 
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.configuration.ConfigurationManager;
 
 import java.io.UnsupportedEncodingException;

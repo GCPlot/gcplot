@@ -1,9 +1,8 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
-import com.gcplot.commons.Utils;
+import com.gcplot.utils.Utils;
 import com.gcplot.model.VMVersion;
-import com.google.common.base.Splitter;
 import org.joda.time.DateTime;
 
 import java.util.Collections;

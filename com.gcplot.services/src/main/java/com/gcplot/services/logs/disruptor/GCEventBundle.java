@@ -14,7 +14,6 @@ public class GCEventBundle {
     public Object rawEvent;
     public GCEvent event;
     public boolean isIgnore;
-    public boolean isNoBatchPersist;
     public CompletableFuture future;
     public ParsingState parsingState;
     public ParserContext parserContext;
@@ -26,7 +25,6 @@ public class GCEventBundle {
         future = null;
         parserContext = null;
         isIgnore = false;
-        isNoBatchPersist = false;
         return this;
     }
 
@@ -45,11 +43,6 @@ public class GCEventBundle {
         return this;
     }
 
-    public GCEventBundle noBatchPersist() {
-        this.isNoBatchPersist = true;
-        return this;
-    }
-
     public GCEventBundle future(CompletableFuture future) {
         this.future = future;
         return this;
@@ -57,6 +50,11 @@ public class GCEventBundle {
 
     public GCEventBundle parsingState(ParsingState parsingState) {
         this.parsingState = parsingState;
+        return this;
+    }
+
+    public GCEventBundle parserContext(ParserContext parserContext) {
+        this.parserContext = parserContext;
         return this;
     }
 }

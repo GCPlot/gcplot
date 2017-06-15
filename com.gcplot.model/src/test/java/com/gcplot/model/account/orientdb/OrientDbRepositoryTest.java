@@ -1,6 +1,6 @@
 package com.gcplot.model.account.orientdb;
 
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.configuration.OrientDbConfigurationManager;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;

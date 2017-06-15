@@ -1,7 +1,7 @@
 package com.gcplot.cassandra;
 
 import com.gcplot.commons.FileUtils;
-import com.gcplot.commons.Utils;
+import com.gcplot.utils.Utils;
 import com.google.common.io.Files;
 import org.apache.commons.io.IOUtils;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;

@@ -1,6 +1,6 @@
 package com.gcplot.web;
 
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.model.account.Account;

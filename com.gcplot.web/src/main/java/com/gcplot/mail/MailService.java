@@ -1,9 +1,9 @@
 package com.gcplot.mail;
 
 import com.codahale.metrics.MetricRegistry;
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.Metrics;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.model.account.Account;
 import com.gcplot.services.UrlBuilder;

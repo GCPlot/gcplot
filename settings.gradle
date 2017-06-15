@@ -1,4 +1,5 @@
 include 'com.gcplot.api'
+include 'com.gcplot.utils'
 include 'com.gcplot.commons'
 include 'com.gcplot.gc-model'
 include 'com.gcplot.log-processor'

@@ -1,7 +1,5 @@
 package com.gcplot.configuration;
 
-import com.gcplot.commons.ConfigProperty;
-
 public interface ConfigurationManager {
 
     String readString(ConfigProperty configProperty);

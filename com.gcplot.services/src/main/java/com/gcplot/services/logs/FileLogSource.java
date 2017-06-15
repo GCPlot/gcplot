@@ -1,7 +1,7 @@
 package com.gcplot.services.logs;
 
 import com.gcplot.commons.FileUtils;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
 import org.slf4j.Logger;

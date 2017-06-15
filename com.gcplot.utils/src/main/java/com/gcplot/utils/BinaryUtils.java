@@ -1,4 +1,4 @@
-package com.gcplot.commons;
+package com.gcplot.utils;
 
 public abstract class BinaryUtils {
 

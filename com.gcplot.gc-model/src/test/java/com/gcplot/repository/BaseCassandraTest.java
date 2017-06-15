@@ -2,7 +2,7 @@ package com.gcplot.repository;
 
 import com.gcplot.cassandra.BaseCassandra;
 import com.gcplot.cassandra.CassandraConnector;
-import com.gcplot.commons.Range;
+import com.gcplot.utils.Range;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;

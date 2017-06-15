@@ -1,6 +1,5 @@
 package com.gcplot.log_processor.parser.detect;
 
-import com.gcplot.commons.exceptions.Exceptions;
 import com.gcplot.logs.LogSource;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GarbageCollectorType;
@@ -10,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Iterator;
 

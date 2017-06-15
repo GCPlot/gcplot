@@ -1,6 +1,6 @@
 package com.gcplot.services.logs;
 
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
 

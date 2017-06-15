@@ -7,6 +7,7 @@ import com.gcplot.logs.ParserContext;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GarbageCollectorType;
+import com.tagtraum.perf.gcviewer.model.AbstractGCEvent;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -29,16 +30,10 @@ public class TestGCViewerLogsParser {
         InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_full_gc_log_2.log");
         List<GCEvent> events = new CopyOnWriteArrayList<>();
         GCViewerLogsParser p = new GCViewerLogsParser();
-        p.init();
         p.setEventFactory(new TestGCEventFactory());
         GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
-        ParseResult pr = p.parse(log, e -> { first[0] = e; return true; }, e -> {
-            if (e != null) {
-                last[0] = e;
-                events.add(e);
-            }
-        }, new ParserContext(LOG, "chcksm", GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
-        p.destroy();
+        ParserContext ctx = new ParserContext(LOG, "chcksm", GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8, "1", "2");
+        ParseResult pr = p.parse(log, e -> eventHandler(events, p, first, last, ctx, e), ctx);
 
         Assert.assertEquals(first[0].timestamp(), 170240.954, 0.001);
         Assert.assertEquals(last[0].timestamp(), 170291.419, 0.001);
@@ -61,17 +56,10 @@ public class TestGCViewerLogsParser {
         InputStream log = getClass().getClassLoader().getResourceAsStream("gc_logs/cms_long_log_young_only.log");
         List<GCEvent> events = new CopyOnWriteArrayList<>();
         GCViewerLogsParser p = new GCViewerLogsParser();
-        p.init();
         p.setEventFactory(new TestGCEventFactory());
-        p.setBatchSize(64);
         GCEvent[] first = new GCEvent[1], last = new GCEvent[1];
-        ParseResult pr = p.parse(log, e -> { first[0] = e; return true; }, e -> {
-            if (e != null) {
-                last[0] = e;
-                events.add(e);
-            }
-        }, new ParserContext(LOG, "chcksm", GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8));
-        p.destroy();
+        ParserContext ctx = new ParserContext(LOG, "chcksm", GarbageCollectorType.ORACLE_CMS, VMVersion.HOTSPOT_1_8, "1", "2");
+        ParseResult pr = p.parse(log, e -> eventHandler(events, p, first, last, ctx, e), ctx);
 
         Assert.assertEquals(first[0].timestamp(), 39996.730, 0.001);
         Assert.assertEquals(last[0].timestamp(), 40149.971, 0.001);
@@ -80,6 +68,17 @@ public class TestGCViewerLogsParser {
         Assert.assertEquals(81, events.size());
         for (int i = 2; i < events.size(); i++) {
             Assert.assertTrue("" + i, events.get(i).occurred().isAfter(events.get(i - 1).occurred()));
+        }
+    }
+
+    private void eventHandler(List<GCEvent> events, GCViewerLogsParser p, GCEvent[] first, GCEvent[] last, ParserContext ctx, AbstractGCEvent e) {
+        GCEvent event = p.getMapper().map(ctx, e);
+        if (event != null) {
+            if (first[0] == null) {
+                first[0] = event;
+            }
+            last[0] = event;
+            events.add(event);
         }
     }
 
