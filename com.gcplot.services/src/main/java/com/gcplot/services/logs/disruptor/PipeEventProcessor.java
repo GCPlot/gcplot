@@ -62,17 +62,22 @@ public class PipeEventProcessor {
             group = disruptor.handleEventsWith(mapperHandlers);
         }
         EventHandler<GCEventBundle> eventHandler = (e, sequence, endOfBatch) -> {
-            if (!e.isIgnore) {
-                e.event.analyseId(e.parserContext.analysisId()).jvmId(e.parserContext.jvmId());
-                if (e.parsingState.getFirstEvent() == null && !e.event.isOther()) {
-                    e.parsingState.setFirstEvent(e.event);
+            try {
+                if (!e.isIgnore) {
+                    e.event.analyseId(e.parserContext.analysisId()).jvmId(e.parserContext.jvmId());
+                    if (e.parsingState.getFirstEvent() == null && !e.event.isOther()) {
+                        e.parsingState.setFirstEvent(e.event);
+                    }
+                    if (e.event.isOther() || (e.parsingState.getLastPersistedEvent().get() != null &&
+                            e.parsingState.getLastPersistedEvent().get().timestamp() >= e.event.timestamp())) {
+                        e.ignore();
+                    } else {
+                        e.parsingState.setLastEvent(e.event);
+                    }
                 }
-                if (e.event.isOther() || (e.parsingState.getLastPersistedEvent().get() != null &&
-                        e.parsingState.getLastPersistedEvent().get().timestamp() >= e.event.timestamp())) {
-                    e.ignore();
-                } else {
-                    e.parsingState.setLastEvent(e.event);
-                }
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+                e.ignore();
             }
         };
         if (group != null) {
@@ -89,11 +94,11 @@ public class PipeEventProcessor {
 
                 @Override
                 public void onEvent(GCEventBundle e, long sequence, boolean endOfBatch) throws Exception {
-                    ParsingState ps = e.parsingState;
-                    List<GCEvent> batch = ps.getBatch().get();
-                    List<CompletableFuture> futures = ps.getFutures().get();
-                    if (sequence % persisterCount == s) {
-                        try {
+                    try {
+                        ParsingState ps = e.parsingState;
+                        List<GCEvent> batch = ps.getBatch().get();
+                        List<CompletableFuture> futures = ps.getFutures().get();
+                        if (sequence % persisterCount == s) {
                             if (batch.size() > 0 && (batch.size() == ParsingState.MAX_BATCH_SIZE || endOfBatch)) {
                                 persist(ps, batch, futures);
                             }
@@ -109,11 +114,11 @@ public class PipeEventProcessor {
                             } else {
                                 e.future.complete(DUMMY);
                             }
-                        } catch (Throwable t) {
-                            LOG.error(t.getMessage(), t);
+                        } else if (endOfBatch && batch.size() > 0) {
+                            persist(ps, batch, futures);
                         }
-                    } else if (endOfBatch && batch.size() > 0) {
-                        persist(ps, batch, futures);
+                    } catch (Throwable t) {
+                        LOG.error(t.getMessage(), t);
                     }
                 }
 
