@@ -6,8 +6,6 @@ import com.gcplot.model.gc.GCEvent;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.LiteBlockingWaitStrategy;
-import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.EventHandlerGroup;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -92,19 +90,20 @@ public class PipeEventProcessor {
                 @Override
                 public void onEvent(GCEventBundle e, long sequence, boolean endOfBatch) throws Exception {
                     ParsingState ps = e.parsingState;
+                    List<GCEvent> batch = ps.getBatch().get();
+                    List<CompletableFuture> futures = ps.getFutures().get();
                     if (sequence % persisterCount == s) {
                         try {
-                            if (ps.getBatch().get().size() > 0 &&
-                                    (ps.getBatch().get().size() == ParsingState.MAX_BATCH_SIZE || endOfBatch)) {
-                                persist(ps);
+                            if (batch.size() > 0 && (batch.size() == ParsingState.MAX_BATCH_SIZE || endOfBatch)) {
+                                persist(ps, batch, futures);
                             }
                             if (!e.isIgnore) {
                                 if (endOfBatch) {
                                     singlePersister.accept(e.event);
                                     e.future.complete(DUMMY);
                                 } else {
-                                    ps.getBatch().get().add(e.event);
-                                    ps.getFutures().get().add(e.future);
+                                    batch.add(e.event);
+                                    futures.add(e.future);
                                     ps.getMonthsSum().set(ps.getMonthsSum().get() + e.event.occurred().getMonthOfYear());
                                 }
                             } else {
@@ -113,20 +112,20 @@ public class PipeEventProcessor {
                         } catch (Throwable t) {
                             LOG.error(t.getMessage(), t);
                         }
-                    } else if (endOfBatch && ps.getBatch().get().size() > 0) {
-                        persist(ps);
+                    } else if (endOfBatch && batch.size() > 0) {
+                        persist(ps, batch, futures);
                     }
                 }
 
-                private void persist(ParsingState ps) {
-                    if (ps.getMonthsSum().get() % ps.getBatch().get().get(0).occurred().getMonthOfYear() != 0) {
-                        ps.getBatch().get().forEach(singlePersister);
+                private void persist(ParsingState ps, List<GCEvent> batch, List<CompletableFuture> futures) {
+                    if (ps.getMonthsSum().get() % batch.get(0).occurred().getMonthOfYear() != 0) {
+                        batch.forEach(singlePersister);
                     } else {
-                        persister.accept(new ArrayList<>(ps.getBatch().get()));
+                        persister.accept(new ArrayList<>(batch));
                     }
-                    ps.getFutures().get().forEach(f -> f.complete(DUMMY));
-                    ps.getFutures().get().clear();
-                    ps.getBatch().get().clear();
+                    futures.forEach(f -> f.complete(DUMMY));
+                    futures.clear();
+                    batch.clear();
                     ps.getMonthsSum().set(0);
                 }
             };
