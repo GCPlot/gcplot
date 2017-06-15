@@ -126,7 +126,8 @@ public class PipeEventProcessor {
                 }
 
                 private void persist(ParsingState ps, List<GCEvent> batch, List<CompletableFuture> futures) {
-                    if (ps.getMonthsSum().get() % batch.get(0).occurred().getMonthOfYear() != 0) {
+                    if (ps.getMonthsSum().get() %
+                            batch.get(0).occurred().getMonthOfYear() != 0) {
                         batch.forEach(singlePersister);
                     } else {
                         persister.accept(new ArrayList<>(batch));
