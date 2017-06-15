@@ -124,8 +124,8 @@ public class AccountImpl implements Account {
         return new DateTime(registrationTime, DateTimeZone.UTC);
     }
 
-    public void setRegistrationTime(DateTime registrationTime) {
-        this.registrationTime = registrationTime.toDate();
+    public void setRegistrationTime(Date registrationTime) {
+        this.registrationTime = registrationTime;
     }
 
     public List<RoleImpl> rolesImpl() {
