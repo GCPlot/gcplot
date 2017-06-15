@@ -119,6 +119,9 @@ public class PipeEventProcessor {
                         }
                     } catch (Throwable t) {
                         LOG.error(t.getMessage(), t);
+                        try {
+                            e.future.complete(DUMMY);
+                        } catch (Throwable ignore) {}
                     }
                 }
 
