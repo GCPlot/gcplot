@@ -13,6 +13,7 @@ public class GCEventBundle {
 
     public Object rawEvent;
     public GCEvent event;
+    public boolean wasHandled;
     public boolean isIgnore;
     public CompletableFuture future;
     public ParsingState parsingState;
@@ -25,6 +26,7 @@ public class GCEventBundle {
         future = null;
         parserContext = null;
         isIgnore = false;
+        wasHandled = false;
         return this;
     }
 

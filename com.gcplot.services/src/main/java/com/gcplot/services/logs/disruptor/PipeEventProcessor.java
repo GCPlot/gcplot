@@ -29,10 +29,10 @@ public class PipeEventProcessor {
     private final Mapper eventMapper;
     private Disruptor<GCEventBundle> disruptor;
 
-    public PipeEventProcessor(Consumer<List<GCEvent>> persister, Consumer<GCEvent> singlePresister,
+    public PipeEventProcessor(Consumer<List<GCEvent>> persister, Consumer<GCEvent> singlePersister,
                               Mapper eventMapper) {
         this.persister = persister;
-        this.singlePersister = singlePresister;
+        this.singlePersister = singlePersister;
         this.eventMapper = eventMapper;
     }
 
@@ -48,6 +48,7 @@ public class PipeEventProcessor {
                 mapperHandlers[i] = (e, sequence, endOfBatch) -> {
                     if (sequence % mapperCount == s) {
                         try {
+                            e.wasHandled = true;
                             e.event = eventMapper.map(e.parserContext, e.rawEvent);
                             if (e.event == null) {
                                 e.ignore();
@@ -76,7 +77,7 @@ public class PipeEventProcessor {
                     }
                 }
             } catch (Throwable t) {
-                LOG.error(t.getMessage(), t);
+                LOG.error(e.wasHandled + " " + e.event + " " + e.isIgnore + "|" + t.getMessage(), t);
                 e.ignore();
             }
         };
