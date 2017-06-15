@@ -39,22 +39,25 @@ public class PipeEventProcessor {
     }
 
     public void init() {
-        disruptor = new Disruptor<>(GCEventBundle::new, 32 * 1024, new ThreadFactoryBuilder()
+        disruptor = new Disruptor<>(GCEventBundle::new, 16 * 1024, new ThreadFactoryBuilder()
                 .setDaemon(false).setNameFormat("ds-").build(), ProducerType.SINGLE, new BlockingWaitStrategy());
         EventHandlerGroup group = null;
         if (eventMapper != Mapper.EMPTY) {
-            int mapperCount = Math.max(Runtime.getRuntime().availableProcessors() / 3, 1);
-            EventHandler<GCEventBundle>[] mapperHandlers = new EventHandler[mapperCount];
+            long mapperCount = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
+            EventHandler<GCEventBundle>[] mapperHandlers = new EventHandler[(int) mapperCount];
             for (int i = 0; i < mapperCount; i++) {
+                final long s = i;
                 mapperHandlers[i] = (e, sequence, endOfBatch) -> {
-                    try {
-                        e.event = eventMapper.map(e.parserContext, e.rawEvent);
-                        if (e.event == null) {
+                    if (sequence % mapperCount == s) {
+                        try {
+                            e.event = eventMapper.map(e.parserContext, e.rawEvent);
+                            if (e.event == null) {
+                                e.ignore();
+                            }
+                        } catch (Throwable t) {
                             e.ignore();
+                            LOG.error(t.getMessage(), t);
                         }
-                    } catch (Throwable t) {
-                        e.ignore();
-                        LOG.error(t.getMessage(), t);
                     }
                 };
             }
@@ -79,39 +82,52 @@ public class PipeEventProcessor {
         } else {
             group = disruptor.handleEventsWith(eventHandler);
         }
-        int persisterCount = Runtime.getRuntime().availableProcessors() * 2;
-        EventHandler<GCEventBundle>[] persisterHandlers = new EventHandler[persisterCount];
+        long persisterCount = Runtime.getRuntime().availableProcessors() * 2;
+        EventHandler<GCEventBundle>[] persisterHandlers = new EventHandler[(int) persisterCount];
         for (int i = 0; i < persisterCount; i++) {
+            final long s = i;
             persisterHandlers[i] = new EventHandler<GCEventBundle>() {
-                private static final int MAX_BATCH_SIZE = 5;
-                private List<GCEvent> batch = new ArrayList<>(MAX_BATCH_SIZE);
-                private int monthsSum;
+                private final Object DUMMY = new Object();
 
                 @Override
                 public void onEvent(GCEventBundle e, long sequence, boolean endOfBatch) throws Exception {
-                    try {
-                        if (batch.size() > 0 && (batch.size() == MAX_BATCH_SIZE || endOfBatch)) {
-                            if (monthsSum % batch.get(0).occurred().getMonthOfYear() != 0) {
-                                batch.forEach(singlePersister);
-                            } else {
-                                persister.accept(new ArrayList<>(batch));
+                    ParsingState ps = e.parsingState;
+                    if (sequence % persisterCount == s) {
+                        try {
+                            if (ps.getBatch().get().size() > 0 &&
+                                    (ps.getBatch().get().size() == ParsingState.MAX_BATCH_SIZE || endOfBatch)) {
+                                persist(ps);
                             }
-                            batch.clear();
-                            monthsSum = 0;
-                        }
-                        if (!e.isIgnore) {
-                            if (endOfBatch) {
-                                singlePersister.accept(e.event);
+                            if (!e.isIgnore) {
+                                if (endOfBatch) {
+                                    singlePersister.accept(e.event);
+                                    e.future.complete(DUMMY);
+                                } else {
+                                    ps.getBatch().get().add(e.event);
+                                    ps.getFutures().get().add(e.future);
+                                    ps.getMonthsSum().set(ps.getMonthsSum().get() + e.event.occurred().getMonthOfYear());
+                                }
                             } else {
-                                batch.add(e.event);
-                                monthsSum += e.event.occurred().getMonthOfYear();
+                                e.future.complete(DUMMY);
                             }
+                        } catch (Throwable t) {
+                            LOG.error(t.getMessage(), t);
                         }
-                    } catch (Throwable t) {
-                        LOG.error(t.getMessage(), t);
-                    } finally {
-                        e.future.complete(e.rawEvent);
+                    } else if (endOfBatch && ps.getBatch().get().size() > 0) {
+                        persist(ps);
                     }
+                }
+
+                private void persist(ParsingState ps) {
+                    if (ps.getMonthsSum().get() % ps.getBatch().get().get(0).occurred().getMonthOfYear() != 0) {
+                        ps.getBatch().get().forEach(singlePersister);
+                    } else {
+                        persister.accept(new ArrayList<>(ps.getBatch().get()));
+                    }
+                    ps.getFutures().get().forEach(f -> f.complete(DUMMY));
+                    ps.getFutures().get().clear();
+                    ps.getBatch().get().clear();
+                    ps.getMonthsSum().set(0);
                 }
             };
         }
