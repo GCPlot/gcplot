@@ -18,5 +18,5 @@ dependencies {
   compile "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
   compile "com.lmax:disruptor:$disruptorVersion"
 
-  testCompile group: 'io.findify', name: 's3mock_2.12', version: '0.1.8'
+  testCompile group: 'io.findify', name: 's3mock_2.12', version: "$s3MockVersion"
 }
