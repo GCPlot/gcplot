@@ -228,15 +228,10 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
 
         ParseResult pr;
         ParsingState ps = new ParsingState(ctx, eventRepository, source.checksum());
-        AtomicReference<Future> lastFuture = new AtomicReference<>();
         try (InputStream fis = source.logStream()) {
-            pr = logsParser.parse(fis, e -> lastFuture.set(pipeEventProcessor.processNext(e, ctx, ps)), ctx);
+            pr = logsParser.parse(fis, e -> pipeEventProcessor.processNext(e, ctx, ps), ctx);
         }
-        if (lastFuture.get() != null) {
-            try {
-                lastFuture.get().get();
-            } catch (Throwable ignore) {}
-        }
+        pipeEventProcessor.finish(ps);
         return Pair.of(pr, ps);
     }
 

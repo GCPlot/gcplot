@@ -7,7 +7,6 @@ import com.gcplot.repository.GCEventRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -19,7 +18,6 @@ public class ParsingState {
     private GCEvent firstEvent;
     private GCEvent lastEvent;
     private ThreadLocal<List<GCEvent>> batch = ThreadLocal.withInitial(() -> new ArrayList<GCEvent>(MAX_BATCH_SIZE));
-    private ThreadLocal<List<CompletableFuture>> futures = ThreadLocal.withInitial(() -> new ArrayList<CompletableFuture>(MAX_BATCH_SIZE));
     private ThreadLocal<Integer> monthsSum = ThreadLocal.withInitial(() -> 0);
 
     public ParsingState(ParserContext ctx, GCEventRepository repository, String checksum) {
@@ -49,10 +47,6 @@ public class ParsingState {
 
     public ThreadLocal<List<GCEvent>> getBatch() {
         return batch;
-    }
-
-    public ThreadLocal<List<CompletableFuture>> getFutures() {
-        return futures;
     }
 
     public ThreadLocal<Integer> getMonthsSum() {

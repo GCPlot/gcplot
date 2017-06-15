@@ -207,10 +207,17 @@ public class GCTests extends IntegrationTest {
         Assert.assertEquals(ar.lastEventUTC.values().iterator().next(), ar2.lastEventUTC.values().iterator().next());
 
         Assert.assertEquals(ar2.jvmIds.size(), 2);
+        final AnalyseResponse arF = ar2;
         for (String jvm : ar2.jvmIds) {
-            events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, ar2.lastEventUTC.get(jvm) - DAYS_BACK,
-                    ar2.lastEventUTC.get(jvm));
-            Assert.assertEquals(19, events.size());
+            Assert.assertTrue(Utils.waitFor(() -> {
+                try {
+                    return getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, arF.lastEventUTC.get(jvm) - DAYS_BACK,
+                            arF.lastEventUTC.get(jvm)).size() == 19;
+                } catch (Throwable t) {
+                    LOG.error(t.getMessage(), t);
+                    return false;
+                }
+            }, TimeUnit.SECONDS.toNanos(10)));
         }
     }
 

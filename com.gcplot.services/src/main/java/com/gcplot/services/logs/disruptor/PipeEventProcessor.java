@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
@@ -24,6 +24,7 @@ import java.util.function.Consumer;
  */
 public class PipeEventProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(PipeEventProcessor.class);
+    private static final Object DUMMY = new Object();
     private final Consumer<List<GCEvent>> persister;
     private final Consumer<GCEvent> singlePersister;
     private final Mapper eventMapper;
@@ -46,7 +47,7 @@ public class PipeEventProcessor {
             for (int i = 0; i < mapperCount; i++) {
                 final long s = i;
                 mapperHandlers[i] = (e, sequence, endOfBatch) -> {
-                    if (sequence % mapperCount == s) {
+                    if (!e.isControl && sequence % mapperCount == s) {
                         try {
                             e.event = eventMapper.map(e.parserContext, e.rawEvent);
                             if (e.event == null) {
@@ -63,7 +64,7 @@ public class PipeEventProcessor {
         }
         EventHandler<GCEventBundle> eventHandler = (e, sequence, endOfBatch) -> {
             try {
-                if (!e.isIgnore) {
+                if (!e.isControl && !e.isIgnore) {
                     e.event.analyseId(e.parserContext.analysisId()).jvmId(e.parserContext.jvmId());
                     if (e.parsingState.getFirstEvent() == null && !e.event.isOther()) {
                         e.parsingState.setFirstEvent(e.event);
@@ -90,50 +91,42 @@ public class PipeEventProcessor {
         for (int i = 0; i < persisterCount; i++) {
             final long s = i;
             persisterHandlers[i] = new EventHandler<GCEventBundle>() {
-                private final Object DUMMY = new Object();
-
                 @Override
                 public void onEvent(GCEventBundle e, long sequence, boolean endOfBatch) throws Exception {
                     try {
                         ParsingState ps = e.parsingState;
                         List<GCEvent> batch = ps.getBatch().get();
-                        List<CompletableFuture> futures = ps.getFutures().get();
-                        if (sequence % persisterCount == s) {
+                        if (!e.isControl && sequence % persisterCount == s) {
                             if (batch.size() > 0 && (batch.size() == ParsingState.MAX_BATCH_SIZE || endOfBatch)) {
-                                persist(ps, batch, futures);
+                                persist(ps, batch);
                             }
                             if (!e.isIgnore) {
                                 if (endOfBatch) {
                                     singlePersister.accept(e.event);
-                                    e.future.complete(DUMMY);
                                 } else {
                                     batch.add(e.event);
-                                    futures.add(e.future);
                                     ps.getMonthsSum().set(ps.getMonthsSum().get() + e.event.occurred().getMonthOfYear());
                                 }
-                            } else {
-                                e.future.complete(DUMMY);
                             }
-                        } else if (endOfBatch && batch.size() > 0) {
-                            persist(ps, batch, futures);
+                        } else if ((endOfBatch || e.isControl) && batch.size() > 0) {
+                            persist(ps, batch);
                         }
                     } catch (Throwable t) {
                         LOG.error(t.getMessage(), t);
-                        try {
+                    } finally {
+                        if (e.isControl) {
                             e.future.complete(DUMMY);
-                        } catch (Throwable ignore) {}
+                        }
                     }
                 }
 
-                private void persist(ParsingState ps, List<GCEvent> batch, List<CompletableFuture> futures) {
+                private void persist(ParsingState ps, List<GCEvent> batch) {
                     if (ps.getMonthsSum().get() %
                             batch.get(0).occurred().getMonthOfYear() != 0) {
                         batch.forEach(singlePersister);
                     } else {
                         persister.accept(new ArrayList<>(batch));
                     }
-                    futures.forEach(f -> f.complete(DUMMY));
-                    futures.clear();
                     batch.clear();
                     ps.getMonthsSum().set(0);
                 }
@@ -151,12 +144,18 @@ public class PipeEventProcessor {
         LOG.info("Pipe Event Processor stopped.");
     }
 
-    public Future processNext(Object rawEvent, ParserContext context, ParsingState commonState) {
-        final CompletableFuture future = new CompletableFuture();
-        disruptor.publishEvent((event, sequence) -> {
-            event.reset().future(future).parsingState(commonState).rawEvent(rawEvent).parserContext(context);
-        });
-        return future;
+    public void processNext(Object rawEvent, ParserContext context, ParsingState commonState) {
+        disruptor.publishEvent((event, sequence) ->
+                event.reset().parsingState(commonState).rawEvent(rawEvent).parserContext(context));
     }
 
+    public void finish(ParsingState commonState) {
+        final CompletableFuture future = new CompletableFuture();
+        disruptor.publishEvent((event, sequence) -> event.reset().future(future).control().parsingState(commonState));
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
 }

@@ -17,6 +17,7 @@ public class GCEventBundle {
     public CompletableFuture future;
     public ParsingState parsingState;
     public ParserContext parserContext;
+    public boolean isControl;
 
     public GCEventBundle reset() {
         rawEvent = null;
@@ -25,6 +26,7 @@ public class GCEventBundle {
         future = null;
         parserContext = null;
         isIgnore = false;
+        isControl = false;
         return this;
     }
 
@@ -55,6 +57,11 @@ public class GCEventBundle {
 
     public GCEventBundle parserContext(ParserContext parserContext) {
         this.parserContext = parserContext;
+        return this;
+    }
+
+    public GCEventBundle control() {
+        this.isControl = true;
         return this;
     }
 }
