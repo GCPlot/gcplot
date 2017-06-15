@@ -38,34 +38,26 @@ public class ParseResult {
         return Optional.ofNullable(logMetadata);
     }
 
-    private final GCEvent firstEvent;
-    public GCEvent getFirstEvent() {
-        return firstEvent;
-    }
-
-    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState, LogMetadata logMetadata,
-                        GCEvent firstEvent) {
-        this(true, null, notifications, agesState, logMetadata, firstEvent);
+    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState, LogMetadata logMetadata) {
+        this(true, null, notifications, agesState, logMetadata);
     }
 
     private ParseResult(boolean isSuccessful, Throwable exception,
-                        List<GCNotification> notifications, List<AgesState> agesStates, LogMetadata logMetadata,
-                        GCEvent firstEvent) {
+                        List<GCNotification> notifications, List<AgesState> agesStates, LogMetadata logMetadata) {
         this.isSuccessful = isSuccessful;
         this.notifications = notifications;
         this.agesStates = agesStates;
         this.exception = exception;
         this.logMetadata = logMetadata;
-        this.firstEvent = firstEvent;
     }
 
     public static ParseResult success(List<GCNotification> notifications, List<AgesState> agesStates,
-                                      LogMetadata logMetadata, GCEvent firstEvent) {
-        return new ParseResult(notifications, agesStates, logMetadata, firstEvent);
+                                      LogMetadata logMetadata) {
+        return new ParseResult(notifications, agesStates, logMetadata);
     }
 
     public static ParseResult failure(Throwable t) {
-        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList(), null, null);
+        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList(), null);
     }
 
 }

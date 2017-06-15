@@ -40,6 +40,7 @@ public enum ConfigProperty {
     CONFIRMATION_IS_RESTRICTED("confirmation.is.restricted", false),
 
     PARSE_LOG_MAX_FILE_SIZE("parse.log.max.file.size", 512L * 1024 * 1024),
+    PARSE_LOG_SAMPLING_SECONDS("parse.log.sampling.seconds", 60 * 1024),
 
     CONNECTOR_LATEST_VERSION("connector.latest.version", "0.0.1");
 

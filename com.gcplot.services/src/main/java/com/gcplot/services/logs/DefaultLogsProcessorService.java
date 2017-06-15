@@ -24,6 +24,8 @@ import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.resource.ResourceManager;
+import com.gcplot.services.logs.disruptor.ParsingState;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -33,7 +35,9 @@ import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
 
 import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
@@ -132,17 +136,12 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
         Logger log = createLogger(logFile);
 
-        AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
-        ParseResult pr = parseAndPersist(source, jvmId, analyze, log, e -> {
-            // TODO concurrency issue here
-            if (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred())) {
-                lastEventTime.set(e.occurred());
-            }
-            e.analyseId(analyze.id()).jvmId(jvmId);
-        });
+        Pair<ParseResult, ParsingState> p = parseAndPersist(source, jvmId, analyze, log);
+        ParseResult pr = p.getLeft();
+        ParsingState ps = p.getRight();
 
         if (pr.isSuccessful()) {
-            updateAnalyzeInfo(analyze.id(), jvmId, account.id(), lastEventTime, pr);
+            updateAnalyzeInfo(analyze.id(), jvmId, account.id(), pr, ps);
             if (pr.getAgesStates().size() > 0) {
                 persistObjectAges(analyze.id(), jvmId, pr);
             }
@@ -158,12 +157,13 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return LogProcessResult.SUCCESS;
     }
 
-    protected void updateAnalyzeInfo(String analyzeId, String jvmId, Identifier userId, AtomicReference<DateTime> lastEventTime, ParseResult pr) {
+    protected void updateAnalyzeInfo(String analyzeId, String jvmId, Identifier userId, ParseResult pr,
+                                     ParsingState ps) {
         List<AnalyseOperation> ops = new ArrayList<>(2);
-        if (lastEventTime.get() != null) {
+        if (ps.getLastEvent() != null) {
             ops.add(new UpdateCornerEventsOperation(userId, analyzeId, jvmId,
-                    pr.getFirstEvent() != null ? pr.getFirstEvent().occurred() : null,
-                    lastEventTime.get()));
+                    ps.getFirstEvent() != null ? ps.getFirstEvent().occurred() : null,
+                    ps.getLastEvent().occurred()));
         }
         if (pr.getLogMetadata().isPresent()) {
             updateAnalyseMetadata(analyzeId, jvmId, userId, pr, ops);
@@ -221,21 +221,21 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return null;
     }
 
-    private ParseResult parseAndPersist(LogSource source, String jvmId, GCAnalyse analyse,
-                                        Logger log, Consumer<GCEvent> enricher) throws IOException {
+    private Pair<ParseResult, ParsingState> parseAndPersist(LogSource source, String jvmId, GCAnalyse analyse, Logger log) throws IOException {
         ParserContext ctx = new ParserContext(log, source.checksum(), analyse.jvmGCTypes().get(jvmId),
-                analyse.jvmVersions().get(jvmId));
+                analyse.jvmVersions().get(jvmId), jvmId, analyse.id());
         final GCEvent[] firstParsed = new GCEvent[1];
-        final int[] lastMonth = new int[1];
-        final DateTime[] lastOccurred = new DateTime[1];
+        final AtomicIntegerArray lastMonth = new AtomicIntegerArray(1);
+        final AtomicReferenceArray<DateTime> lastOccurred = new AtomicReferenceArray<>(1);
         final boolean forbidOtherGen = config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION);
         final int batchSize = config.readInt(ConfigProperty.BATCH_PUT_GC_EVENT_SIZE);
         final ThreadLocal<List<GCEvent>> es = ThreadLocal.withInitial(() -> new ArrayList<>(batchSize));
         LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
                 eventRepository.lastEvent(analyse.id(), jvmId, source.checksum(), firstParsed[0].occurred().minusDays(1)));
         ParseResult pr;
+        ParsingState ps = new ParsingState(lastPersistedEvent);
         try (InputStream fis = source.logStream()) {
-            pr = logsParser.parse(fis, first -> {
+            pr = logsParser.parse(fis, /*first -> {
                 if (!first.isOther()) {
                     firstParsed[0] = first;
                     lastPersistedEvent.get();
@@ -243,30 +243,30 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                 } else {
                     return false;
                 }
-            }, e -> {
+            },*/ e -> {
+                /*
                 List<GCEvent> events = es.get();
                 if (e != null) {
                     if ((firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
                             e.timestamp()) && !isOtherGeneration(forbidOtherGen, e)) {
                         enricher.accept(e);
                         // we will want to omit cross-rows inserts in the same batch - they are slow
-                        boolean isInOtherMonthBucket = lastMonth[0] != e.occurred().getMonthOfYear();
+                        boolean isInOtherMonthBucket =
+                                lastMonth.getAndSet(0, e.occurred().getMonthOfYear()) != e.occurred().getMonthOfYear();
                         if (events.size() > 0 &&
                                 (events.size() % batchSize == 0
                                         || isInOtherMonthBucket
-                                        || (e.occurred().equals(lastOccurred[0])))) {
+                                        || (e.occurred().equals(lastOccurred.getAndSet(0, e.occurred()))))) {
                             persist(events);
                         }
                         events.add(e);
-                        lastMonth[0] = e.occurred().getMonthOfYear();
-                        lastOccurred[0] = e.occurred();
                     }
                 } else if (events.size() > 0) {
                     persist(events);
-                }
+                }*/
             }, ctx);
         }
-        return pr;
+        return Pair.of(pr, ps);
     }
 
     private boolean isOtherGeneration(boolean forbidOtherGen, GCEvent e) {

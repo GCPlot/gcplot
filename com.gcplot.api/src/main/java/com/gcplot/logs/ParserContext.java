@@ -35,12 +35,25 @@ public class ParserContext {
         return vmVersion;
     }
 
+    private final String jvmId;
+    public String jvmId() {
+        return jvmId;
+    }
+
+    private final String analysisId;
+    public String analysisId() {
+        return analysisId;
+    }
+
     public ParserContext(Logger logger, String streamChecksum,
-                         GarbageCollectorType collectorType, VMVersion vmVersion) {
+                         GarbageCollectorType collectorType, VMVersion vmVersion,
+                         String jvmId, String analysisId) {
         this.logger = logger;
         this.streamChecksum = streamChecksum;
         this.collectorType = collectorType;
         this.vmVersion = vmVersion;
+        this.jvmId = jvmId;
+        this.analysisId = analysisId;
     }
 
 }

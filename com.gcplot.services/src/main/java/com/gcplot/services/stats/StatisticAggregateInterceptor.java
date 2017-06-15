@@ -9,7 +9,7 @@ import com.gcplot.model.gc.*;
 import com.gcplot.model.stats.GCStatistic;
 import com.gcplot.model.stats.GenerationStats;
 import com.gcplot.model.stats.MinMaxAvg;
-import com.gcplot.services.EventInterceptor;
+import com.gcplot.commons.interceptors.EventInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

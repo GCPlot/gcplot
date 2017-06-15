@@ -1,4 +1,4 @@
-package com.gcplot.services;
+package com.gcplot.commons.interceptors;
 
 import com.gcplot.model.IdentifiedEvent;
 import com.gcplot.model.gc.GCEvent;
