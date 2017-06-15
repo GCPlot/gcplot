@@ -4,7 +4,9 @@ import com.gcplot.logs.ParserContext;
 import com.gcplot.logs.mapping.Mapper;
 import com.gcplot.model.gc.GCEvent;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.LiteBlockingWaitStrategy;
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.EventHandlerGroup;
@@ -33,7 +35,7 @@ public class PipeEventProcessor {
 
     public void init() {
         disruptor = new Disruptor<>(GCEventBundle::new, 16 * 1024, new ThreadFactoryBuilder()
-                .setDaemon(false).setNameFormat("ds-").build(), ProducerType.SINGLE, new SleepingWaitStrategy());
+                .setDaemon(false).setNameFormat("ds-").build(), ProducerType.SINGLE, new BlockingWaitStrategy());
         EventHandlerGroup group = null;
         if (eventMapper != Mapper.EMPTY) {
             int mapperCount = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
