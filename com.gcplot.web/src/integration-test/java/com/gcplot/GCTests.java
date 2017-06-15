@@ -5,8 +5,10 @@ import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.controllers.gc.EventsController;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
+import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.SourceType;
+import com.gcplot.utils.Utils;
 import com.google.common.collect.Sets;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
@@ -138,8 +140,14 @@ public class GCTests extends IntegrationTest {
 
         long fromInitial = ar.lastEventUTC.get(jvmId) - TimeUnit.DAYS.toMillis(30);
         Long toInitial = ar.lastEventUTC.get(jvmId);
-        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, fromInitial, toInitial);
-        Assert.assertEquals(19, events.size());
+        Assert.assertTrue(Utils.waitFor(() -> {
+            try {
+                return getEvents(token, analyseId, jvmId, fromInitial, toInitial).size() == 19;
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+                return false;
+            }
+        }, TimeUnit.SECONDS.toNanos(10)));
 
         // check that processing this file again won't make any effect
         resp = processGCLogFile(token, analyseId, jvmId, "hs18_log_cms.log");
@@ -147,7 +155,7 @@ public class GCTests extends IntegrationTest {
         AnalyseResponse ar2 = getAnalyse(token, analyseId);
         Assert.assertEquals(ar.lastEventUTC, ar2.lastEventUTC);
 
-        events = getEvents(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - DAYS_BACK, ar.lastEventUTC.get(jvmId));
+        List<GCEventResponse> events = getEvents(token, analyseId, jvmId, ar.lastEventUTC.get(jvmId) - DAYS_BACK, ar.lastEventUTC.get(jvmId));
         Assert.assertEquals(19, events.size());
 
         // test chunked response
@@ -179,10 +187,18 @@ public class GCTests extends IntegrationTest {
         Assert.assertTrue(success().test(resp));
         ar = getAnalyse(token, EventsController.ANONYMOUS_ANALYSE_ID);
 
-        events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, ar.jvmIds.iterator().next(),
-                ar.lastEventUTC.get(ar.jvmIds.iterator().next()) - TimeUnit.DAYS.toMillis(30),
-                ar.lastEventUTC.get(ar.jvmIds.iterator().next()));
-        Assert.assertEquals(19, events.size());
+        final AnalyseResponse ar1 = ar;
+        Assert.assertTrue(Utils.waitFor(() -> {
+            try {
+                return getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, ar1.jvmIds.iterator().next(),
+                        ar1.lastEventUTC.get(ar1.jvmIds.iterator().next()) - TimeUnit.DAYS.toMillis(30),
+                        ar1.lastEventUTC.get(ar1.jvmIds.iterator().next())).size() == 19;
+            } catch (Throwable t) {
+                LOG.error(t.getMessage(), t);
+                return false;
+            }
+        }, TimeUnit.SECONDS.toNanos(10)));
+
 
         resp = processGCLogFile(token, "", "", "hs18_log_cms.log");
         Assert.assertTrue(success().test(resp));
@@ -191,10 +207,17 @@ public class GCTests extends IntegrationTest {
         Assert.assertEquals(ar.lastEventUTC.values().iterator().next(), ar2.lastEventUTC.values().iterator().next());
 
         Assert.assertEquals(ar2.jvmIds.size(), 2);
+        final AnalyseResponse arF = ar2;
         for (String jvm : ar2.jvmIds) {
-            events = getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, ar2.lastEventUTC.get(jvm) - DAYS_BACK,
-                    ar2.lastEventUTC.get(jvm));
-            Assert.assertEquals(19, events.size());
+            Assert.assertTrue(Utils.waitFor(() -> {
+                try {
+                    return getEvents(token, EventsController.ANONYMOUS_ANALYSE_ID, jvm, arF.lastEventUTC.get(jvm) - DAYS_BACK,
+                            arF.lastEventUTC.get(jvm)).size() == 19;
+                } catch (Throwable t) {
+                    LOG.error(t.getMessage(), t);
+                    return false;
+                }
+            }, TimeUnit.SECONDS.toNanos(10)));
         }
     }
 

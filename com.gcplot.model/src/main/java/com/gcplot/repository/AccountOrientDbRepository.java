@@ -2,7 +2,7 @@ package com.gcplot.repository;
 
 import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;

@@ -3,7 +3,7 @@ package com.gcplot.model.gc.cassandra;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.gcplot.Identifier;
-import com.gcplot.commons.enums.EnumSetUtils;
+import com.gcplot.utils.enums.EnumSetUtils;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
 import org.joda.time.DateTime;
@@ -16,7 +16,7 @@ import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 
-import static com.gcplot.commons.CollectionUtils.transformValue;
+import static com.gcplot.utils.CollectionUtils.transformValue;
 
 public abstract class Mapper {
     private static final Logger LOG = LoggerFactory.getLogger(Mapper.class);

@@ -1,6 +1,5 @@
 package com.gcplot.configuration;
 
-import com.gcplot.commons.ConfigProperty;
 import com.gcplot.repository.AbstractOrientDbRepository;
 import com.gcplot.repository.OrientDbConfig;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;

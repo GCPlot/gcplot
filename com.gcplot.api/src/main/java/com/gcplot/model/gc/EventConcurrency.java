@@ -1,6 +1,6 @@
 package com.gcplot.model.gc;
 
-import com.gcplot.commons.enums.TypedEnum;
+import com.gcplot.utils.enums.TypedEnum;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 

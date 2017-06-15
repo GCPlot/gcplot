@@ -1,6 +1,6 @@
 package com.gcplot.controllers;
 
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.messages.ConnectorSettingsMessage;
 import com.gcplot.web.RequestContext;

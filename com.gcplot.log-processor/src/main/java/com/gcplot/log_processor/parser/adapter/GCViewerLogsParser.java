@@ -6,6 +6,7 @@ import com.gcplot.log_processor.parser.producers.v8.MetadataInfoProducer;
 import com.gcplot.log_processor.parser.producers.v8.SurvivorAgesInfoProducer;
 import com.gcplot.logs.LogsParser;
 import com.gcplot.logs.ParserContext;
+import com.gcplot.logs.mapping.Mapper;
 import com.gcplot.model.Property;
 import com.gcplot.model.gc.*;
 import com.tagtraum.perf.gcviewer.imp.GcLogType;
@@ -19,76 +20,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         7/24/16
  */
-public class GCViewerLogsParser implements LogsParser {
+public class GCViewerLogsParser implements LogsParser<AbstractGCEvent> {
     protected ConfigurationManager configurationManager;
     protected GCEventFactory eventFactory;
-    protected int batchSize = -1;
-    protected int threadPoolSize = Runtime.getRuntime().availableProcessors() * 8;
-    protected ExecutorService executor;
     protected volatile DateTimeZone tz;
 
-    public void init() {
-        executor = Executors.newFixedThreadPool(threadPoolSize);
-    }
-
-    public void destroy() {
-        executor.shutdownNow();
-        try {
-            executor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {}
-    }
-
     @Override
-    public ParseResult parse(InputStream reader, Predicate<GCEvent> firstEventListener, Consumer<GCEvent> eventsConsumer,
-                             ParserContext ctx) {
+    public ParseResult parse(InputStream reader, Consumer<AbstractGCEvent> eventsConsumer, ParserContext ctx) {
         SurvivorAgesInfoProducer agesInfoProducer = new SurvivorAgesInfoProducer();
         MetadataInfoProducer metadataInfoProducer = new MetadataInfoProducer();
         GCResource gcResource = new GCResource("default");
         gcResource.setLogger(ctx.logger());
         StreamDataReader dr;
-        final DateTime now = DateTime.now(DateTimeZone.UTC).withDayOfYear(1).withTimeAtStartOfDay();
-        GCEvent[] firstEvent = new GCEvent[1];
-        Future[] lastFuture = new Future[1];
         Consumer<List<AbstractGCEvent<?>>> c = l -> {
             if (l.size() > 0) {
-                if (firstEvent[0] == null) {
-                    GCEvent event = map(now, ctx, l.get(0));
-                    if (event != null) {
-                        firstEvent[0] = event;
-                        if (!firstEventListener.test(firstEvent[0])) {
-                            firstEvent[0] = null;
-                        }
-                    }
-                }
-                lastFuture[0] = executor.submit(() -> {
-                    try {
-                        l.forEach(e -> {
-                            GCEvent event = map(now, ctx, e);
-                            if (event != null) {
-                                eventsConsumer.accept(event);
-                            }
-                        });
-                        eventsConsumer.accept(null);
-                    } catch (Throwable t) {
-                        ctx.logger().error(t.getMessage(), t);
-                    }
-                });
+                l.forEach(eventsConsumer);
             }
         };
         try {
             if (ctx.collectorType() == GarbageCollectorType.ORACLE_G1) {
-                dr = new HotSpotG1DataReader(c, batchSize, gcResource, reader, fetchLogType(ctx));
+                dr = new HotSpotG1DataReader(c, 1024, gcResource, reader, fetchLogType(ctx));
             } else {
-                dr = new HotSpotDataReader(c, batchSize, gcResource, reader, fetchLogType(ctx));
+                dr = new HotSpotDataReader(c, 1024, gcResource, reader, fetchLogType(ctx));
             }
         } catch (UnsupportedEncodingException e) {
             return ParseResult.failure(e);
@@ -101,17 +60,15 @@ public class GCViewerLogsParser implements LogsParser {
         } catch (IOException e) {
             return ParseResult.failure(e);
         }
-
-        if (lastFuture[0] != null) {
-            try {
-                lastFuture[0].get();
-            } catch (InterruptedException | ExecutionException ignored) {
-            }
-        }
         // temp stuff
         return ParseResult.success(Collections.emptyList(),
                 Collections.singletonList(agesInfoProducer.averageAgesState()),
-                metadataInfoProducer.getLogMetadata(), firstEvent[0]);
+                metadataInfoProducer.getLogMetadata());
+    }
+
+    @Override
+    public Mapper<AbstractGCEvent> getMapper() {
+        return this::map;
     }
 
     private GcLogType fetchLogType(ParserContext ctx) {
@@ -340,13 +297,5 @@ public class GCViewerLogsParser implements LogsParser {
 
     public void setEventFactory(GCEventFactory eventFactory) {
         this.eventFactory = eventFactory;
-    }
-
-    public void setBatchSize(int batchSize) {
-        this.batchSize = batchSize;
-    }
-
-    public void setThreadPoolSize(int threadPoolSize) {
-        this.threadPoolSize = threadPoolSize;
     }
 }

@@ -4,7 +4,7 @@ import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.gcplot.commons.Range;
+import com.gcplot.utils.Range;
 import com.gcplot.model.gc.ObjectsAges;
 import org.apache.cassandra.utils.UUIDGen;
 import org.joda.time.DateTime;

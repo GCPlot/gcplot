@@ -1,5 +1,7 @@
 package com.gcplot.commons;
 
+import com.gcplot.utils.Utils;
+
 public abstract class Metrics {
 
     public static String name(Class clazz, String... parts) {

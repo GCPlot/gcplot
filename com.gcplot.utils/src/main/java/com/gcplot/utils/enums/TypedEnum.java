@@ -1,4 +1,4 @@
-package com.gcplot.commons.enums;
+package com.gcplot.utils.enums;
 
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;

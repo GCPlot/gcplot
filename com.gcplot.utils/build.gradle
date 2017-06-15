@@ -1,0 +1,3 @@
+dependencies {
+    compile group: 'it.unimi.dsi', name: 'fastutil', version: "$fuVersion"
+}

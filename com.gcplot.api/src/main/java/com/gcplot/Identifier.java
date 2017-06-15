@@ -1,7 +1,7 @@
 package com.gcplot;
 
-import com.gcplot.commons.BinaryUtils;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.BinaryUtils;
+import com.gcplot.utils.Exceptions;
 
 import java.io.UnsupportedEncodingException;
 import java.util.zip.CRC32;

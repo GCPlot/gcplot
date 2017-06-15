@@ -24,7 +24,7 @@ public class RolesTests extends IntegrationTest {
         JsonObject account = login("admin", "root");
         String token = account.getString("token");
 
-        String id = rs(get("/admin/account/id", token));
+        String id = rs(get("/user/account/id", token));
         get("/admin/account/info?account_id=" + URLEncoder.encode(id, "UTF-8"), token, ErrorMessages.REQUEST_FILTERED);
         getApplicationContext().getBean(AccountRepository.class).roleManagement(Identifier.fromStr(id), true);
         get("/admin/account/info?account_id=" + URLEncoder.encode(id, "UTF-8"), token, ErrorMessages.REQUEST_FILTERED);

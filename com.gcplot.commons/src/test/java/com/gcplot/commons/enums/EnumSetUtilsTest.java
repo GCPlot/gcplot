@@ -1,5 +1,7 @@
 package com.gcplot.commons.enums;
 
+import com.gcplot.utils.enums.EnumSetUtils;
+import com.gcplot.utils.enums.TypedEnum;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.junit.Assert;

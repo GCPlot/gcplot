@@ -3,7 +3,7 @@ package com.gcplot.repository;
 import com.codahale.metrics.MetricRegistry;
 import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;

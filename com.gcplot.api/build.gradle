@@ -1,4 +1,8 @@
 dependencies {
-    compile project(":com.gcplot.commons")
+    compile project(":com.gcplot.utils")
+    compile group: 'it.unimi.dsi', name: 'fastutil', version: "$fuVersion"
     compile "org.apache.commons:commons-lang3:$langVersion"
+    compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+    compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+    compile "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
 }

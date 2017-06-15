@@ -1,10 +1,9 @@
 package com.gcplot.controllers;
 
 import com.gcplot.Identifier;
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.messages.AccountResponse;
-import com.gcplot.messages.ConnectorSettingsMessage;
 import com.gcplot.messages.PutConfigMessage;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.role.Restriction;

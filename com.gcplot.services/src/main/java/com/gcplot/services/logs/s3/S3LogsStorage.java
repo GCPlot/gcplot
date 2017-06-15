@@ -11,8 +11,8 @@ import com.gcplot.services.S3Connector;
 
 import java.util.Iterator;
 
-import static com.gcplot.commons.Utils.toBase64;
-import static com.gcplot.commons.Utils.fromBase64;
+import static com.gcplot.utils.Utils.toBase64;
+import static com.gcplot.utils.Utils.fromBase64;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

@@ -1,7 +1,7 @@
 package com.gcplot.services.s3;
 
 import com.gcplot.commons.FileUtils;
-import com.gcplot.commons.Utils;
+import com.gcplot.utils.Utils;
 import com.gcplot.fs.LogsStorage;
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;

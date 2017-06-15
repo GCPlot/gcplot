@@ -3,7 +3,7 @@ package com.gcplot.web.vertx;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.commons.ErrorMessages;
-import com.gcplot.commons.Utils;
+import com.gcplot.utils.Utils;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;

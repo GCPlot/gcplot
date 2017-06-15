@@ -1,4 +1,4 @@
-package com.gcplot.commons;
+package com.gcplot.utils;
 
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.*;

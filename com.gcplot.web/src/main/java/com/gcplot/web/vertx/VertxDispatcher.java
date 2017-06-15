@@ -1,7 +1,7 @@
 package com.gcplot.web.vertx;
 
 import com.gcplot.commons.ErrorMessages;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.web.Dispatcher;
 import com.gcplot.web.DispatcherBase;

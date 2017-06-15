@@ -1,7 +1,7 @@
 package com.gcplot.controllers;
 
 import com.codahale.metrics.MetricRegistry;
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.Metrics;
 import com.gcplot.configuration.ConfigurationManager;

@@ -1,4 +1,4 @@
-package com.gcplot.commons.exceptions;
+package com.gcplot.utils;
 
 @SuppressWarnings("all")
 public class Exceptions {

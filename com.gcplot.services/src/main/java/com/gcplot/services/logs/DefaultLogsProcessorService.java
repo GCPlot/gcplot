@@ -4,11 +4,10 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.FileAppender;
 import com.gcplot.Identifier;
-import com.gcplot.commons.ConfigProperty;
+import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.FileUtils;
-import com.gcplot.commons.LazyVal;
-import com.gcplot.commons.exceptions.Exceptions;
+import com.gcplot.utils.Exceptions;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.logs.*;
 import com.gcplot.logs.survivor.AgesState;
@@ -24,6 +23,9 @@ import com.gcplot.repository.operations.analyse.AnalyseOperation;
 import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
 import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.resource.ResourceManager;
+import com.gcplot.services.logs.disruptor.ParsingState;
+import com.gcplot.services.logs.disruptor.PipeEventProcessor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -34,11 +36,10 @@ import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
-import static com.gcplot.commons.CollectionUtils.cloneAndAdd;
-import static com.gcplot.commons.CollectionUtils.cloneAndPut;
-import static com.gcplot.commons.Utils.esc;
+import static com.gcplot.utils.CollectionUtils.cloneAndAdd;
+import static com.gcplot.utils.CollectionUtils.cloneAndPut;
+import static com.gcplot.utils.Utils.esc;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -60,15 +61,19 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
     private GCAnalyseFactory analyseFactory;
     private ObjectsAgesFactory objectsAgesFactory;
     private ConfigurationManager config;
+    private PipeEventProcessor pipeEventProcessor;
 
     public void init() {
         uploadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8);
+        pipeEventProcessor = new PipeEventProcessor(eventRepository::add, eventRepository::add, logsParser.getMapper());
+        pipeEventProcessor.init();
     }
 
     public void destroy() {
         try {
             uploadExecutor.shutdownNow();
             uploadExecutor.awaitTermination(1, TimeUnit.MINUTES);
+            pipeEventProcessor.shutdown();
         } catch (Throwable t) {
             LOG.error(t.getMessage(), t);
         }
@@ -132,17 +137,12 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
         Logger log = createLogger(logFile);
 
-        AtomicReference<DateTime> lastEventTime = new AtomicReference<>(null);
-        ParseResult pr = parseAndPersist(source, jvmId, analyze, log, e -> {
-            // TODO concurrency issue here
-            if (lastEventTime.get() == null || lastEventTime.get().isBefore(e.occurred())) {
-                lastEventTime.set(e.occurred());
-            }
-            e.analyseId(analyze.id()).jvmId(jvmId);
-        });
+        Pair<ParseResult, ParsingState> p = parseAndPersist(source, jvmId, analyze, log);
+        ParseResult pr = p.getLeft();
+        ParsingState ps = p.getRight();
 
         if (pr.isSuccessful()) {
-            updateAnalyzeInfo(analyze.id(), jvmId, account.id(), lastEventTime, pr);
+            updateAnalyzeInfo(analyze.id(), jvmId, account.id(), pr, ps);
             if (pr.getAgesStates().size() > 0) {
                 persistObjectAges(analyze.id(), jvmId, pr);
             }
@@ -158,12 +158,13 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return LogProcessResult.SUCCESS;
     }
 
-    protected void updateAnalyzeInfo(String analyzeId, String jvmId, Identifier userId, AtomicReference<DateTime> lastEventTime, ParseResult pr) {
+    protected void updateAnalyzeInfo(String analyzeId, String jvmId, Identifier userId, ParseResult pr,
+                                     ParsingState ps) {
         List<AnalyseOperation> ops = new ArrayList<>(2);
-        if (lastEventTime.get() != null) {
+        if (ps.getLastEvent() != null) {
             ops.add(new UpdateCornerEventsOperation(userId, analyzeId, jvmId,
-                    pr.getFirstEvent() != null ? pr.getFirstEvent().occurred() : null,
-                    lastEventTime.get()));
+                    ps.getFirstEvent() != null ? ps.getFirstEvent().occurred() : null,
+                    ps.getLastEvent().occurred()));
         }
         if (pr.getLogMetadata().isPresent()) {
             updateAnalyseMetadata(analyzeId, jvmId, userId, pr, ops);
@@ -221,61 +222,17 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         return null;
     }
 
-    private ParseResult parseAndPersist(LogSource source, String jvmId, GCAnalyse analyse,
-                                        Logger log, Consumer<GCEvent> enricher) throws IOException {
+    private Pair<ParseResult, ParsingState> parseAndPersist(LogSource source, String jvmId, GCAnalyse analyse, Logger log) throws IOException {
         ParserContext ctx = new ParserContext(log, source.checksum(), analyse.jvmGCTypes().get(jvmId),
-                analyse.jvmVersions().get(jvmId));
-        final GCEvent[] firstParsed = new GCEvent[1];
-        final int[] lastMonth = new int[1];
-        final DateTime[] lastOccurred = new DateTime[1];
-        final boolean forbidOtherGen = config.readBoolean(ConfigProperty.FORBID_OTHER_GENERATION);
-        final int batchSize = config.readInt(ConfigProperty.BATCH_PUT_GC_EVENT_SIZE);
-        final ThreadLocal<List<GCEvent>> es = ThreadLocal.withInitial(() -> new ArrayList<>(batchSize));
-        LazyVal<GCEvent> lastPersistedEvent = LazyVal.ofOpt(() ->
-                eventRepository.lastEvent(analyse.id(), jvmId, source.checksum(), firstParsed[0].occurred().minusDays(1)));
+                analyse.jvmVersions().get(jvmId), jvmId, analyse.id());
+
         ParseResult pr;
+        ParsingState ps = new ParsingState(ctx, eventRepository, source.checksum());
         try (InputStream fis = source.logStream()) {
-            pr = logsParser.parse(fis, first -> {
-                if (!first.isOther()) {
-                    firstParsed[0] = first;
-                    lastPersistedEvent.get();
-                    return true;
-                } else {
-                    return false;
-                }
-            }, e -> {
-                List<GCEvent> events = es.get();
-                if (e != null) {
-                    if ((firstParsed[0] == null || lastPersistedEvent.get() == null || lastPersistedEvent.get().timestamp() <
-                            e.timestamp()) && !isOtherGeneration(forbidOtherGen, e)) {
-                        enricher.accept(e);
-                        // we will want to omit cross-rows inserts in the same batch - they are slow
-                        boolean isInOtherMonthBucket = lastMonth[0] != e.occurred().getMonthOfYear();
-                        if (events.size() > 0 &&
-                                (events.size() % batchSize == 0
-                                        || isInOtherMonthBucket
-                                        || (e.occurred().equals(lastOccurred[0])))) {
-                            persist(events);
-                        }
-                        events.add(e);
-                        lastMonth[0] = e.occurred().getMonthOfYear();
-                        lastOccurred[0] = e.occurred();
-                    }
-                } else if (events.size() > 0) {
-                    persist(events);
-                }
-            }, ctx);
+            pr = logsParser.parse(fis, e -> pipeEventProcessor.processNext(e, ctx, ps), ctx);
         }
-        return pr;
-    }
-
-    private boolean isOtherGeneration(boolean forbidOtherGen, GCEvent e) {
-        return forbidOtherGen && e.isOther();
-    }
-
-    private void persist(List<GCEvent> events) {
-        eventRepository.add(events);
-        events.clear();
+        pipeEventProcessor.finish(ps);
+        return Pair.of(pr, ps);
     }
 
     private Logger createLogger(File logFile) {

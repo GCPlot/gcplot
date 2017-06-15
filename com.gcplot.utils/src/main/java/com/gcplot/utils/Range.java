@@ -1,4 +1,4 @@
-package com.gcplot.commons;
+package com.gcplot.utils;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

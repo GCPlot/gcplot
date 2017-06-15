@@ -3,7 +3,7 @@ package com.gcplot.services.stats;
 import com.gcplot.model.GCRateImpl;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GCRate;
-import com.gcplot.services.EventInterceptor;
+import com.gcplot.commons.interceptors.EventInterceptor;
 import org.joda.time.DateTime;
 
 import java.util.Collections;

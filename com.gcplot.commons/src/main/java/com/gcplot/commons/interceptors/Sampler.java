@@ -1,8 +1,7 @@
-package com.gcplot.services.filters;
+package com.gcplot.commons.interceptors;
 
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GCEvents;
-import com.gcplot.services.EventInterceptor;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;

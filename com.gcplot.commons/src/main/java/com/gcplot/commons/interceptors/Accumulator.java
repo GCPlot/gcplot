@@ -1,10 +1,9 @@
-package com.gcplot.services.filters;
+package com.gcplot.commons.interceptors;
 
 import com.gcplot.model.gc.Capacity;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.GCEventFactory;
 import com.gcplot.model.gc.Phase;
-import com.gcplot.services.EventInterceptor;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;

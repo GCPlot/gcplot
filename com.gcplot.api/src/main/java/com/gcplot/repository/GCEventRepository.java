@@ -1,7 +1,7 @@
 package com.gcplot.repository;
 
-import com.gcplot.commons.Range;
 import com.gcplot.model.gc.GCEvent;
+import com.gcplot.utils.Range;
 import org.joda.time.DateTime;
 
 import java.util.Iterator;

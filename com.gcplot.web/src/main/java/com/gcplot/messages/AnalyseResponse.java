@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static com.gcplot.commons.CollectionUtils.transformValue;
+import static com.gcplot.utils.CollectionUtils.transformValue;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
