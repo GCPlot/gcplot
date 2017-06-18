@@ -28,7 +28,8 @@ public class PipeEventProcessor {
     private final Consumer<List<GCEvent>> persister;
     private final Consumer<GCEvent> singlePersister;
     private final Mapper eventMapper;
-    private Disruptor<GCEventBundle> disruptor;
+    private Disruptor<GCEventBundle> input;
+    private Disruptor<GCEventBundle> output;
 
     public PipeEventProcessor(Consumer<List<GCEvent>> persister, Consumer<GCEvent> singlePersister,
                               Mapper eventMapper) {
@@ -38,8 +39,10 @@ public class PipeEventProcessor {
     }
 
     public void init() {
-        disruptor = new Disruptor<>(GCEventBundle::new, 16 * 1024, new ThreadFactoryBuilder()
-                .setDaemon(false).setNameFormat("ds-").build(), ProducerType.MULTI, new BlockingWaitStrategy());
+        input = new Disruptor<>(GCEventBundle::new, 8 * 1024, new ThreadFactoryBuilder()
+                .setDaemon(false).setNameFormat("ds-in-%d").build(), ProducerType.MULTI, new BlockingWaitStrategy());
+        output = new Disruptor<>(GCEventBundle::new, 16 * 1024, new ThreadFactoryBuilder()
+                .setDaemon(false).setNameFormat("ds-out-%d").build(), ProducerType.MULTI, new BlockingWaitStrategy());
         EventHandlerGroup group = null;
         if (eventMapper != Mapper.EMPTY) {
             final long mapperCount = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
@@ -60,31 +63,44 @@ public class PipeEventProcessor {
                     }
                 };
             }
-            group = disruptor.handleEventsWith(mapperHandlers);
+            group = input.handleEventsWith(mapperHandlers);
         }
         EventHandler<GCEventBundle> eventHandler = (e, sequence, endOfBatch) -> {
             try {
-                if (!e.isControl && !e.isIgnore) {
+                final ParsingState parsingState = e.parsingState;
+                if (e.isControl) {
+                    if (e.parsingState.getYoungSampler() != null) {
+                        e.parsingState.getYoungSampler().complete().forEach(event -> persistEvent(event, parsingState));
+                    }
+                    e.future.complete(DUMMY);
+                } else if (!e.isIgnore) {
                     e.event.analyseId(e.parserContext.analysisId()).jvmId(e.parserContext.jvmId());
                     if (e.parsingState.getFirstEvent() == null && !e.event.isOther()) {
                         e.parsingState.setFirstEvent(e.event);
                     }
-                    if (e.event.isOther() || (e.parsingState.getLastPersistedEvent().get() != null &&
-                            e.parsingState.getLastPersistedEvent().get().timestamp() >= e.event.timestamp())) {
-                        e.ignore();
-                    } else {
+                    if (!e.event.isOther() && (e.parsingState.getLastPersistedEvent().get() == null ||
+                            e.parsingState.getLastPersistedEvent().get().timestamp() < e.event.timestamp())) {
                         e.parsingState.setLastEvent(e.event);
+
+                        if (e.parsingState.getYoungSampler() == null ||
+                                !e.parsingState.getYoungSampler().isApplicable(e.event)) {
+                            persistEvent(e.event, parsingState);
+                        } else {
+                            List<GCEvent> gcs = e.parsingState.getYoungSampler().process(e.event);
+                            if (gcs.size() > 0) {
+                                gcs.forEach(event -> persistEvent(event, parsingState));
+                            }
+                        }
                     }
                 }
             } catch (Throwable t) {
                 LOG.error(t.getMessage(), t);
-                e.ignore();
             }
         };
         if (group != null) {
-            group = group.then(eventHandler);
+            group.then(eventHandler);
         } else {
-            group = disruptor.handleEventsWith(eventHandler);
+            input.handleEventsWith(eventHandler);
         }
         long persisterCount = Runtime.getRuntime().availableProcessors() * 2;
         EventHandler<GCEventBundle>[] persisterHandlers = new EventHandler[(int) persisterCount];
@@ -100,13 +116,11 @@ public class PipeEventProcessor {
                             if (batch.size() > 0 && (batch.size() == ParsingState.MAX_BATCH_SIZE || endOfBatch)) {
                                 persist(ps, batch);
                             }
-                            if (!e.isIgnore) {
-                                if (endOfBatch) {
-                                    singlePersister.accept(e.event);
-                                } else {
-                                    batch.add(e.event);
-                                    ps.getMonthsSum().set(ps.getMonthsSum().get() + e.event.occurred().getMonthOfYear());
-                                }
+                            if (endOfBatch) {
+                                singlePersister.accept(e.event);
+                            } else {
+                                batch.add(e.event);
+                                ps.getMonthsSum().set(ps.getMonthsSum().get() + e.event.occurred().getMonthOfYear());
                             }
                         } else if ((endOfBatch || e.isControl) && batch.size() > 0) {
                             persist(ps, batch);
@@ -132,30 +146,44 @@ public class PipeEventProcessor {
                 }
             };
         }
-        group.then(persisterHandlers);
+        output.handleEventsWith(persisterHandlers);
+
         LOG.info("Starting Pipe Event Processor ...");
-        disruptor.start();
+        input.start();
+        output.start();
         LOG.info("Pipe Event Processor started!");
     }
 
     public void shutdown() {
         LOG.info("Shutting down Pipe Event Processor ...");
-        disruptor.shutdown();
+        input.shutdown();
+        output.shutdown();
         LOG.info("Pipe Event Processor stopped.");
     }
 
     public void processNext(Object rawEvent, ParserContext context, ParsingState commonState) {
-        disruptor.publishEvent((event, sequence) ->
+        input.publishEvent((event, sequence) ->
                 event.reset().parsingState(commonState).rawEvent(rawEvent).parserContext(context));
     }
 
     public void finish(ParsingState commonState) {
-        final CompletableFuture future = new CompletableFuture();
-        disruptor.publishEvent((event, sequence) -> event.reset().future(future).control().parsingState(commonState));
+        final CompletableFuture futureIn = new CompletableFuture();
+        final CompletableFuture futureOut = new CompletableFuture();
+        input.publishEvent((event, sequence) -> event.reset().future(futureIn).control().parsingState(commonState));
         try {
-            future.get();
+            futureIn.get();
         } catch (InterruptedException | ExecutionException e) {
             LOG.error(e.getMessage(), e);
         }
+        output.publishEvent((event, sequence) -> event.reset().future(futureOut).control().parsingState(commonState));
+        try {
+            futureOut.get();
+        } catch (InterruptedException | ExecutionException e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
+
+    private void persistEvent(GCEvent gcEvent, ParsingState parsingState) {
+        output.publishEvent((event, s) -> event.reset().event(gcEvent).parsingState(parsingState));
     }
 }

@@ -227,7 +227,8 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
                 analyse.jvmVersions().get(jvmId), jvmId, analyse.id());
 
         ParseResult pr;
-        ParsingState ps = new ParsingState(ctx, eventRepository, source.checksum());
+        ParsingState ps = new ParsingState(ctx, eventRepository, source.checksum(),
+                getConfig().readInt(ConfigProperty.PARSE_LOG_SAMPLING_SECONDS));
         try (InputStream fis = source.logStream()) {
             pr = logsParser.parse(fis, e -> pipeEventProcessor.processNext(e, ctx, ps), ctx);
         }

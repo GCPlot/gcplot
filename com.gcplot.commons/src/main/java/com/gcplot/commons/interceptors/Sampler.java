@@ -16,13 +16,19 @@ import java.util.function.Predicate;
 public class Sampler implements EventInterceptor<GCEvent> {
     private final Predicate<GCEvent> applyTo;
     private final int sampleSeconds;
+    private final boolean reverse;
     private EventsBundle events = new EventsBundle();
     private DateTime edge = null;
-    private DateTime edgeMinus = null;
+    private DateTime edgeTime = null;
 
     public Sampler(int sampleSeconds, Predicate<GCEvent> applyTo) {
+        this(sampleSeconds, applyTo, false);
+    }
+
+    public Sampler(int sampleSeconds, Predicate<GCEvent> applyTo, boolean reverse) {
         this.sampleSeconds = sampleSeconds;
         this.applyTo = applyTo;
+        this.reverse = reverse;
     }
 
     @Override
@@ -45,7 +51,8 @@ public class Sampler implements EventInterceptor<GCEvent> {
     protected List<GCEvent> process(GCEvent event, EventsBundle b) {
         initialProcess(event, b);
         List<GCEvent> events = Collections.emptyList();
-        if (edgeMinus.isBefore(event.occurred())) {
+        boolean shouldSample = (reverse ? edgeTime.isAfter(event.occurred()) : edgeTime.isBefore(event.occurred()));
+        if (shouldSample) {
             if (event.pauseMu() < b.getMin().pauseMu()) {
                 b.setMin(event);
             } else if (event.pauseMu() > b.getMax().pauseMu()) {
@@ -108,7 +115,7 @@ public class Sampler implements EventInterceptor<GCEvent> {
 
     protected void edge(GCEvent event) {
         edge = event.occurred();
-        edgeMinus = edge.minusSeconds(sampleSeconds);
+        edgeTime = reverse ? edge.plusSeconds(sampleSeconds) : edge.minusSeconds(sampleSeconds);
     }
 
 }
