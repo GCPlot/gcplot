@@ -16,7 +16,6 @@ allprojects {
 
     dependencies {
         compile "org.slf4j:slf4j-api:$slf4jVersion"
-        //compile "org.slf4j:slf4j-log4j12:$log4jVersion"
         compile "ch.qos.logback:logback-classic:$logbackVersion"
         compile "com.google.guava:guava:$guavaVersion"
         compile "joda-time:joda-time:$jodaTimeVersion"
