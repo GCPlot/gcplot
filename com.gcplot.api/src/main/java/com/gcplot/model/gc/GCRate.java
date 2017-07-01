@@ -14,7 +14,7 @@ public interface GCRate extends DatedEvent, IdentifiedEvent {
     long promotionRate();
 
     @Override
-    default boolean isRate() {
+    default boolean isGCRate() {
         return true;
     }
 }

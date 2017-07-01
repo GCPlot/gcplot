@@ -10,11 +10,15 @@ public interface IdentifiedEvent {
         return false;
     }
 
-    default boolean isRate() {
+    default boolean isGCRate() {
         return false;
     }
 
     default boolean isStatistic() {
+        return false;
+    }
+
+    default boolean isPauseRate() {
         return false;
     }
 

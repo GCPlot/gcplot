@@ -9,7 +9,7 @@ import com.gcplot.model.gc.Generation;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         11/20/16
  */
-public class BaseInterceptor {
+public abstract class BaseInterceptor {
     protected GCEvent ratePreviousEvent;
     protected long allocatedSum;
     protected long promotedSum;

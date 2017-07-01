@@ -178,7 +178,7 @@ public class EventsController extends Controller {
                         features, e -> {
                             if (e.isGCEvent()) {
                                 ctx.write(GCEventResponse.toJson((GCEvent) e));
-                            } else if (e.isRate()) {
+                            } else if (e.isGCRate()) {
                                 ctx.write(GCRateResponse.toJson((GCRate) e));
                             } else if (e.isStatistic()) {
                                 analyseStatsCache.put(statsKey(pp), (StatisticAggregateInterceptor) e);
