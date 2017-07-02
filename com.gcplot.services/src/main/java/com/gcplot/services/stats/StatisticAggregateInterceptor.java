@@ -48,6 +48,9 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
     public static final Function<Object, GenerationStatsImpl> STATS_FACTORY = k -> new GenerationStatsImpl();
     private final boolean isG1;
     private GCEvent lastYoungEvent;
+    private GCEvent lastSerialEvent;
+    private long stwCount = 0;
+    private long stwSum = 0;
     @JsonProperty("generation_total")
     @JsonFormat()
     private Map<Generation, MinMaxAvg> generationsTotalSizes = new EnumMap<>(Generation.class);
@@ -71,6 +74,14 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
     private long firstEvent;
     @JsonProperty("last_event")
     private long lastEvent;
+    @JsonProperty("stw_events_per_minute_count")
+    private long stwEventsPerMinuteCount;
+    @JsonProperty("stw_events_per_minute_sum")
+    private long stwEventsPerMinuteSum;
+    @JsonProperty("stw_pause_per_minute_count")
+    private long stwPausePerMinuteCount;
+    @JsonProperty("stw_pause_per_minute_sum")
+    private long stwPausePerMinuteSum;
 
     private QuantileEstimationCKMS qes = new QuantileEstimationCKMS(QUANTILES);
 
@@ -211,6 +222,7 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
 
         if (event.concurrency() == EventConcurrency.SERIAL) {
             qes.insert(event.pauseMu());
+            calcStwRates(event);
         }
 
         if (!event.totalCapacity().equals(Capacity.NONE)) {
@@ -226,6 +238,31 @@ public class StatisticAggregateInterceptor extends BaseInterceptor implements Ev
     @Override
     public List<GCStatistic> complete() {
         return Collections.singletonList(this);
+    }
+
+    private void calcStwRates(GCEvent event) {
+        if (lastSerialEvent == null) {
+            lastSerialEvent = event;
+        } else {
+            long timeDiff = Math.abs(event.occurred().getMillis() - lastSerialEvent.occurred().getMillis());
+            if (timeDiff < 60 * 1000) {
+                stwCount++;
+                stwSum += event.pauseMu();
+            } else {
+                long ss = Math.round((60d * 1000 * stwSum) / timeDiff);
+                long sc = Math.max(Math.round((60d * 1000 * stwCount) / timeDiff), 1);
+                if (ss == 0) {
+                    ss = lastSerialEvent.pauseMu();
+                }
+                stwEventsPerMinuteCount++;
+                stwEventsPerMinuteSum += sc;
+                stwPausePerMinuteCount++;
+                stwPausePerMinuteSum += ss;
+                stwCount = 0;
+                stwSum = 0;
+                lastSerialEvent = null;
+            }
+        }
     }
 
     private void calcGCStats(GCEvent event, Generation g) {

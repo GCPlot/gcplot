@@ -18,8 +18,4 @@ public interface IdentifiedEvent {
         return false;
     }
 
-    default boolean isPauseRate() {
-        return false;
-    }
-
 }

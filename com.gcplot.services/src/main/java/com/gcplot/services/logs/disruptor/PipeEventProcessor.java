@@ -79,7 +79,7 @@ public class PipeEventProcessor {
                         e.parsingState.setFirstEvent(e.event);
                     }
                     if (!e.event.isOther() && (e.parsingState.getLastPersistedEvent().get() == null ||
-                            e.parsingState.getLastPersistedEvent().get().timestamp() < e.event.timestamp())) {
+                            e.parsingState.getLastPersistedEvent().get().occurred().getMillis() < e.event.occurred().getMillis())) {
                         e.parsingState.setLastEvent(e.event);
 
                         if (e.parsingState.getYoungSampler() == null ||
