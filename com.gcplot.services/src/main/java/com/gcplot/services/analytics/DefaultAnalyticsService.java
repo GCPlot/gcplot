@@ -33,16 +33,23 @@ public class DefaultAnalyticsService implements AnalyticsService {
         put(420L, 5L); /* 7 minutes -> 5 seconds */
         put(900L, 10L); /* 15 minutes -> 10 seconds */
         put(1800L, 15L); /* 30 minutes -> 15 seconds */
+        put(2700L, 20L); /* 45 minutes -> 20 seconds */
         put(3600L, 30L); /* 1 hours -> 30 seconds */
+        put(5400L, 45L); /* 1.5 hours -> 45 seconds */
         put(7200L, 60L); /* 2 hours -> 60 seconds */
         put(14600L, 80L); /* 4 hours -> 1 min 20 sec */
         put(21600L, 120L); /* 6 hours -> 2 minutes */
+        put(32400L, 180L); /* 9 hours -> 3 minutes */
         put(43200L, 240L); /* 12 hours -> 4 minutes */
-        put(86400L, 600L); /* 24 hours -> 10 minutes */
-        put(172800L, 1200L); /* 2 days -> 20 minutes */
+        put(57600L, 360L); /* 16 hours -> 6 minutes */
+        put(86400L, 480L); /* 24 hours -> 8 minutes */
+        put(172800L, 960L); /* 2 days -> 16 minutes */
         put(345600L, 1800L); /* 4 days -> 30 minutes */
+        put(518400L, 2400L); /* 6 days -> 40 minutes */
         put(604800L, 3000L); /* 7 days -> 50 minutes */
-        put(1209600L, 7200L); /* 14 days -> 2 hours */
+        put(777600L, 4200L); /* 9 days -> 70 minutes */
+        put(1728000L, 7200L); /* 14 days -> 2 hours */
+        put(1209600L, 10800L); /* 20 days -> 3 hours */
         put(2592000L, 14400L); /* 30 days -> 4 hours */
         put(5184000L, 18000L); /* 60 days -> 5 hours */
         put(7776000L, 32000L); /* 90 days -> 8.8 hours */
@@ -59,10 +66,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
             return new EventsResult(ErrorMessages.buildJson(ErrorMessages.UNKNOWN_GC_ANALYZE, "Unknown Analyse " + analyseId));
         }
         GCAnalyse analyse = oa.get();
-        Range range = Range.of(interval);
-        if (!analyse.isContinuous()) {
-            range = correctIntervalIfRequired(jvmId, range, analyse);
-        }
+        Range range = correctIntervalIfRequired(jvmId, Range.of(interval), analyse);
         long secondsBetween = new Duration(range.from(), range.to()).getStandardSeconds();
         int sampleSeconds = pickUpSampling(secondsBetween);
 
@@ -131,7 +135,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
     }
 
     private int pickUpSampling(long seconds) {
-        return pickUpSampling(seconds, 900, 32000, PERIOD_SAMPLING_BUCKETS);
+        return pickUpSampling(seconds, 420, 32000, PERIOD_SAMPLING_BUCKETS);
     }
 
     private int pickUpSampling(long seconds, long start, int last, Long2LongMap buckets) {
