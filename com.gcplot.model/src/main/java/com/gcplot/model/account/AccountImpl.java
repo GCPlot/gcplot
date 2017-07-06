@@ -128,31 +128,28 @@ public class AccountImpl implements Account {
 
     @Override
     public Configuration config() {
-        if (configs == null) {
-            configs = Collections.emptyMap();
-        }
         return new Configuration() {
             @Override
             public long asLong(ConfigProperty cp) {
-                String v = configs.get(cp.getId());
+                String v = getConfigs().get(cp.getId());
                 return (Long) (v == null ? cp.getDefaultValue() : Long.parseLong(v));
             }
 
             @Override
             public double asDouble(ConfigProperty cp) {
-                String v = configs.get(cp.getId());
+                String v = getConfigs().get(cp.getId());
                 return (Double) (v == null ? cp.getDefaultValue() : Double.parseDouble(v));
             }
 
             @Override
             public boolean asBoolean(ConfigProperty cp) {
-                String v = configs.get(cp.getId());
+                String v = getConfigs().get(cp.getId());
                 return (Boolean) (v == null ? cp.getDefaultValue() : Boolean.parseBoolean(v));
             }
 
             @Override
             public String asString(ConfigProperty cp) {
-                String s = configs.get(cp.getId());
+                String s = getConfigs().get(cp.getId());
                 return s == null ? (String) cp.getDefaultValue() : s;
             }
         };
@@ -191,6 +188,9 @@ public class AccountImpl implements Account {
     }
 
     public Map<String, String> getConfigs() {
+        if (configs == null) {
+            configs = new HashMap<>();
+        }
         return configs;
     }
 
