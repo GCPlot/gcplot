@@ -128,6 +128,9 @@ public class AccountImpl implements Account {
 
     @Override
     public Configuration config() {
+        if (configs == null) {
+            configs = Collections.emptyMap();
+        }
         return new Configuration() {
             @Override
             public long asLong(ConfigProperty cp) {
