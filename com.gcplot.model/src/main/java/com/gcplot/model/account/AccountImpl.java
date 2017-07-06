@@ -1,6 +1,8 @@
 package com.gcplot.model.account;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.account.config.ConfigProperty;
+import com.gcplot.model.account.config.Configuration;
 import com.gcplot.model.role.Role;
 import com.gcplot.model.role.RoleImpl;
 import com.google.common.base.MoreObjects;
@@ -124,6 +126,35 @@ public class AccountImpl implements Account {
         return new DateTime(registrationTime, DateTimeZone.UTC);
     }
 
+    @Override
+    public Configuration config() {
+        return new Configuration() {
+            @Override
+            public long asLong(ConfigProperty cp) {
+                String v = configs.get(cp.getId());
+                return (Long) (v == null ? cp.getDefaultValue() : Long.parseLong(v));
+            }
+
+            @Override
+            public double asDouble(ConfigProperty cp) {
+                String v = configs.get(cp.getId());
+                return (Double) (v == null ? cp.getDefaultValue() : Double.parseDouble(v));
+            }
+
+            @Override
+            public boolean asBoolean(ConfigProperty cp) {
+                String v = configs.get(cp.getId());
+                return (Boolean) (v == null ? cp.getDefaultValue() : Boolean.parseBoolean(v));
+            }
+
+            @Override
+            public String asString(ConfigProperty cp) {
+                String s = configs.get(cp.getId());
+                return s == null ? (String) cp.getDefaultValue() : s;
+            }
+        };
+    }
+
     public void setRegistrationTime(Date registrationTime) {
         this.registrationTime = registrationTime;
     }
@@ -156,6 +187,10 @@ public class AccountImpl implements Account {
         return id;
     }
 
+    public Map<String, String> getConfigs() {
+        return configs;
+    }
+
     public AccountImpl() {
     }
 
@@ -174,6 +209,7 @@ public class AccountImpl implements Account {
         this.roles = roles;
         this.registrationTime = registrationTime.toDate();
         this.ips = ips;
+        this.configs = new HashMap<>();
     }
 
     public static AccountImpl createNew(String username,
@@ -262,4 +298,5 @@ public class AccountImpl implements Account {
     protected Set<String> ips;
     @OneToMany(targetEntity = RoleImpl.class)
     protected ArrayList<? super RoleImpl> roles;
+    private Map<String, String> configs;
 }

@@ -16,6 +16,8 @@ public class LoginResult {
     public String token;
     @JsonProperty("confirmed")
     public boolean confirmed;
+    @JsonProperty("config")
+    public AccountConfigResponse config;
 
     public LoginResult() {
     }
@@ -28,6 +30,7 @@ public class LoginResult {
         loginResult.email = account.email();
         loginResult.token = account.token();
         loginResult.confirmed = account.isConfirmed();
+        loginResult.config = AccountConfigResponse.from(account.config());
         return loginResult;
     }
 

@@ -2,6 +2,7 @@ package com.gcplot.repository;
 
 import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
+import com.gcplot.model.account.config.ConfigProperty;
 import com.gcplot.utils.Exceptions;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.model.account.Account;
@@ -40,7 +41,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
         db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
         db.getEntityManager().registerEntityClass(RoleImpl.class);
         if (schema.getClass(ACCOUNT_DOCUMENT_NAME) == null) {
-            db.getEntityManager().registerEntityClass(AccountImpl.class);
+            db.getEntityManager().registerEntityClasses(AccountImpl.class, true);
             OClass cls = db.getMetadata().getSchema().getClass(AccountImpl.class);
             String indexName = AccountImpl.class.getName() + ".unq";
             Table t = AccountImpl.class.getAnnotation(Table.class);
@@ -56,7 +57,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
                 }
             }
         } else {
-            db.getEntityManager().registerEntityClass(AccountImpl.class);
+            db.getEntityManager().registerEntityClasses(AccountImpl.class, true);
         }
     }
 
@@ -210,6 +211,13 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
         execute(String.format(UPDATE_ROLE_MANAGEMENT_COMMAND, id.toString(), isRoleManagement));
     }
 
+    @Override
+    public void updateConfig(Account account, ConfigProperty cp, String val) {
+        metrics.meter(ACCOUNT_UPDATE_CONFIG_METRIC).mark();
+        ((AccountImpl)account).getConfigs().put(cp.getId(), val);
+        execute(String.format(UPDATE_CONFIG_COMMAND, account.id().toString(), cp.getId(), val));
+    }
+
     protected void updateRoles(List<RoleImpl> roles, Account account) {
         metrics.meter(ACCOUNT_UPDATE_ROLES_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
@@ -249,8 +257,9 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
             " set roles=[%s] LOCK RECORD";
     private static final String UPDATE_INFO_COMMAND = "update %s" +
             " set username=\"%s\", email=\"%s\", firstName=\"%s\", lastName=\"%s\" LOCK RECORD";
-    private static final String UPDATE_IP_FIELD_COMMAND = "UPDATE %s SET ips = []";
-    private static final String ATTACH_IP_COMMAND = "update %s add ips = '%s'";
+    private static final String UPDATE_CONFIG_COMMAND = "update %s put configs = \"%s\",\"%s\" LOCK RECORD";
+    private static final String UPDATE_IP_FIELD_COMMAND = "UPDATE %s SET ips = [] LOCK RECORD";
+    private static final String ATTACH_IP_COMMAND = "update %s add ips = '%s' LOCK RECORD";
     private static final String UPDATE_PASSWORD_COMMAND = "update %s set passHash=\"%s\" LOCK RECORD";
     private static final String UPDATE_USERNAME_COMMAND = "update %s set username=\"%s\" LOCK RECORD";
     private static final String UPDATE_EMAIL_COMMAND = "update %s set email=\"%s\" LOCK RECORD";
@@ -260,6 +269,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String ACCOUNT_METRIC = Metrics.name(AccountOrientDbRepository.class, "account");
     private static final String ACCOUNT_TOKEN_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "token");
     private static final String ACCOUNT_INSERT_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "insert");
+    private static final String ACCOUNT_UPDATE_CONFIG_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "update", "config");
     private static final String ACCOUNT_UPDATE_ROLES_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "update", "roles");
     private static final String ACCOUNT_UPDATE_INFO_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "update", "info");
     private static final String ACCOUNT_DELETE_METRIC = Metrics.name(AccountOrientDbRepository.class, "account", "delete");

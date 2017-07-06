@@ -1,6 +1,7 @@
 package com.gcplot.model.account;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.account.config.Configuration;
 import com.gcplot.model.role.Role;
 import org.joda.time.DateTime;
 
@@ -36,4 +37,6 @@ public interface Account {
     List<Role> roles();
 
     DateTime registrationTime();
+
+    Configuration config();
 }

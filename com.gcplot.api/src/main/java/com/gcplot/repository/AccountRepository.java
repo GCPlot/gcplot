@@ -2,6 +2,7 @@ package com.gcplot.repository;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.account.Account;
+import com.gcplot.model.account.config.ConfigProperty;
 import com.gcplot.model.role.Role;
 
 import java.util.List;
@@ -48,6 +49,8 @@ public interface AccountRepository {
     void detachRole(Account account, Role role);
 
     void roleManagement(Identifier account, boolean isRoleManagement);
+
+    void updateConfig(Account account, ConfigProperty cp, String val);
 
     enum LoginType {
         USERNAME, EMAIL
