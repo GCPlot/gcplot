@@ -2,9 +2,9 @@ package com.gcplot.controllers;
 
 import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
+import com.gcplot.services.mail.MailService;
 import com.gcplot.utils.Utils;
 import com.gcplot.commons.exceptions.NotUniqueException;
-import com.gcplot.mail.MailService;
 import com.gcplot.messages.*;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;

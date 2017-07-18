@@ -26,29 +26,20 @@ public abstract class BaseMailProvider implements MailProvider {
     protected static final String CONTENT_TYPE = "text/html; charset=\"UTF-8\"";
     protected ConfigurationManager config;
     protected MetricRegistry metrics;
-
-    public void init() {
-        executorService = ;
-    }
-
-    public void destroy() {
-        executorService.shutdownNow();
-        try {
-            executorService.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ignore) {}
-    }
+    protected MailProvider fallbackProvider;
 
     @Override
     public void send(String to, String subject, String msg, boolean async) {
         try {
             if (async) {
-                executorService.submit(() -> {
+                EXECUTOR.submit(() -> {
                    try {
                        makeSend(to, subject, msg);
                        metrics.meter(SUCCESS_METRIC_NAME).mark();
                    } catch (Throwable t) {
                        metrics.meter(ERROR_METRIC_NAME).mark();
                        LOG.error("EMAIL ERROR", t);
+                       tryCallFallbackProvider(to, subject, msg, true);
                    }
                 });
             } else {
@@ -58,14 +49,22 @@ public abstract class BaseMailProvider implements MailProvider {
         } catch (Throwable t) {
             metrics.meter(ERROR_METRIC_NAME).mark();
             LOG.error("EMAIL ERROR", t);
+            tryCallFallbackProvider(to, subject, msg, async);
+        }
+    }
+
+    private void tryCallFallbackProvider(String to, String subject, String msg, boolean async) {
+        if (fallbackProvider != null) {
+            try {
+                fallbackProvider.send(to, subject, msg, async);
+            } catch (Throwable tt) {
+                metrics.meter(ERROR_METRIC_NAME).mark();
+                LOG.error("EMAIL ERROR", tt);
+            }
         }
     }
 
     abstract void makeSend(String to, String subject, String msg);
-
-    public void setThreadPoolSize(int threadPoolSize) {
-        this.threadPoolSize = threadPoolSize;
-    }
 
     public void setConfig(ConfigurationManager config) {
         this.config = config;
@@ -73,5 +72,9 @@ public abstract class BaseMailProvider implements MailProvider {
 
     public void setMetrics(MetricRegistry metrics) {
         this.metrics = metrics;
+    }
+
+    public void setFallbackProvider(MailProvider fallbackProvider) {
+        this.fallbackProvider = fallbackProvider;
     }
 }

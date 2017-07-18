@@ -37,6 +37,8 @@ public class SESMailProvider extends BaseMailProvider {
             } finally {
                 client.shutdown();
             }
+        } else {
+            throw new IllegalStateException("SES Mail provider wasn't configured well.");
         }
     }
 

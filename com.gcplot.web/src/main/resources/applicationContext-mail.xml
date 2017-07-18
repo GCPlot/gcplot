@@ -9,11 +9,22 @@
     <import resource="applicationContext-config.xml"/>
     <import resource="applicationContext-web.xml"/>
 
-    <bean id="mailService" class="com.gcplot.mail.MailService" init-method="init" destroy-method="destroy">
+    <bean id="smtpMailProvider" class="com.gcplot.services.mail.providers.SMTPMailProvider">
+        <property name="metrics" ref="metrics"/>
+        <property name="config" ref="config"/>
+    </bean>
+
+    <bean id="sesMailProvider" class="com.gcplot.services.mail.providers.SESMailProvider">
+        <property name="metrics" ref="metrics"/>
+        <property name="config" ref="config"/>
+        <property name="fallbackProvider" ref="smtpMailProvider"/>
+    </bean>
+
+    <bean id="mailService" class="com.gcplot.services.mail.MailService">
         <property name="config" ref="config"/>
         <property name="urlBuilder" ref="urlBuilder"/>
-        <property name="threadPoolSize" value="${mail.thread.pool.size:30}"/>
-        <property name="metrics" ref="metrics"/>
+        <property name="async" value="${mail.service.async:true}"/>
+        <property name="mailProvider" ref="sesMailProvider"/>
     </bean>
 
 </beans>
