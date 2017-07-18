@@ -27,7 +27,8 @@ public class SMTPMailProvider extends BaseMailProvider {
                     config.readString(ConfigProperty.SMTP_DEFAULT_PASSWORD)));
         }
         try {
-            email.setFrom(config.readString(ConfigProperty.EMAIL_DEFAULT_FROM));
+            email.setFrom(config.readString(ConfigProperty.EMAIL_DEFAULT_FROM),
+                    config.readString(ConfigProperty.EMAIL_DEFAULT_FROM_NAME));
         } catch (EmailException e) {
             throw Exceptions.runtime(e);
         }

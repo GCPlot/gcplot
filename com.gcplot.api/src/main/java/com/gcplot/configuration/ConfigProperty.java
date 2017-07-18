@@ -13,7 +13,8 @@ public enum ConfigProperty {
 
     EMAIL_CONFIRM_TEMPLATE("email.confirm.template", ""),
     EMAIL_NEW_PASS_TEMPLATE("email.new.pass.template", ""),
-    EMAIL_DEFAULT_FROM("email.confirm.from", "do-not-reply@gcplot.com"),
+    EMAIL_DEFAULT_FROM("email.default.from", "do-not-reply@gcplot.com"),
+    EMAIL_DEFAULT_FROM_NAME("email.default.from.name", "GCPlot"),
 
     SMTP_HOST_NAME("smtp.host.name", "smtp.yandex.ru"),
     SMTP_PORT("smtp.port", 465),

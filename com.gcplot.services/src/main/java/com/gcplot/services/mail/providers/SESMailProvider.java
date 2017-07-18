@@ -25,7 +25,8 @@ public class SESMailProvider extends BaseMailProvider {
             Body body = new Body().withText(textBody);
 
             Message message = new Message().withSubject(subj).withBody(body);
-            SendEmailRequest req = new SendEmailRequest().withSource(config.readString(ConfigProperty.EMAIL_DEFAULT_FROM))
+            SendEmailRequest req = new SendEmailRequest().withSource(config.readString(ConfigProperty.EMAIL_DEFAULT_FROM_NAME)
+                    + " <" + config.readString(ConfigProperty.EMAIL_DEFAULT_FROM) + ">")
                     .withDestination(destination).withMessage(message);
 
             AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
