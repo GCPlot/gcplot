@@ -49,24 +49,24 @@ public class MailService {
 
     protected Email createEmail() {
         Email email = new SimpleEmail();
-        email.setHostName(config.readString(ConfigProperty.EMAIL_HOST_NAME));
-        email.setSSLOnConnect(config.readBoolean(ConfigProperty.EMAIL_USE_SSL));
-        if (config.readBoolean(ConfigProperty.EMAIL_USE_SSL)) {
-            email.setSslSmtpPort(config.readString(ConfigProperty.EMAIL_SMTP_PORT));
+        email.setHostName(config.readString(ConfigProperty.SMTP_HOST_NAME));
+        email.setSSLOnConnect(config.readBoolean(ConfigProperty.SMTP_USE_SSL));
+        if (config.readBoolean(ConfigProperty.SMTP_USE_SSL)) {
+            email.setSslSmtpPort(config.readString(ConfigProperty.SMTP_PORT));
         } else {
-            email.setSmtpPort(config.readInt(ConfigProperty.EMAIL_SMTP_PORT));
+            email.setSmtpPort(config.readInt(ConfigProperty.SMTP_PORT));
         }
-        if (config.readBoolean(ConfigProperty.EMAIL_AUTH)) {
-            email.setAuthenticator(new DefaultAuthenticator(config.readString(ConfigProperty.EMAIL_DEFAULT_USERNAME),
-                    config.readString(ConfigProperty.EMAIL_DEFAULT_PASSWORD)));
+        if (config.readBoolean(ConfigProperty.SMTP_AUTH)) {
+            email.setAuthenticator(new DefaultAuthenticator(config.readString(ConfigProperty.SMTP_DEFAULT_USERNAME),
+                    config.readString(ConfigProperty.SMTP_DEFAULT_PASSWORD)));
         }
         try {
             email.setFrom(config.readString(ConfigProperty.EMAIL_DEFAULT_FROM));
         } catch (EmailException e) {
             throw Exceptions.runtime(e);
         }
-        email.setSocketConnectionTimeout(config.readInt(ConfigProperty.EMAIL_CONNECTION_TIMEOUT));
-        email.setSocketTimeout(config.readInt(ConfigProperty.EMAIL_SEND_TIMEOUT));
+        email.setSocketConnectionTimeout(config.readInt(ConfigProperty.SMTP_CONNECTION_TIMEOUT));
+        email.setSocketTimeout(config.readInt(ConfigProperty.SMTP_SEND_TIMEOUT));
         return email;
     }
 

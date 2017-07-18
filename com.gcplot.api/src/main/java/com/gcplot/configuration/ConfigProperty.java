@@ -13,19 +13,23 @@ public enum ConfigProperty {
 
     EMAIL_CONFIRM_TEMPLATE("email.confirm.template", ""),
     EMAIL_NEW_PASS_TEMPLATE("email.new.pass.template", ""),
-    EMAIL_HOST_NAME("email.host.name", "smtp.yandex.ru"),
-    EMAIL_SMTP_PORT("email.smtp.port", 465),
-    EMAIL_USE_SSL("email.use.ssl", true),
-    EMAIL_AUTH("email.auth", true),
-    EMAIL_CONNECTION_TIMEOUT("email.connection.timeout", 10000),
-    EMAIL_SEND_TIMEOUT("email.send.timeout", 5000),
-    EMAIL_DEFAULT_USERNAME("email.confirm.username", "do-not-reply@gcplot.com"),
     EMAIL_DEFAULT_FROM("email.confirm.from", "do-not-reply@gcplot.com"),
-    EMAIL_DEFAULT_PASSWORD("email.confirm.password", "%*KmX_bh/Z:e7)u\""),
+
+    SMTP_HOST_NAME("smtp.host.name", "smtp.yandex.ru"),
+    SMTP_PORT("smtp.port", 465),
+    SMTP_USE_SSL("smtp.use.ssl", true),
+    SMTP_AUTH("smtp.auth", true),
+    SMTP_CONNECTION_TIMEOUT("smtp.connection.timeout", 10000),
+    SMTP_SEND_TIMEOUT("smtp.send.timeout", 5000),
+    SMTP_DEFAULT_USERNAME("smtp.confirm.username", "do-not-reply@gcplot.com"),
+    SMTP_DEFAULT_PASSWORD("smtp.confirm.password", "%*KmX_bh/Z:e7)u\""),
+
+    SES_REGION("aws.ses.region", "us-east-1"),
+    SES_ACCESS_KEY("aws.ses.access.key", ""),
+    SES_SECRET_KEY("aws.ses.secret.key", ""),
 
     TEST1_CONFIG("test.config.1", "test"),
 
-    BATCH_PUT_GC_EVENT_SIZE("batch.put.gc.event.size", 5),
     USER_ANALYSIS_COUNT_CACHE_SIZE("user.analysis.cache.size", 5_000L),
     USER_ANALYSIS_COUNT_CACHE_SECONDS("user.analysis.cache.min", 120L),
     ANALYSIS_STATISTIC_CACHE_SIZE("analysis.stats.cache.size", 10_000L),

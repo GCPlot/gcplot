@@ -13,6 +13,7 @@ import com.gcplot.logs.LogsProcessorService;
 import com.gcplot.model.gc.GCAnalyse;
 import com.gcplot.repository.AccountRepository;
 import com.gcplot.repository.GCAnalyseRepository;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,8 @@ public class ProcessingWorker {
     public void init() {
         timer = Executors.newSingleThreadScheduledExecutor();
         timer.scheduleAtFixedRate(this::processOfflineLogs, intervalMs, intervalMs, TimeUnit.MILLISECONDS);
-        executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+        executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2,
+                new ThreadFactoryBuilder().setNameFormat("processing-worker-%d").build());
     }
 
     public void destroy() {

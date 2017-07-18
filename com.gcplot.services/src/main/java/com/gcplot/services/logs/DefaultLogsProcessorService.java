@@ -25,6 +25,7 @@ import com.gcplot.repository.operations.analyse.UpdateJvmInfoOperation;
 import com.gcplot.resource.ResourceManager;
 import com.gcplot.services.logs.disruptor.ParsingState;
 import com.gcplot.services.logs.disruptor.PipeEventProcessor;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -64,7 +65,8 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
     private PipeEventProcessor pipeEventProcessor;
 
     public void init() {
-        uploadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8);
+        uploadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 8,
+                new ThreadFactoryBuilder().setNameFormat("logs-proc-%d").build());
         pipeEventProcessor = new PipeEventProcessor(eventRepository::add, eventRepository::add, logsParser.getMapper());
         pipeEventProcessor.init();
     }

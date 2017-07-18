@@ -13,10 +13,14 @@ dependencies {
   compile("org.apache.zookeeper:zookeeper:$zookeeperVersion") {
     exclude group: 'org.slf4j'
   }
-  compile "com.amazonaws:aws-java-sdk-s3:$s3Version"
+  compile "com.amazonaws:aws-java-sdk-s3:$awsVersion"
+  compile "com.amazonaws:aws-java-sdk-ses:$awsVersion"
   compile group: 'commons-io', name: 'commons-io', version: "$apacheCommonsIOVersion"
   compile "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
   compile "com.lmax:disruptor:$disruptorVersion"
+  compile "io.dropwizard.metrics:metrics-core:$metricsVersion"
+  compile "io.dropwizard.metrics:metrics-graphite:$metricsVersion"
+  compile "org.apache.commons:commons-email:$apacheMailVersion"
 
   testCompile group: 'io.findify', name: 's3mock_2.12', version: "$s3MockVersion"
 }

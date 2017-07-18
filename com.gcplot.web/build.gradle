@@ -63,7 +63,7 @@ dependencies {
     compile project(":com.gcplot.gc-model")
     compile project(":com.gcplot.log-processor")
 
-    compile "com.amazonaws:aws-java-sdk-s3:$s3Version"
+    compile "com.amazonaws:aws-java-sdk-s3:$awsVersion"
     compile "org.slf4j:slf4j-simple:$slf4jVersion"
     compile "io.vertx:vertx-web:$vertxVersion"
     compile "io.vertx:vertx-codegen:$vertxVersion"
@@ -73,7 +73,6 @@ dependencies {
     compile "io.dropwizard.metrics:metrics-graphite:$metricsVersion"
     compile "com.beust:jcommander:$jcommanderVersion"
     compile "commons-codec:commons-codec:$apacheCodecVersion"
-    compile "org.apache.commons:commons-email:$apacheMailVersion"
     compile "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
 
     testCompile "org.springframework:spring-test:$springVersion"

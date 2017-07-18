@@ -109,10 +109,10 @@ public abstract class IntegrationTest {
         ConfigurationManager cm = getApplicationContext().getBean(ConfigurationManager.class);
         cm.putProperty(ConfigProperty.API_HOST, LOCALHOST + ":" + port.value);
         cm.putProperty(ConfigProperty.PUBLIC_HOST, LOCALHOST);
-        cm.putProperty(ConfigProperty.EMAIL_USE_SSL, false);
-        cm.putProperty(ConfigProperty.EMAIL_SMTP_PORT, smtpServer.getPort());
-        cm.putProperty(ConfigProperty.EMAIL_HOST_NAME, LOCALHOST);
-        cm.putProperty(ConfigProperty.EMAIL_AUTH, false);
+        cm.putProperty(ConfigProperty.SMTP_USE_SSL, false);
+        cm.putProperty(ConfigProperty.SMTP_PORT, smtpServer.getPort());
+        cm.putProperty(ConfigProperty.SMTP_HOST_NAME, LOCALHOST);
+        cm.putProperty(ConfigProperty.SMTP_AUTH, false);
         cm.putProperty(ConfigProperty.EMAIL_CONFIRM_TEMPLATE, "");
     }
 
