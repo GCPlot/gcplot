@@ -20,6 +20,7 @@ import javax.annotation.PostConstruct;
  *         8/10/16
  */
 public class DefaultDispatcherHandlers {
+    private static final Logger ANALYTICS_LOGGER = LoggerFactory.getLogger("analytics");
     private static final Logger LOG = LoggerFactory.getLogger(DefaultDispatcherHandlers.class);
 
     protected Dispatcher<String> dispatcher;
@@ -62,6 +63,7 @@ public class DefaultDispatcherHandlers {
             return false;
         }
         if (ctx.loginInfo().isPresent()) {
+            ANALYTICS_LOGGER.info("Access | {} | {} | {}", ctx.path(), ctx.getUserAgent(), ctx.loginInfo().get().getAccount());
             boolean accessRestricted = ctx.loginInfo().get().getAccount().roles()
                     .stream().flatMap(r -> r.restrictions().stream())
                     .filter(r -> r.type() == RestrictionType.TOGGLE)
