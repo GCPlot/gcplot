@@ -31,6 +31,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.NOPLogger;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -136,8 +137,14 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
         LogProcessResult x = checkAnalyzeCorrect(analyze.id(), jvmId, account.id(), analyze);
         if (x != null) return x;
 
-        final File logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
-        Logger log = createLogger(logFile);
+        Logger log;
+        File logFile = null;
+        if (analyze.isContinuous()) {
+            log = NOPLogger.NOP_LOGGER;
+        } else {
+            logFile = java.nio.file.Files.createTempFile("gcplot_log", ".log").toFile();
+            log = createLogger(logFile);
+        }
 
         Pair<ParseResult, ParsingState> p = parseAndPersist(source, jvmId, analyze, log);
         ParseResult pr = p.getLeft();
@@ -154,8 +161,10 @@ public class DefaultLogsProcessorService implements LogsProcessorService {
             return new LogProcessResult(ErrorMessages.buildJson(ErrorMessages.INTERNAL_ERROR));
         }
 
-        truncateFile(logFile, getConfig().readLong(ConfigProperty.PARSE_LOG_MAX_FILE_SIZE));
-        uploadLogFile(sync, analyze.id(), jvmId, account.username(), logFile);
+        if (logFile != null) {
+            truncateFile(logFile, getConfig().readLong(ConfigProperty.PARSE_LOG_MAX_FILE_SIZE));
+            uploadLogFile(sync, analyze.id(), jvmId, account.username(), logFile);
+        }
 
         return LogProcessResult.SUCCESS;
     }
