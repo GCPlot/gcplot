@@ -22,13 +22,12 @@ public class SESMailProvider extends BaseMailProvider {
             Destination destination = new Destination().withToAddresses(to);
             Content subj = new Content().withData(subject);
             Content textBody = new Content().withData(msg);
-            Body body = new Body().withText(textBody);
+            Body body = new Body().withHtml(textBody);
 
             Message message = new Message().withSubject(subj).withBody(body);
             SendEmailRequest req = new SendEmailRequest().withSource(config.readString(ConfigProperty.EMAIL_DEFAULT_FROM_NAME)
                     + " <" + config.readString(ConfigProperty.EMAIL_DEFAULT_FROM) + ">")
                     .withDestination(destination).withMessage(message);
-            req.putCustomRequestHeader(CONTENT_TYPE_HEADER, CONTENT_TYPE);
 
             AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
                     .withRegion(config.readString(ConfigProperty.SES_REGION))
