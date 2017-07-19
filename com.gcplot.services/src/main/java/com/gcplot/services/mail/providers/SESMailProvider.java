@@ -28,6 +28,7 @@ public class SESMailProvider extends BaseMailProvider {
             SendEmailRequest req = new SendEmailRequest().withSource(config.readString(ConfigProperty.EMAIL_DEFAULT_FROM_NAME)
                     + " <" + config.readString(ConfigProperty.EMAIL_DEFAULT_FROM) + ">")
                     .withDestination(destination).withMessage(message);
+            req.putCustomRequestHeader(CONTENT_TYPE_HEADER, CONTENT_TYPE);
 
             AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
                     .withRegion(config.readString(ConfigProperty.SES_REGION))
