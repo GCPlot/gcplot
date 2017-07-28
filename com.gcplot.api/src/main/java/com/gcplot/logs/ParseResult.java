@@ -1,8 +1,6 @@
 package com.gcplot.logs;
 
 import com.gcplot.logs.survivor.AgesState;
-import com.gcplot.model.gc.GCEvent;
-import com.gcplot.model.notifications.GCNotification;
 
 import java.util.Collections;
 import java.util.List;
