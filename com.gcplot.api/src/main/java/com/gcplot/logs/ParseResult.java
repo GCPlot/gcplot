@@ -21,11 +21,6 @@ public class ParseResult {
         return Optional.ofNullable(exception);
     }
 
-    private final List<GCNotification> notifications;
-    public List<GCNotification> getNotifications() {
-        return Collections.unmodifiableList(notifications);
-    }
-
     private final List<AgesState> agesStates;
     public List<AgesState> getAgesStates() {
         return agesStates;
@@ -36,26 +31,23 @@ public class ParseResult {
         return Optional.ofNullable(logMetadata);
     }
 
-    private ParseResult(List<GCNotification> notifications, List<AgesState> agesState, LogMetadata logMetadata) {
-        this(true, null, notifications, agesState, logMetadata);
+    private ParseResult(List<AgesState> agesState, LogMetadata logMetadata) {
+        this(true, null, agesState, logMetadata);
     }
 
-    private ParseResult(boolean isSuccessful, Throwable exception,
-                        List<GCNotification> notifications, List<AgesState> agesStates, LogMetadata logMetadata) {
+    private ParseResult(boolean isSuccessful, Throwable exception, List<AgesState> agesStates, LogMetadata logMetadata) {
         this.isSuccessful = isSuccessful;
-        this.notifications = notifications;
         this.agesStates = agesStates;
         this.exception = exception;
         this.logMetadata = logMetadata;
     }
 
-    public static ParseResult success(List<GCNotification> notifications, List<AgesState> agesStates,
-                                      LogMetadata logMetadata) {
-        return new ParseResult(notifications, agesStates, logMetadata);
+    public static ParseResult success(List<AgesState> agesStates, LogMetadata logMetadata) {
+        return new ParseResult(agesStates, logMetadata);
     }
 
     public static ParseResult failure(Throwable t) {
-        return new ParseResult(false, t, Collections.emptyList(), Collections.emptyList(), null);
+        return new ParseResult(false, t, Collections.emptyList(), null);
     }
 
 }

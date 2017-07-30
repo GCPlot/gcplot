@@ -61,9 +61,7 @@ public class GCViewerLogsParser implements LogsParser<AbstractGCEvent> {
             return ParseResult.failure(e);
         }
         // temp stuff
-        return ParseResult.success(Collections.emptyList(),
-                Collections.singletonList(agesInfoProducer.averageAgesState()),
-                metadataInfoProducer.getLogMetadata());
+        return ParseResult.success(Collections.singletonList(agesInfoProducer.averageAgesState()), metadataInfoProducer.getLogMetadata());
     }
 
     @Override

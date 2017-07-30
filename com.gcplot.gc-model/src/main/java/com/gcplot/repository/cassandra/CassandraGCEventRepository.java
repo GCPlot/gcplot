@@ -35,6 +35,7 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
     private static final Logger LOG = LoggerFactory.getLogger(CassandraGCEventRepository.class);
     protected static final String TABLE_NAME = "gc_event";
     protected static final String DATE_PATTERN = "yyyy-MM";
+    // See Mapper#lazyEventFrom in case of update
     public static final String[] NON_KEY_FIELDS = new String[] {
             "occurred", "pause_mu", "tmstm", "generations",
             "concurrency", "phase", "capacity", "total_capacity",
