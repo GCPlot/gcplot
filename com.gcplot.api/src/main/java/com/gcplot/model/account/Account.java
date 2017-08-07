@@ -16,6 +16,8 @@ public interface Account {
 
     String email();
 
+    String notificationEmail();
+
     String firstName();
 
     String lastName();

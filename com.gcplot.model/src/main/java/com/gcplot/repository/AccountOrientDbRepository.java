@@ -40,25 +40,7 @@ public class AccountOrientDbRepository extends AbstractOrientDbRepository implem
     public void init(OObjectDatabaseTx db, OSchema schema) {
         db.getEntityManager().registerEntityClass(RoleImpl.RestrictionImpl.class);
         db.getEntityManager().registerEntityClass(RoleImpl.class);
-        if (schema.getClass(ACCOUNT_DOCUMENT_NAME) == null) {
-            db.getEntityManager().registerEntityClasses(AccountImpl.class, true);
-            OClass cls = db.getMetadata().getSchema().getClass(AccountImpl.class);
-            String indexName = AccountImpl.class.getName() + ".unq";
-            Table t = AccountImpl.class.getAnnotation(Table.class);
-            if (t != null) {
-                Set<String> fields = new HashSet<>();
-                for (UniqueConstraint uc : t.uniqueConstraints()) {
-                    fields.addAll(Lists.newArrayList(uc.columnNames()));
-                }
-                if (fields.size() > 0) {
-                    LOG.info("Registering unique constraint for fields: " + fields);
-                    for (String field : fields)
-                        cls.createIndex(indexName + "." + field, OClass.INDEX_TYPE.UNIQUE_HASH_INDEX, field);
-                }
-            }
-        } else {
-            db.getEntityManager().registerEntityClasses(AccountImpl.class, true);
-        }
+        register(db, schema, AccountImpl.class);
     }
 
     @Override

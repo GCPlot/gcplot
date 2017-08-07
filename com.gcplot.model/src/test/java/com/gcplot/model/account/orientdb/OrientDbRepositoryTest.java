@@ -1,5 +1,6 @@
 package com.gcplot.model.account.orientdb;
 
+import com.gcplot.Identifier;
 import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.configuration.OrientDbConfigurationManager;
 import com.gcplot.model.account.Account;
@@ -7,6 +8,11 @@ import com.gcplot.model.account.AccountImpl;
 import com.gcplot.model.role.RestrictionType;
 import com.gcplot.model.role.RoleImpl;
 import com.gcplot.repository.*;
+import com.gcplot.triggers.binary.BinaryTrigger;
+import com.gcplot.triggers.BinaryTriggerImpl;
+import com.gcplot.triggers.Trigger;
+import com.gcplot.triggers.TriggerType;
+import com.gcplot.triggers.binary.State;
 import com.google.common.collect.Lists;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
@@ -19,6 +25,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 public class OrientDbRepositoryTest {
@@ -168,6 +175,34 @@ public class OrientDbRepositoryTest {
         Assert.assertEquals("value", cm.readString(ConfigProperty.TEST1_CONFIG));
         Assert.assertEquals(16, cm.readInt(ConfigProperty.POLL_INTERVAL));
         cm.destroy();
+    }
+
+    @Test
+    public void testTriggers() throws Exception {
+        TriggerOrientDbRepository r = new TriggerOrientDbRepository(config, new OPartitionedDatabasePoolFactory());
+        r.init();
+        Identifier accId = Identifier.fromStr("123");
+
+        BinaryTriggerImpl btr = new BinaryTriggerImpl();
+        btr.setState(State.ACQUIRED);
+        btr.setPreviousState(State.WAIT);
+        btr.setProperties(Collections.singletonMap("one", "two"));
+        btr.setAccountId(accId);
+        btr.setLastTimeTrigger(System.currentTimeMillis());
+        btr.setType(TriggerType.IS_GCPC_WORK);
+        r.saveTrigger(btr);
+
+        List<Trigger> triggers = r.triggersFor(accId);
+        Assert.assertEquals(1, triggers.size());
+        BinaryTrigger fromDb = (BinaryTrigger) triggers.get(0);
+        Assert.assertNotNull(fromDb.id());
+        Assert.assertEquals(accId, fromDb.accountId());
+        Assert.assertEquals(btr.lastTimeTrigger(), fromDb.lastTimeTrigger());
+        Assert.assertEquals(btr.previousState(), fromDb.previousState());
+        Assert.assertEquals(btr.state(), fromDb.state());
+        Assert.assertEquals(btr.properties(), fromDb.properties());
+
+        r.destroy();
     }
 
 }

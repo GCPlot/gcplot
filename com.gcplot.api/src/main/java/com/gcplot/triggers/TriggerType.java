@@ -9,7 +9,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  */
 public enum TriggerType {
 
-    GCPC_WORK_STATE(1);
+    IS_GCPC_WORK(1);
 
     private static final Int2ObjectMap<TriggerType> VALUES;
 

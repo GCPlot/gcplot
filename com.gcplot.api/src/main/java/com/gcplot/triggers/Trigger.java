@@ -1,5 +1,7 @@
 package com.gcplot.triggers;
 
+import com.gcplot.Identifier;
+
 import java.util.Map;
 
 /**
@@ -7,6 +9,10 @@ import java.util.Map;
  *         8/1/17
  */
 public interface Trigger<State> {
+
+    Identifier id();
+
+    Identifier accountId();
 
     TriggerType type();
 
