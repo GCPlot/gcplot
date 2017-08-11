@@ -8,6 +8,7 @@ import com.gcplot.model.account.AccountImpl;
 import com.gcplot.model.role.RestrictionType;
 import com.gcplot.model.role.RoleImpl;
 import com.gcplot.repository.*;
+import com.gcplot.triggers.AbstractTrigger;
 import com.gcplot.triggers.binary.BinaryTrigger;
 import com.gcplot.triggers.BinaryTriggerImpl;
 import com.gcplot.triggers.Trigger;
@@ -202,7 +203,52 @@ public class OrientDbRepositoryTest {
         Assert.assertEquals(btr.state(), fromDb.state());
         Assert.assertEquals(btr.properties(), fromDb.properties());
 
+        TestTrigger tt = new TestTrigger();
+        tt.setState(true);
+        tt.setPreviousState(false);
+        tt.setAccountId(accId);
+
+        r.saveTrigger(tt);
+
+        triggers = r.triggersFor(accId);
+
+        Assert.assertEquals(triggers.size(), 2);
+        Assert.assertTrue(triggers.get(0) instanceof BinaryTrigger);
+        Assert.assertTrue(triggers.get(1) instanceof TestTrigger);
+        Assert.assertTrue((Boolean) triggers.get(1).state());
+        Assert.assertFalse((Boolean) triggers.get(1).previousState());
+
+        r.updateState(triggers.get(1).id(), false);
+        tt = (TestTrigger) r.trigger(triggers.get(1).id());
+        Assert.assertFalse(tt.state());
+
+        r.updateState(triggers.get(1).id(), true);
+        tt = (TestTrigger) r.trigger(triggers.get(1).id());
+        Assert.assertTrue(tt.state());
+
+        r.updateLastTimeTriggered(triggers.get(0).id(), btr.lastTimeTrigger() + 3);
+        BinaryTriggerImpl btr1 = (BinaryTriggerImpl) r.trigger(triggers.get(0).id());
+        Assert.assertEquals(btr1.lastTimeTrigger(), btr.lastTimeTrigger() + 3);
+
+        r.putProperty(btr1.id(), "one", "two");
+        btr1 = (BinaryTriggerImpl) r.trigger(btr1.id());
+        Assert.assertEquals(btr1.properties().size(), 1);
+        Assert.assertEquals(btr1.properties().get("one"), "two");
+
         r.destroy();
+    }
+
+    public static class TestTrigger extends AbstractTrigger<Boolean> {
+
+        @Override
+        public Boolean previousState() {
+            return (Boolean) previousState;
+        }
+
+        @Override
+        public Boolean state() {
+            return (Boolean) state;
+        }
     }
 
 }

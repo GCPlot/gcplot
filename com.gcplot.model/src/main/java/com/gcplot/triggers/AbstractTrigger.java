@@ -23,6 +23,8 @@ public abstract class AbstractTrigger<T> implements Trigger<T> {
     private int typeId;
     private long lastTimeTrigger;
     private Map<String, String> properties;
+    protected Object state;
+    protected Object previousState;
 
     public Identifier id() {
         if (identifier == null) {
@@ -69,5 +71,13 @@ public abstract class AbstractTrigger<T> implements Trigger<T> {
 
     public void setProperties(Map<String, String> properties) {
         this.properties = properties;
+    }
+
+    public void setState(Object state) {
+        this.state = state;
+    }
+
+    public void setPreviousState(Object previousState) {
+        this.previousState = previousState;
     }
 }

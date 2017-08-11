@@ -13,6 +13,8 @@ public interface TriggerRepository {
 
     List<Trigger> triggersFor(Identifier accountId);
 
+    Trigger trigger(Identifier triggerId);
+
     void saveTrigger(Trigger trigger);
 
     <T> void updateState(Identifier triggerId, T state);

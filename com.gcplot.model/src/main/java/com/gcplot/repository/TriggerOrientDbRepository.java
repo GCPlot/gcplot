@@ -5,14 +5,18 @@ import com.gcplot.commons.Metrics;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.triggers.AbstractTrigger;
 import com.gcplot.triggers.Trigger;
+import com.gcplot.utils.Exceptions;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.metadata.schema.OSchema;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import com.orientechnologies.orient.object.db.OObjectDatabaseTx;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -33,7 +37,16 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
         metrics.meter(TRIGGERS_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             List<Trigger> l = db.query(new OSQLSynchQuery<>(String.format(TRIGGERS_QUERY, accountId)));
-            return l.stream().map(i -> (Trigger) db.detachAll(i, true)).collect(Collectors.toList());
+            return detachList(db, l).collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public Trigger trigger(Identifier triggerId) {
+        metrics.meter(TRIGGER_METRIC).mark();
+        try (OObjectDatabaseTx db = db()) {
+            List<Trigger> l = db.query(new OSQLSynchQuery<>(String.format(TRIGGER_QUERY, triggerId)));
+            return detachList(db, l).findFirst().orElse(null);
         }
     }
 
@@ -55,16 +68,49 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
     @Override
     public <T> void updateState(Identifier triggerId, T state) {
         metrics.meter(UPDATE_STATE_METRIC).mark();
+        updateTrigger(triggerId, t -> t.setState(state));
     }
 
     @Override
     public void updateLastTimeTriggered(Identifier triggerId, long lastTimeTriggered) {
         metrics.meter(UPDATE_LAST_TIME_TRIGGERED_METRIC).mark();
+        updateTrigger(triggerId, t -> t.setLastTimeTrigger(lastTimeTriggered));
     }
 
     @Override
     public void putProperty(Identifier triggerId, String key, String value) {
         metrics.meter(PUT_PROPERTY_METRIC).mark();
+        updateTrigger(triggerId, t -> {
+            if (t.properties() == null) {
+                t.setProperties(new HashMap<>());
+            }
+            t.properties().put(key, value);
+        });
+    }
+
+    private void updateTrigger(Identifier triggerId, Consumer<AbstractTrigger> c) {
+        try (OObjectDatabaseTx db = db()) {
+            try {
+                db.begin();
+                List<Trigger> l = db.query(new OSQLSynchQuery<>(String.format(TRIGGER_QUERY, triggerId)));
+                if (l.size() != 1) {
+                    throw new IllegalArgumentException("Can't find trigger with id=" + triggerId);
+                } else {
+                    AbstractTrigger trigger = (AbstractTrigger) l.get(0);
+                    c.accept(trigger);
+                    db.save(trigger);
+                }
+            } catch (Throwable t) {
+                db.rollback();
+                throw Exceptions.runtime(t);
+            } finally {
+                db.commit();
+            }
+        }
+    }
+
+    private Stream<Trigger> detachList(OObjectDatabaseTx db, List<Trigger> l) {
+        return l.stream().map(i -> (Trigger) db.detachAll(i, true));
     }
 
     @Override
@@ -74,6 +120,8 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
 
     private static final String DOCUMENT_NAME = AbstractTrigger.class.getSimpleName();
     private static final String TRIGGERS_QUERY = "select from " + DOCUMENT_NAME + " where accountId = '%s'";
+    private static final String TRIGGER_QUERY = "select from %s";
+    private static final String TRIGGER_METRIC = Metrics.name(TriggerOrientDbRepository.class, "trigger");
     private static final String TRIGGERS_METRIC = Metrics.name(TriggerOrientDbRepository.class, "triggers_for");
     private static final String SAVE_TRIGGER_METRIC = Metrics.name(TriggerOrientDbRepository.class, "save_trigger");
     private static final String UPDATE_STATE_METRIC = Metrics.name(TriggerOrientDbRepository.class, "update_state");
