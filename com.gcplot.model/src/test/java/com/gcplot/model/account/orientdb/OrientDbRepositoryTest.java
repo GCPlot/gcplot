@@ -190,7 +190,7 @@ public class OrientDbRepositoryTest {
         btr.setProperties(Collections.singletonMap("one", "two"));
         btr.setAccountId(accId);
         btr.setLastTimeTrigger(System.currentTimeMillis());
-        btr.setType(TriggerType.IS_GCPC_WORK);
+        btr.setType(TriggerType.REALTIME_AGENT_HEALTH);
         r.saveTrigger(btr);
 
         List<Trigger> triggers = r.triggersFor(accId);

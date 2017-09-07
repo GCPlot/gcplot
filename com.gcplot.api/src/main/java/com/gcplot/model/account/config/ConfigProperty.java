@@ -9,7 +9,11 @@ import java.util.Map;
  */
 public enum ConfigProperty {
 
-    PRELOAD_ANALYSIS_ON_PAGE_OPEN("1", true);
+    PRELOAD_ANALYSIS_ON_PAGE_OPEN("1", true),
+
+    /** Notification Configurations **/
+    NOTIFY_REALTIME_AGENT_HEALTH("2", true);
+    /*********************************/
 
     private static final Map<String, ConfigProperty> VALUES;
 
