@@ -4,6 +4,8 @@ import com.gcplot.Identifier;
 import com.gcplot.triggers.binary.BinaryTrigger;
 import com.gcplot.triggers.binary.State;
 
+import java.util.Map;
+
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  * 9/7/17
@@ -11,10 +13,11 @@ import com.gcplot.triggers.binary.State;
 public class TriggerFactoryImpl implements TriggerFactory {
 
     @Override
-    public BinaryTrigger createBinary(Identifier accountId, State initialState) {
+    public BinaryTrigger createBinary(Identifier accountId, State initialState, Map<String, String> properties) {
         BinaryTriggerImpl bt = new BinaryTriggerImpl();
         bt.setAccountId(accountId);
         bt.setState(initialState);
+        bt.setProperties(properties);
         return bt;
     }
 }

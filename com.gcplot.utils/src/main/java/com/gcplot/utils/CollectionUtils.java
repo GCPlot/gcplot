@@ -74,4 +74,10 @@ public abstract class CollectionUtils {
         return map != null && map.size() > 0 ? transformKeyValue(map, keyMapper, valueMapper::apply) : Collections.emptyMap();
     }
 
+    public static <K, V> Map<K, V> map(K key, V value) {
+        HashMap<K, V> map = new HashMap<>();
+        map.put(key, value);
+        return map;
+    }
+
 }

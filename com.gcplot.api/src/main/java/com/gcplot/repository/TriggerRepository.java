@@ -15,7 +15,7 @@ public interface TriggerRepository {
 
     Trigger trigger(Identifier triggerId);
 
-    void saveTrigger(Trigger trigger);
+    <T extends Trigger> T saveTrigger(T trigger);
 
     <T> void updateState(Identifier triggerId, T state);
 

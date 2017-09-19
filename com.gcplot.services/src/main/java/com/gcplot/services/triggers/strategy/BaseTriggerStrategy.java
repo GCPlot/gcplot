@@ -1,5 +1,6 @@
 package com.gcplot.services.triggers.strategy;
 
+import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.repository.TriggerRepository;
 import com.gcplot.triggers.TriggerFactory;
 
@@ -10,6 +11,15 @@ import com.gcplot.triggers.TriggerFactory;
 public abstract class BaseTriggerStrategy implements TriggerStrategy {
     private TriggerRepository triggerRepository;
     private TriggerFactory triggerFactory;
+    private ConfigurationManager config;
+
+    public ConfigurationManager getConfig() {
+        return config;
+    }
+
+    public void setConfig(ConfigurationManager config) {
+        this.config = config;
+    }
 
     public TriggerFactory getTriggerFactory() {
         return triggerFactory;

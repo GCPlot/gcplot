@@ -51,14 +51,14 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
     }
 
     @Override
-    public void saveTrigger(Trigger trigger) {
+    public <T extends Trigger> T saveTrigger(T trigger) {
         metrics.meter(SAVE_TRIGGER_METRIC).mark();
         try (OObjectDatabaseTx db = db()) {
             try {
                 if (db.getMetadata().getSchema().getClass(trigger.getClass()) == null) {
                     register(db, db.getMetadata().getSchema(), trigger.getClass());
                 }
-                db.detachAll(db.save(trigger), true);
+                return db.detachAll(db.save(trigger), true);
             } catch (ORecordDuplicatedException e) {
                 throw new NotUniqueException(e.getMessage());
             }
@@ -68,7 +68,11 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
     @Override
     public <T> void updateState(Identifier triggerId, T state) {
         metrics.meter(UPDATE_STATE_METRIC).mark();
-        updateTrigger(triggerId, t -> t.setState(state));
+        updateTrigger(triggerId, t -> {
+            Object previousState = t.state();
+            t.setState(state);
+            t.setPreviousState(previousState);
+        });
     }
 
     @Override
