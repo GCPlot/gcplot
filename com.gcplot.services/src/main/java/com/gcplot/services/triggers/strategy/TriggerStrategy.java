@@ -9,10 +9,12 @@ import java.util.List;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  * 9/5/17
  */
-public interface TriggerStrategy {
+public interface TriggerStrategy<T> {
+
+    TriggerStrategyType type();
 
     boolean isActive(Account account);
 
-    void process(Account account, List<Trigger> triggers);
+    void process(Account account, T data, List<Trigger> triggers);
 
 }

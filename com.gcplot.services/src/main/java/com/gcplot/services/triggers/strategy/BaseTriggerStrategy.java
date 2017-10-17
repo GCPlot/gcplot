@@ -8,7 +8,7 @@ import com.gcplot.triggers.TriggerFactory;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  * 9/6/17
  */
-public abstract class BaseTriggerStrategy implements TriggerStrategy {
+public abstract class BaseTriggerStrategy<T> implements TriggerStrategy<T> {
     private TriggerRepository triggerRepository;
     private TriggerFactory triggerFactory;
     private ConfigurationManager config;
