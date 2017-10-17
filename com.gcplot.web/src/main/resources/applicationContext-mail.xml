@@ -20,7 +20,7 @@
         <property name="fallbackProvider" ref="smtpMailProvider"/>
     </bean>
 
-    <bean id="mailService" class="com.gcplot.services.mail.MailService">
+    <bean id="mailService" class="com.gcplot.services.mail.MailService" init-method="init">
         <property name="config" ref="config"/>
         <property name="urlBuilder" ref="urlBuilder"/>
         <property name="async" value="${mail.service.async:true}"/>

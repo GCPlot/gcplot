@@ -51,6 +51,7 @@ public enum ConfigProperty {
 
     TRIGGERS_POLL_INTERVAL_MS("triggers.poll.interval.ms", 60 * 1000),
     TRIGGERS_EMAIL_ENABLED("triggers.email.enabled", true),
+    TRIGGERS_ENABLED("triggers.enabled", false),
 
     CONNECTOR_LATEST_VERSION("connector.latest.version", "0.0.1");
 

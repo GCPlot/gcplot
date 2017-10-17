@@ -29,6 +29,7 @@ public class TriggerService {
         LOG.info("Begin processing real-time analyzes.");
         try {
             List<TriggerStrategy> s = strategies.get(TriggerStrategyType.REALTIME_ANALYSIS);
+            LOG.info("Found {} strategies.", s.size());
             Map<Account, Pair<List<Trigger>, List<GCAnalyse>>> analyses = new HashMap<>();
             analyseRepository.analyses(true).forEach(a -> {
                 try {
@@ -42,6 +43,7 @@ public class TriggerService {
                 }
             });
             analyses.forEach((account, p) -> {
+                LOG.info("Checking for {} account.", account.username());
                 try {
                     s.stream().filter(i -> i.isActive(account)).forEach(
                             i -> i.process(account, p.getLeft(), p.getRight()));

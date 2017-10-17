@@ -239,29 +239,16 @@ public class AccountImpl implements Account {
 
         AccountImpl account = (AccountImpl) o;
 
-        if (confirmed != account.confirmed) return false;
-        if (blocked != account.blocked) return false;
         if (identifier != null ? !identifier.equals(account.identifier) : account.identifier != null) return false;
-        if (username != null ? !username.equals(account.username) : account.username != null) return false;
-        if (email != null ? !email.equals(account.email) : account.email != null) return false;
-        if (firstName != null ? !firstName.equals(account.firstName) : account.firstName != null) return false;
-        if (lastName != null ? !lastName.equals(account.lastName) : account.lastName != null) return false;
         if (confirmationSalt != null ? !confirmationSalt.equals(account.confirmationSalt) : account.confirmationSalt != null)
             return false;
-        return roles != null ? roles.equals(account.roles) : account.roles == null;
+        return true;
     }
 
     @Override
     public int hashCode() {
         int result = identifier != null ? identifier.hashCode() : 0;
-        result = 31 * result + (username != null ? username.hashCode() : 0);
-        result = 31 * result + (email != null ? email.hashCode() : 0);
-        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
-        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
-        result = 31 * result + (confirmed ? 1 : 0);
-        result = 31 * result + (blocked ? 1 : 0);
         result = 31 * result + (confirmationSalt != null ? confirmationSalt.hashCode() : 0);
-        result = 31 * result + (roles != null ? roles.hashCode() : 0);
         return result;
     }
 

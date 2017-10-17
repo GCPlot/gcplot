@@ -39,4 +39,11 @@
         <property name="metrics" ref="metrics"/>
     </bean>
 
+    <bean id="triggerRepository" class="com.gcplot.repository.TriggerOrientDbRepository" init-method="init"
+          destroy-method="destroy">
+        <constructor-arg ref="orientDbConfig"/>
+        <constructor-arg ref="orientDbPool"/>
+        <property name="metrics" ref="metrics"/>
+    </bean>
+
 </beans>

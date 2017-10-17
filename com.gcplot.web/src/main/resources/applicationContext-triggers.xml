@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+    <context:annotation-config/>
+
+    <import resource="applicationContext-config.xml"/>
+    <import resource="applicationContext-mail.xml"/>
+    <import resource="applicationContext-cassandra.xml"/>
+    <import resource="applicationContext-orientdb.xml"/>
+
+    <bean id="triggerFactory" class="com.gcplot.triggers.TriggerFactoryImpl"/>
+
+    <bean id="triggerService" class="com.gcplot.services.triggers.TriggerService">
+        <property name="accountRepository" ref="accountRepository"/>
+        <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
+        <property name="triggerRepository" ref="triggerRepository"/>
+        <property name="strategies">
+            <list>
+                <ref bean="agentHealthStrategy"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="agentHealthStrategy" class="com.gcplot.services.triggers.strategy.RealtimeAgentHealthStrategy">
+        <property name="triggerRepository" ref="triggerRepository"/>
+        <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
+        <property name="config" ref="config"/>
+        <property name="mailService" ref="mailService"/>
+        <property name="triggerFactory" ref="triggerFactory"/>
+    </bean>
+
+    <bean id="triggerPoller" class="com.gcplot.services.triggers.TriggersPoller"
+          init-method="init" destroy-method="destroy">
+        <property name="config" ref="config"/>
+        <property name="triggerService" ref="triggerService"/>
+    </bean>
+
+</beans>
