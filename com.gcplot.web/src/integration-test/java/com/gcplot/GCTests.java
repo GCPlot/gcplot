@@ -260,20 +260,6 @@ public class GCTests extends IntegrationTest {
         Assert.assertFalse(stats.isEmpty());
     }
 
-    private JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {
-        HttpClient hc = HttpClientBuilder.create().build();
-        HttpEntity file = MultipartEntityBuilder.create()
-                .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream(fileName),
-                        ContentType.TEXT_PLAIN, fileName).build();
-        HttpPost post = new HttpPost("http://" + LOCALHOST + ":" +
-                getPort() + "/gc/jvm/log/process" + "?token=" + token + "&analyse_id=" + analyseId
-                + "&jvm_id=" + jvmId + "&sync=true");
-        post.setEntity(file);
-        HttpResponse response = hc.execute(post);
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-        return new JsonObject(EntityUtils.toString(response.getEntity()));
-    }
-
     private String createAnalyse(String token) throws Exception {
         NewAnalyseRequest nar = new NewAnalyseRequest("analyse1", false, "Africa/Harare", Collections.emptyList(), SourceType.NONE, "", "");
         return r(post("/analyse/new", nar, token, j -> r(j).getString("id") != null)).getString("id");

@@ -76,7 +76,7 @@ public class MailService {
 
         StringWriter msg = new StringWriter((int) (template.length() * 1.5));
         if (Velocity.evaluate(ctx, msg, account.username(), template)) {
-            send(account, "Real-time Agent Health Status", msg.toString());
+            sendNotification(account, "Real-time Agent Health Status", msg.toString());
         } else {
             LOG.info("Unable to generate velocity template for message.");
         }
@@ -84,6 +84,11 @@ public class MailService {
 
     private void send(Account account, String subject, String msg) {
         mailProvider.send(account.email(), subject, msg, isAsync);
+    }
+
+    private void sendNotification(Account account, String subject, String msg) {
+        mailProvider.send(Strings.isNullOrEmpty(account.notificationEmail()) ? account.email() : account.notificationEmail(),
+                subject, msg, isAsync);
     }
 
     public void setMailProvider(MailProvider mailProvider) {

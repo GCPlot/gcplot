@@ -21,6 +21,13 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
@@ -386,5 +393,27 @@ public abstract class IntegrationTest {
 
     private String withToken(String path, String token) {
         return path.contains("?") ? path + "&token=" + token : path + "?token=" + token;
+    }
+
+    protected RegisterRequest register() {
+        RegisterRequest request = new RegisterRequest();
+        request.email = "artem@gcplot.com";
+        request.username = "admin";
+        request.password = "root";
+        return request;
+    }
+
+    protected JsonObject processGCLogFile(String token, String analyseId, String jvmId, String fileName) throws IOException {
+        org.apache.http.client.HttpClient hc = HttpClientBuilder.create().build();
+        HttpEntity file = MultipartEntityBuilder.create()
+                .addBinaryBody("gc.log", GCTests.class.getClassLoader().getResourceAsStream(fileName),
+                        ContentType.TEXT_PLAIN, fileName).build();
+        HttpPost post = new HttpPost("http://" + LOCALHOST + ":" +
+                getPort() + "/gc/jvm/log/process" + "?token=" + token + "&analyse_id=" + analyseId
+                + "&jvm_id=" + jvmId + "&sync=true");
+        post.setEntity(file);
+        HttpResponse response = hc.execute(post);
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        return new JsonObject(EntityUtils.toString(response.getEntity()));
     }
 }
