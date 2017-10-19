@@ -13,6 +13,8 @@ public enum ConfigProperty {
 
     EMAIL_CONFIRM_TEMPLATE("email.confirm.template", ""),
     EMAIL_NEW_PASS_TEMPLATE("email.new.pass.template", ""),
+    EMAIL_AGENT_HEALTH_TEMPLATE("email.agent.health.template", ""),
+
     EMAIL_DEFAULT_FROM("email.default.from", "do-not-reply@gcplot.com"),
     EMAIL_DEFAULT_FROM_NAME("email.default.from.name", "GCPlot"),
 
@@ -46,6 +48,10 @@ public enum ConfigProperty {
 
     PARSE_LOG_MAX_FILE_SIZE("parse.log.max.file.size", 512L * 1024 * 1024),
     PARSE_LOG_SAMPLING_SECONDS("parse.log.sampling.seconds", 0),
+
+    TRIGGERS_POLL_INTERVAL_MS("triggers.poll.interval.ms", 60 * 1000),
+    TRIGGERS_EMAIL_ENABLED("triggers.email.enabled", true),
+    TRIGGERS_ENABLED("triggers.enabled", false),
 
     CONNECTOR_LATEST_VERSION("connector.latest.version", "0.0.1");
 

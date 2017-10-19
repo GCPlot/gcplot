@@ -4,11 +4,13 @@ import com.codahale.metrics.MetricRegistry;
 import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
 import com.gcplot.utils.Exceptions;
+import com.google.common.collect.Lists;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.id.ORecordId;
+import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OSchema;
 import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
@@ -16,8 +18,12 @@ import com.orientechnologies.orient.object.db.OObjectDatabaseTx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public abstract class AbstractOrientDbRepository {
 
@@ -40,6 +46,28 @@ public abstract class AbstractOrientDbRepository {
             LOG.error(t.getMessage(), t);
         } finally {
             isClosed = true;
+        }
+    }
+
+    protected <T> void register(OObjectDatabaseTx db, OSchema schema, Class<T> aClass) {
+        if (schema.getClass(aClass.getSimpleName()) == null) {
+            db.getEntityManager().registerEntityClasses(aClass, true);
+            OClass cls = db.getMetadata().getSchema().getClass(aClass);
+            String indexName = aClass.getName() + ".unq";
+            Table t = aClass.getAnnotation(Table.class);
+            if (t != null) {
+                Set<String> fields = new HashSet<>();
+                for (UniqueConstraint uc : t.uniqueConstraints()) {
+                    fields.addAll(Lists.newArrayList(uc.columnNames()));
+                }
+                if (fields.size() > 0) {
+                    LOG.info("Registering unique constraint for fields: " + fields);
+                    for (String field : fields)
+                        cls.createIndex(indexName + "." + field, OClass.INDEX_TYPE.UNIQUE_HASH_INDEX, field);
+                }
+            }
+        } else {
+            db.getEntityManager().registerEntityClasses(aClass, true);
         }
     }
 

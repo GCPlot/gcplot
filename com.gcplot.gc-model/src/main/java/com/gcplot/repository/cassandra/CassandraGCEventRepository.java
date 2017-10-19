@@ -13,6 +13,7 @@ import com.gcplot.model.gc.Capacity;
 import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.gc.Generation;
 import com.gcplot.repository.GCEventRepository;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.cassandra.utils.UUIDGen;
 import org.joda.time.DateTime;
@@ -34,6 +35,7 @@ import static com.gcplot.model.gc.cassandra.Mapper.eventsFrom;
 public class CassandraGCEventRepository extends AbstractVMEventsCassandraRepository<GCEvent> implements GCEventRepository {
     private static final Logger LOG = LoggerFactory.getLogger(CassandraGCEventRepository.class);
     protected static final String TABLE_NAME = "gc_event";
+    protected static final String BUCKET_TABLE_NAME = "gc_event_by_bucket";
     protected static final String DATE_PATTERN = "yyyy-MM";
     // See Mapper#lazyEventFrom in case of update
     public static final String[] NON_KEY_FIELDS = new String[] {
@@ -118,14 +120,13 @@ public class CassandraGCEventRepository extends AbstractVMEventsCassandraReposit
         List<String> dates = dates(Range.of(start.toDateTime(DateTimeZone.UTC),
                 DateTime.now(DateTimeZone.UTC)));
         for (String date : dates) {
-            Select from = QueryBuilder.select(fields).from(TABLE_NAME);
+            Select from = QueryBuilder.select(fields).from(Strings.isNullOrEmpty(bucketId) ? TABLE_NAME : BUCKET_TABLE_NAME);
             Select.Where statement = from.limit(1)
                     .where(eq("analyse_id", UUID.fromString(analyseId)))
                     .and(eq("jvm_id", jvmId))
                     .and(eq("date", date));
-            if (bucketId != null) {
-                from.allowFiltering();
-                statement.and(eq("bucket_id", bucketId));
+            if (!Strings.isNullOrEmpty(bucketId)) {
+                statement = statement.and(eq("bucket_id", bucketId));
             }
             List<Row> rows = connector.session().execute(statement).all();
             if (rows.size() > 0) {

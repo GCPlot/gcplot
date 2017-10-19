@@ -45,6 +45,14 @@ public class AccountImpl implements Account {
     }
 
     @Override
+    public String notificationEmail() {
+        return notificationEmail;
+    }
+    public void setNotificationEmail(String notificationEmail) {
+        this.notificationEmail = notificationEmail;
+    }
+
+    @Override
     public String firstName() {
         return firstName;
     }
@@ -231,33 +239,16 @@ public class AccountImpl implements Account {
 
         AccountImpl account = (AccountImpl) o;
 
-        if (confirmed != account.confirmed) return false;
-        if (blocked != account.blocked) return false;
         if (identifier != null ? !identifier.equals(account.identifier) : account.identifier != null) return false;
-        if (username != null ? !username.equals(account.username) : account.username != null) return false;
-        if (email != null ? !email.equals(account.email) : account.email != null) return false;
-        if (firstName != null ? !firstName.equals(account.firstName) : account.firstName != null) return false;
-        if (lastName != null ? !lastName.equals(account.lastName) : account.lastName != null) return false;
-        if (token != null ? !token.equals(account.token) : account.token != null) return false;
-        if (passHash != null ? !passHash.equals(account.passHash) : account.passHash != null) return false;
         if (confirmationSalt != null ? !confirmationSalt.equals(account.confirmationSalt) : account.confirmationSalt != null)
             return false;
-        return roles != null ? roles.equals(account.roles) : account.roles == null;
+        return true;
     }
 
     @Override
     public int hashCode() {
         int result = identifier != null ? identifier.hashCode() : 0;
-        result = 31 * result + (username != null ? username.hashCode() : 0);
-        result = 31 * result + (email != null ? email.hashCode() : 0);
-        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
-        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
-        result = 31 * result + (token != null ? token.hashCode() : 0);
-        result = 31 * result + (passHash != null ? passHash.hashCode() : 0);
-        result = 31 * result + (confirmed ? 1 : 0);
-        result = 31 * result + (blocked ? 1 : 0);
         result = 31 * result + (confirmationSalt != null ? confirmationSalt.hashCode() : 0);
-        result = 31 * result + (roles != null ? roles.hashCode() : 0);
         return result;
     }
 
@@ -268,6 +259,7 @@ public class AccountImpl implements Account {
                 .add("identifier", identifier)
                 .add("username", username)
                 .add("email", email)
+                .add("notificationEmail", email)
                 .add("firstName", firstName)
                 .add("lastName", lastName)
                 .add("confirmed", confirmed)
@@ -285,6 +277,7 @@ public class AccountImpl implements Account {
     protected transient Identifier identifier;
     protected String username;
     protected String email;
+    protected String notificationEmail;
     protected String firstName;
     protected String lastName;
     protected String token;
@@ -298,5 +291,6 @@ public class AccountImpl implements Account {
     protected Set<String> ips;
     @OneToMany(targetEntity = RoleImpl.class)
     protected ArrayList<? super RoleImpl> roles;
+
     private Map<String, String> configs;
 }

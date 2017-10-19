@@ -122,12 +122,4 @@ public class LoginTests extends IntegrationTest {
         Assert.assertTrue(newPassUrl.contains(jo.getString("token")));
     }
 
-    protected RegisterRequest register() {
-        RegisterRequest request = new RegisterRequest();
-        request.email = "artem@gcplot.com";
-        request.username = "admin";
-        request.password = "root";
-        return request;
-    }
-
 }

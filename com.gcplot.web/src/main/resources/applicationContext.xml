@@ -16,6 +16,7 @@
     <import resource="applicationContext-gc.xml"/>
     <import resource="applicationContext-cassandra.xml"/>
     <import resource="applicationContext-cluster.xml"/>
+    <import resource="applicationContext-triggers.xml"/>
 
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 

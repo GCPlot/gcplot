@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   PRIMARY KEY (account_id, id)
 );
 
-CREATE INDEX IF NOT EXISTS analyse_ids ON gc_analyse( id );
 CREATE INDEX IF NOT EXISTS analyse_continuous ON gc_analyse( is_continuous );
 
 CREATE TABLE IF NOT EXISTS gc_event (
@@ -63,9 +62,10 @@ CREATE TABLE IF NOT EXISTS gc_event (
   PRIMARY KEY ((analyse_id, jvm_id, date), written_at)
 ) WITH CLUSTERING ORDER BY (written_at DESC);
 
-CREATE INDEX IF NOT EXISTS gc_event_ids ON gc_event( id );
-CREATE INDEX IF NOT EXISTS gc_event_occurred ON gc_event( occurred );
-CREATE INDEX IF NOT EXISTS gc_event_bucketid ON gc_event( bucket_id );
+CREATE MATERIALIZED VIEW IF NOT EXISTS gc_event_by_bucket
+AS SELECT * FROM gc_event
+WHERE bucket_id IS NOT NULL AND analyse_id IS NOT NULL AND jvm_id IS NOT NULL AND date IS NOT NULL AND written_at IS NOT NULL
+PRIMARY KEY ((bucket_id, analyse_id, jvm_id, date), written_at);
 
 CREATE TABLE IF NOT EXISTS objects_ages (
   analyse_id uuid,
