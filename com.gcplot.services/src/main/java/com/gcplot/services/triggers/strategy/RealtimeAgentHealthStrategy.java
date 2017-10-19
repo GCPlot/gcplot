@@ -59,14 +59,17 @@ public class RealtimeAgentHealthStrategy extends BaseTriggerStrategy<List<GCAnal
                         boolean isBroken = inactiveSeconds > maxInactiveSeconds;
                         BinaryTrigger trigger = triggerMap.get(jvm);
                         if (trigger == null) {
-                            trigger = getTriggerRepository().saveTrigger(
-                                    getTriggerFactory().createBinary(account.id(), State.WAIT, map(JVM_ID_PROP, jvm)));
+                            trigger = getTriggerRepository().saveTrigger(getTriggerFactory().createBinary(account.id(),
+                                    State.WAIT, TriggerType.REALTIME_AGENT_HEALTH, map(JVM_ID_PROP, jvm)));
                         }
                         if (trigger.state() == State.ACQUIRED && !isBroken) {
                             getTriggerRepository().updateState(trigger.id(), State.WAIT);
                         } else if (trigger.state() == State.WAIT && isBroken) {
                             getTriggerRepository().updateState(trigger.id(), State.ACQUIRED);
-                            if (isEmailEnabled()) {
+                            getTriggerRepository().updateLastTimeTriggered(trigger.id(), System.currentTimeMillis());
+
+                            // double check in order to not flood customer with emails in case of database issue
+                            if (isEmailEnabled() && getTriggerRepository().trigger(trigger.id()).state() == State.ACQUIRED) {
                                 jvmStatuses.add(Pair.of(analysis.jvmNames().get(jvm), inactiveSeconds));
                             }
                         }

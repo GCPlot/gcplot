@@ -4,6 +4,7 @@ import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.triggers.AbstractTrigger;
+import com.gcplot.triggers.BinaryTriggerImpl;
 import com.gcplot.triggers.Trigger;
 import com.gcplot.utils.Exceptions;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
@@ -30,6 +31,7 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
 
     @Override
     protected void init(OObjectDatabaseTx db, OSchema schema) {
+        register(db, db.getMetadata().getSchema(), DummyTrigger.class);
     }
 
     @Override
@@ -68,11 +70,7 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
     @Override
     public <T> void updateState(Identifier triggerId, T state) {
         metrics.meter(UPDATE_STATE_METRIC).mark();
-        updateTrigger(triggerId, t -> {
-            Object previousState = t.state();
-            t.setState(state);
-            t.setPreviousState(previousState);
-        });
+        updateTrigger(triggerId, t -> t.setState(state));
     }
 
     @Override
@@ -96,11 +94,11 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
         try (OObjectDatabaseTx db = db()) {
             try {
                 db.begin();
-                List<Trigger> l = db.query(new OSQLSynchQuery<>(String.format(TRIGGER_QUERY, triggerId)));
+                List<AbstractTrigger> l = db.query(new OSQLSynchQuery<>(String.format(TRIGGER_QUERY, triggerId)));
                 if (l.size() != 1) {
                     throw new IllegalArgumentException("Can't find trigger with id=" + triggerId);
                 } else {
-                    AbstractTrigger trigger = (AbstractTrigger) l.get(0);
+                    AbstractTrigger trigger = l.get(0);
                     c.accept(trigger);
                     db.save(trigger);
                 }
@@ -132,4 +130,15 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String UPDATE_LAST_TIME_TRIGGERED_METRIC = Metrics.name(TriggerOrientDbRepository.class, "update_last_time_triggered");
     private static final String PUT_PROPERTY_METRIC = Metrics.name(TriggerOrientDbRepository.class, "put_property");
     private static final String REMOVE_PROPERTY_METRIC = Metrics.name(TriggerOrientDbRepository.class, "remove_property");
+
+    /**
+     * hack in order to have AbstractTrigger as a registered entity
+     */
+    public static class DummyTrigger extends AbstractTrigger {
+
+        @Override
+        public Object state() {
+            return null;
+        }
+    }
 }

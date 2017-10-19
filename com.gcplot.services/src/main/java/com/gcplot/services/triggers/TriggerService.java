@@ -46,7 +46,7 @@ public class TriggerService {
                 LOG.info("Checking for {} account.", account.username());
                 try {
                     s.stream().filter(i -> i.isActive(account)).forEach(
-                            i -> i.process(account, p.getLeft(), p.getRight()));
+                            i -> i.process(account, p.getRight(), p.getLeft()));
                 } catch (Throwable t) {
                     LOG.error("processRealtimeAnalyzes {}", account, t);
                 }

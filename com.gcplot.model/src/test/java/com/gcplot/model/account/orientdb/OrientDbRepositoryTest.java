@@ -186,7 +186,6 @@ public class OrientDbRepositoryTest {
 
         BinaryTriggerImpl btr = new BinaryTriggerImpl();
         btr.setState(State.ACQUIRED);
-        btr.setPreviousState(State.WAIT);
         btr.setProperties(Collections.singletonMap("one", "two"));
         btr.setAccountId(accId);
         btr.setLastTimeTrigger(System.currentTimeMillis());
@@ -199,13 +198,11 @@ public class OrientDbRepositoryTest {
         Assert.assertNotNull(fromDb.id());
         Assert.assertEquals(accId, fromDb.accountId());
         Assert.assertEquals(btr.lastTimeTrigger(), fromDb.lastTimeTrigger());
-        Assert.assertEquals(btr.previousState(), fromDb.previousState());
         Assert.assertEquals(btr.state(), fromDb.state());
         Assert.assertEquals(btr.properties(), fromDb.properties());
 
         TestTrigger tt = new TestTrigger();
         tt.setState(true);
-        tt.setPreviousState(false);
         tt.setAccountId(accId);
 
         r.saveTrigger(tt);
@@ -216,7 +213,6 @@ public class OrientDbRepositoryTest {
         Assert.assertTrue(triggers.get(0) instanceof BinaryTrigger);
         Assert.assertTrue(triggers.get(1) instanceof TestTrigger);
         Assert.assertTrue((Boolean) triggers.get(1).state());
-        Assert.assertFalse((Boolean) triggers.get(1).previousState());
 
         r.updateState(triggers.get(1).id(), false);
         tt = (TestTrigger) r.trigger(triggers.get(1).id());
@@ -239,11 +235,6 @@ public class OrientDbRepositoryTest {
     }
 
     public static class TestTrigger extends AbstractTrigger<Boolean> {
-
-        @Override
-        public Boolean previousState() {
-            return (Boolean) previousState;
-        }
 
         @Override
         public Boolean state() {

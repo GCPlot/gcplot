@@ -13,10 +13,10 @@ import java.util.Map;
  */
 public interface TriggerFactory {
 
-    BinaryTrigger createBinary(Identifier accountId, State initialState, Map<String, String> properties);
+    BinaryTrigger createBinary(Identifier accountId, State initialState, TriggerType type, Map<String, String> properties);
 
-    default BinaryTrigger createBinary(Identifier accountId, State initialState) {
-        return createBinary(accountId, initialState, Collections.emptyMap());
+    default BinaryTrigger createBinary(Identifier accountId, State initialState, TriggerType type) {
+        return createBinary(accountId, initialState, type, Collections.emptyMap());
     }
 
 }

@@ -4,6 +4,7 @@ import com.gcplot.Identifier;
 
 import javax.persistence.Id;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 import java.util.Map;
 
 /**
@@ -13,6 +14,8 @@ import java.util.Map;
 public abstract class AbstractTrigger<T> implements Trigger<T> {
     @Id
     private Object id;
+    @Version
+    private Object version;
     @Transient
     private transient Identifier identifier;
     @Transient
@@ -24,7 +27,6 @@ public abstract class AbstractTrigger<T> implements Trigger<T> {
     private long lastTimeTrigger;
     private Map<String, String> properties;
     protected Object state;
-    protected Object previousState;
 
     public Identifier id() {
         if (identifier == null) {
@@ -75,9 +77,5 @@ public abstract class AbstractTrigger<T> implements Trigger<T> {
 
     public void setState(Object state) {
         this.state = state;
-    }
-
-    public void setPreviousState(Object previousState) {
-        this.previousState = previousState;
     }
 }

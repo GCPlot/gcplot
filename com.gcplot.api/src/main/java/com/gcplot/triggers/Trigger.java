@@ -18,8 +18,6 @@ public interface Trigger<State> {
 
     long lastTimeTrigger();
 
-    State previousState();
-
     State state();
 
     Map<String, String> properties();

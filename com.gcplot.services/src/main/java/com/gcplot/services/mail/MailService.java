@@ -7,21 +7,19 @@ import com.gcplot.services.UrlBuilder;
 import com.gcplot.services.mail.data.JvmAgentStatus;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-import org.apache.velocity.Template;
+import net.time4j.ClockUnit;
+import net.time4j.Duration;
+import net.time4j.PrettyTime;
+import net.time4j.format.TextWidth;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.runtime.RuntimeServices;
-import org.apache.velocity.runtime.RuntimeSingleton;
-import org.apache.velocity.runtime.parser.node.SimpleNode;
-import org.joda.time.Seconds;
-import org.joda.time.format.PeriodFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -65,7 +63,8 @@ public class MailService {
             jas.getJvms().forEach(p -> {
                 Jvm jvm = new Jvm();
                 jvm.name = p.getKey();
-                jvm.period = PeriodFormat.getDefault().print(Seconds.seconds(p.getValue().intValue()));
+                Duration dur = Duration.of(p.getValue(), ClockUnit.SECONDS).with(Duration.STD_CLOCK_PERIOD);
+                jvm.period = PrettyTime.of(Locale.ENGLISH).print(dur, TextWidth.ABBREVIATED);
                 jvms.add(jvm);
             });
             c.jvms = jvms;
@@ -110,10 +109,26 @@ public class MailService {
     public static class Cluster {
         public String name;
         public List<Jvm> jvms;
+
+        public String getName() {
+            return name;
+        }
+
+        public List<Jvm> getJvms() {
+            return jvms;
+        }
     }
 
     public static class Jvm {
         public String name;
         public String period;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getPeriod() {
+            return period;
+        }
     }
 }

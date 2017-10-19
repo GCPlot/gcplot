@@ -4,16 +4,22 @@ import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.messages.*;
 import com.gcplot.model.VMVersion;
-import com.gcplot.model.gc.GCAnalyseImpl;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.SourceType;
 import com.gcplot.repository.GCAnalyseRepository;
-import io.vertx.core.json.JsonObject;
+import com.gcplot.repository.operations.analyse.UpdateCornerEventsOperation;
+import com.gcplot.services.triggers.TriggerService;
+import com.gcplot.utils.Utils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
+import org.joda.time.DateTimeZone;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -33,6 +39,7 @@ public class TriggersTest extends IntegrationTest {
         UpdateAccountConfigRequest ucr = new UpdateAccountConfigRequest(com.gcplot.model.account.config.ConfigProperty.REALTIME_AGENT_INACTIVE_SECONDS.getId(),
                 "100");
         String token = login(request).getString("token");
+        Identifier accountId = Identifier.fromStr(get("/user/account/id", token).getString("result"));
         post("/user/config/update?token=" + token, ucr, success());
         Assert.assertNotNull(token);
 
@@ -52,7 +59,24 @@ public class TriggersTest extends IntegrationTest {
         processGCLogFile(token, analyseId, jvm2, "hs18_log_cms.log");
 
         GCAnalyseRepository analyseRepository = getApplicationContext().getBean(GCAnalyseRepository.class);
+        DateTime now = DateTime.now(DateTimeZone.UTC);
+        UpdateCornerEventsOperation op1 = new UpdateCornerEventsOperation(accountId, analyseId, jvm1, now, now.minusSeconds(90));
+        UpdateCornerEventsOperation op2 = new UpdateCornerEventsOperation(accountId, analyseId, jvm2, now, now.minusSeconds(200));
+        analyseRepository.perform(Arrays.asList(op1, op2));
 
+        TriggerService ts = getApplicationContext().getBean(TriggerService.class);
+        DateTimeUtils.setCurrentMillisFixed(now.getMillis());
+        try {
+            ts.processRealtimeAnalyzes();
+
+            Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 2, TimeUnit.SECONDS.toNanos(10)));
+            Assert.assertEquals("<b><div>analyse1</div><d>JVM 2</d><c>3 mins, 20 secs</c></b>", smtpServer.getReceivedEmails().get(1).getBody());
+
+            ts.processRealtimeAnalyzes();
+            Assert.assertFalse(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 3, TimeUnit.SECONDS.toNanos(5)));
+        } finally {
+            DateTimeUtils.setCurrentMillisSystem();
+        }
     }
 
     private String createAnalyse(String token) throws Exception {

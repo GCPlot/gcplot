@@ -13,11 +13,12 @@ import java.util.Map;
 public class TriggerFactoryImpl implements TriggerFactory {
 
     @Override
-    public BinaryTrigger createBinary(Identifier accountId, State initialState, Map<String, String> properties) {
+    public BinaryTrigger createBinary(Identifier accountId, State initialState, TriggerType type, Map<String, String> properties) {
         BinaryTriggerImpl bt = new BinaryTriggerImpl();
         bt.setAccountId(accountId);
         bt.setState(initialState);
         bt.setProperties(properties);
+        bt.setType(type);
         return bt;
     }
 }
