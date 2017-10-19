@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS gc_event (
   PRIMARY KEY ((analyse_id, jvm_id, date), written_at)
 ) WITH CLUSTERING ORDER BY (written_at DESC);
 
-CREATE MATERIALIZED VIEW gc_event_by_bucket
+CREATE MATERIALIZED VIEW IF NOT EXISTS gc_event_by_bucket
 AS SELECT * FROM gc_event
 WHERE bucket_id IS NOT NULL AND analyse_id IS NOT NULL AND jvm_id IS NOT NULL AND date IS NOT NULL AND written_at IS NOT NULL
 PRIMARY KEY ((bucket_id, analyse_id, jvm_id, date), written_at);
