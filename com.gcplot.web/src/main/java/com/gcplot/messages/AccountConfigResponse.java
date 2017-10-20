@@ -13,6 +13,10 @@ public class AccountConfigResponse {
     public boolean isPreloadAnalysisOnPageOpen;
     @JsonProperty("notifications_enabled")
     public boolean notificationsEnabled;
+    @JsonProperty("notify_realtime_agent_health")
+    public boolean notifyRealtimeAgentHealth;
+    @JsonProperty("realtime_agent_inactive_seconds")
+    public long realtimeAgentInactiveSeconds;
 
     public AccountConfigResponse() {
     }
@@ -26,6 +30,12 @@ public class AccountConfigResponse {
                     break;
                 case NOTIFICATIONS_ENABLED:
                     res.notificationsEnabled = config.asBoolean(cp);
+                    break;
+                case NOTIFY_REALTIME_AGENT_HEALTH:
+                    res.notifyRealtimeAgentHealth = config.asBoolean(cp);
+                    break;
+                case REALTIME_AGENT_INACTIVE_SECONDS:
+                    res.realtimeAgentInactiveSeconds = config.asLong(cp);
                     break;
             }
         }
