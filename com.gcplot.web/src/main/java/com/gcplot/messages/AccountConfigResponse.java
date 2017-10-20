@@ -11,6 +11,8 @@ import com.gcplot.model.account.config.Configuration;
 public class AccountConfigResponse {
     @JsonProperty("preload_analysis")
     public boolean isPreloadAnalysisOnPageOpen;
+    @JsonProperty("notifications_enabled")
+    public boolean notificationsEnabled;
 
     public AccountConfigResponse() {
     }
@@ -21,6 +23,9 @@ public class AccountConfigResponse {
             switch (cp) {
                 case PRELOAD_ANALYSIS_ON_PAGE_OPEN:
                     res.isPreloadAnalysisOnPageOpen = config.asBoolean(cp);
+                    break;
+                case NOTIFICATIONS_ENABLED:
+                    res.notificationsEnabled = config.asBoolean(cp);
                     break;
             }
         }
