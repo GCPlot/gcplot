@@ -54,7 +54,7 @@ public class MailService {
 
     public void sendRealtimeAgentHealth(Account account, List<JvmAgentStatus> statusList) {
         VelocityContext ctx = new VelocityContext();
-        ctx.put("username", account.firstName() + " " + account.lastName());
+        ctx.put("username", account.username());
         List<Cluster> clusters = new ArrayList<>();
         statusList.forEach(jas -> {
             Cluster c = new Cluster();

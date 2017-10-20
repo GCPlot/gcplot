@@ -51,7 +51,8 @@ public class RealtimeAgentHealthStrategy extends BaseTriggerStrategy<List<GCAnal
         List<JvmAgentStatus> statuses = new ArrayList<>();
         analyses.forEach(analysis -> {
             if (analysis.jvmIds().size() != 0) {
-                Set<Pair<String, Long>> jvmStatuses = new HashSet<>();
+                Set<Pair<String, Long>> newJvmStatuses = new HashSet<>();
+                Set<Pair<String, Long>> acquiredJvmStatuses = new HashSet<>();
                 analysis.jvmIds().forEach(jvm -> {
                     DateTime dt = analysis.lastEvent().get(jvm);
                     if (dt != null) {
@@ -70,13 +71,18 @@ public class RealtimeAgentHealthStrategy extends BaseTriggerStrategy<List<GCAnal
 
                             // double check in order to not flood customer with emails in case of database issue
                             if (isEmailEnabled() && getTriggerRepository().trigger(trigger.id()).state() == State.ACQUIRED) {
-                                jvmStatuses.add(Pair.of(analysis.jvmNames().get(jvm), inactiveSeconds));
+                                newJvmStatuses.add(Pair.of(analysis.jvmNames().get(jvm), inactiveSeconds));
+                            }
+                        } else if (trigger.state() == State.ACQUIRED && isBroken) {
+                            if (isEmailEnabled()) {
+                                acquiredJvmStatuses.add(Pair.of(analysis.jvmNames().get(jvm), inactiveSeconds));
                             }
                         }
                     }
                 });
-                if (jvmStatuses.size() > 0) {
-                    statuses.add(new JvmAgentStatus(analysis, jvmStatuses));
+                if (newJvmStatuses.size() > 0) {
+                    newJvmStatuses.addAll(acquiredJvmStatuses);
+                    statuses.add(new JvmAgentStatus(analysis, newJvmStatuses));
                 }
             }
         });
