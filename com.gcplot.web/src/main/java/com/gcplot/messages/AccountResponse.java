@@ -19,6 +19,8 @@ public class AccountResponse {
     public String username;
     @JsonProperty("email")
     public String email;
+    @JsonProperty("notification_email")
+    public String notificationEmail;
     @JsonProperty("first_name")
     public String firstName;
     @JsonProperty("last_name")
@@ -37,6 +39,7 @@ public class AccountResponse {
     public AccountResponse(@JsonProperty("id") String id,
                            @JsonProperty("username") String username,
                            @JsonProperty("email") String email,
+                           @JsonProperty("notification_email") String notificationEmail,
                            @JsonProperty("first_name") String firstName,
                            @JsonProperty("last_name") String lastName,
                            @JsonProperty("token") String token,
@@ -47,6 +50,7 @@ public class AccountResponse {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.notificationEmail = notificationEmail;
         this.firstName = firstName;
         this.lastName = lastName;
         this.token = token;
@@ -58,7 +62,7 @@ public class AccountResponse {
 
     public static AccountResponse from(Account account) {
         List<RoleResponse> roles = account.roles().stream().map(RoleResponse::from).collect(Collectors.toList());
-        return new AccountResponse(account.id().toString(), account.username(), account.email(),
+        return new AccountResponse(account.id().toString(), account.username(), account.email(), account.notificationEmail(),
                 account.firstName(), account.lastName(), account.token(), account.isConfirmed(),
                 account.isBlocked(), account.isRoleManagement(), roles);
     }
