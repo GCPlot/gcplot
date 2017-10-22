@@ -19,7 +19,7 @@ public class TestCassandraConnector extends BaseCassandra {
         ResultSet rs = connector.session().execute("select release_version from system.local");
         Row row = rs.one();
         row.getString("release_version");
-        Assert.assertEquals(row.getString("release_version"), "3.9");
+        Assert.assertEquals(row.getString("release_version"), "3.11.0");
 
         connector.session().execute("CREATE KEYSPACE gcplot WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 }");
 

@@ -1,5 +1,6 @@
 package com.gcplot.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.GCAnalyse;
@@ -51,6 +52,7 @@ public class AnalyseResponse {
     @JsonProperty("ext")
     public String ext;
 
+    @JsonCreator
     public AnalyseResponse(@JsonProperty("id") String id,
                            @JsonProperty("name") String name,
                            @JsonProperty("tz") String timezone,

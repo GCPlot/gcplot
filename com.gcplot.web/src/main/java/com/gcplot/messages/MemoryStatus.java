@@ -1,5 +1,6 @@
 package com.gcplot.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.gc.MemoryDetails;
 import com.google.common.base.MoreObjects;
@@ -20,6 +21,7 @@ public class MemoryStatus {
     @JsonProperty(value = "sf")
     public long swapFree;
 
+    @JsonCreator
     public MemoryStatus(@JsonProperty(value = "ps") long pageSize,
                         @JsonProperty(value = "pt") long physicalTotal,
                         @JsonProperty(value = "pf") long physicalFree,

@@ -21,8 +21,8 @@ dependencies {
   compile "io.dropwizard.metrics:metrics-core:$metricsVersion"
   compile "io.dropwizard.metrics:metrics-graphite:$metricsVersion"
   compile "org.apache.commons:commons-email:$apacheMailVersion"
-  compile group: 'org.apache.velocity', name: 'velocity-engine-core', version: '2.0'
-  compile group: 'net.time4j', name: 'time4j-core', version: '4.30'
+  compile group: 'org.apache.velocity', name: 'velocity-engine-core', version: "$velocityVersion"
+  compile group: 'net.time4j', name: 'time4j-core', version: "$time4jVersion"
 
   testCompile group: 'io.findify', name: 's3mock_2.12', version: "$s3MockVersion"
 }
