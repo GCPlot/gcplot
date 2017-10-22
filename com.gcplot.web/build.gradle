@@ -65,7 +65,9 @@ dependencies {
 
     compile "com.amazonaws:aws-java-sdk-s3:$awsVersion"
     compile "org.slf4j:slf4j-simple:$slf4jVersion"
-    compile "io.vertx:vertx-web:$vertxVersion"
+    compile("io.vertx:vertx-web:$vertxVersion") {
+        exclude group: 'io.netty'
+    }
     compile "io.vertx:vertx-codegen:$vertxVersion"
     compile "org.springframework:spring-context:$springVersion"
     compile "org.springframework:spring-beans:$springVersion"

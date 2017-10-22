@@ -42,6 +42,9 @@ public enum ConfigProperty {
     TENURED_ACCUMULATE_SECONDS("tenured.accumulate.seconds", 10),
     FORBID_OTHER_GENERATION("forbid.other.generation", true),
 
+    GRAPHITE_REDUNDANCY_CACHE_SIZE("graphite.redundancy.cache.size", 100_000),
+    GRAPHITE_EVENT_LOOP_POOL_SIZE("graphite.event.loop.pool.size", Runtime.getRuntime().availableProcessors() * 2),
+
     PASSWORD_MIN_LENGTH("password.min.length", 1),
 
     CONFIRMATION_IS_RESTRICTED("confirmation.is.restricted", false),

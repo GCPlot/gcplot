@@ -11,5 +11,7 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    compile "org.cassandraunit:cassandra-unit:$cassandraUnitVersion"
+    compile("org.cassandraunit:cassandra-unit:$cassandraUnitVersion") {
+        exclude group: "io.netty"
+    }
 }
