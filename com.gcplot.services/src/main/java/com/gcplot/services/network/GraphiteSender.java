@@ -5,9 +5,11 @@ import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.utils.Exceptions;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -32,7 +34,6 @@ import java.util.concurrent.TimeUnit;
  * 10/22/17
  */
 public class GraphiteSender {
-    private static final Logger LOG = LoggerFactory.getLogger(GraphiteSender.class);
     private EventLoopGroup eventLoopGroup;
     private SslContext sslContext;
     private Cache<Pair<String, ProxyConfiguration>, Bootstrap> bootstrapCache;
@@ -57,7 +58,7 @@ public class GraphiteSender {
         } catch (Throwable ignore) { }
     }
 
-    public synchronized void send(String url, ProxyConfiguration pc, long timestamp, Map<String, Number> data) {
+    public void send(String url, ProxyConfiguration pc, long timestamp, Map<String, Number> data) {
         if (!(eventLoopGroup.isShuttingDown() || eventLoopGroup.isShutdown())) {
             String[] parts = url.split(":");
             if (parts.length != 2) {
@@ -93,7 +94,8 @@ public class GraphiteSender {
             try {
                 Channel c = b.connect(parts[0], port).sync().channel();
                 data.forEach((metric, n) -> {
-                    c.write(metric + " " + n + " " + timestamp / 1000 + "\n");
+                    // TODO optimize
+                    c.write(Unpooled.copiedBuffer(metric + " " + n + " " + timestamp / 1000 + "\n", Charsets.UTF_8));
                 });
                 c.flush().closeFuture().sync();
             } catch (InterruptedException e) {

@@ -1,6 +1,6 @@
 package com.gcplot.logs;
 
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.model.gc.GCEvent;
 
 /**

@@ -4,6 +4,7 @@ import com.gcplot.analytics.AnalyticsService;
 import com.gcplot.analytics.EventsResult;
 import com.gcplot.analytics.GCEventFeature;
 import com.gcplot.commons.*;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.utils.Exceptions;
 import com.gcplot.commons.serialization.JsonSerializer;
 import com.gcplot.configuration.ConfigProperty;

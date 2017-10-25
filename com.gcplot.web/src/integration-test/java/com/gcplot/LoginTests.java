@@ -1,7 +1,7 @@
 package com.gcplot;
 
 import com.gcplot.commons.ErrorMessages;
-import com.gcplot.model.account.config.ConfigProperty;
+import com.gcplot.model.account.ConfigProperty;
 import com.gcplot.utils.Utils;
 import com.gcplot.messages.*;
 import io.vertx.core.json.JsonObject;

@@ -6,7 +6,7 @@ import com.gcplot.cluster.WorkerTask;
 import com.gcplot.fs.LogsStorage;
 import com.gcplot.fs.LogsStorageProvider;
 import com.gcplot.logs.LogHandle;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.model.gc.SourceType;
 import com.gcplot.repository.GCAnalyseRepository;
 import org.slf4j.Logger;

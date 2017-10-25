@@ -1,7 +1,11 @@
-package com.gcplot.model.gc;
+package com.gcplot.model.gc.analysis;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
+import com.gcplot.model.config.Configuration;
+import com.gcplot.model.gc.GarbageCollectorType;
+import com.gcplot.model.gc.MemoryDetails;
+import com.gcplot.model.gc.SourceType;
 import org.joda.time.DateTime;
 
 import java.util.Map;
@@ -47,6 +51,8 @@ public interface GCAnalyse {
     Map<String, SourceType> sourceByJvm();
 
     Map<String, String> sourceConfigByJvm();
+
+    Configuration<ConfigProperty> config();
 
     String ext();
 

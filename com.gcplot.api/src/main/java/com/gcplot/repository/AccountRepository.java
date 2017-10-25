@@ -2,7 +2,7 @@ package com.gcplot.repository;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.account.Account;
-import com.gcplot.model.account.config.ConfigProperty;
+import com.gcplot.model.account.ConfigProperty;
 import com.gcplot.model.role.Role;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 
 import java.util.Collection;
 import java.util.List;

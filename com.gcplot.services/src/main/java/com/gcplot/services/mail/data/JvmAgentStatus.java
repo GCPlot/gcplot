@@ -1,6 +1,6 @@
 package com.gcplot.services.mail.data;
 
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;

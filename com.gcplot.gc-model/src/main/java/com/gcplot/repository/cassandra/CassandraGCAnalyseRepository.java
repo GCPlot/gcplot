@@ -6,7 +6,9 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.account.ConfigProperty;
+import com.gcplot.model.gc.GCAnalyseImpl;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
 import com.gcplot.model.gc.SourceType;
@@ -168,6 +170,11 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
         } else {
             connector.session().execute(statements.get(0));
         }
+    }
+
+    @Override
+    public void updateConfig(GCAnalyse analyse, ConfigProperty cp, String val) {
+        ((GCAnalyseImpl) analyse).getConfigs().put(cp.getId(), val);
     }
 
     private RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String timezone,

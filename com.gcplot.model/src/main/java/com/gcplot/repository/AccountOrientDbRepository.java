@@ -2,17 +2,15 @@ package com.gcplot.repository;
 
 import com.gcplot.Identifier;
 import com.gcplot.commons.Metrics;
-import com.gcplot.model.account.config.ConfigProperty;
+import com.gcplot.model.account.ConfigProperty;
 import com.gcplot.utils.Exceptions;
 import com.gcplot.commons.exceptions.NotUniqueException;
 import com.gcplot.model.account.Account;
 import com.gcplot.model.account.AccountImpl;
 import com.gcplot.model.role.Role;
 import com.gcplot.model.role.RoleImpl;
-import com.google.common.collect.Lists;
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePoolFactory;
 import com.orientechnologies.orient.core.id.ORID;
-import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OSchema;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.sql.OCommandSQL;
@@ -22,12 +20,8 @@ import com.orientechnologies.orient.object.db.OObjectDatabaseTx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AccountOrientDbRepository extends AbstractOrientDbRepository implements AccountRepository {

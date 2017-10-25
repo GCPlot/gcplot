@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   rc_source_config_string varchar,
   jvm_rc_source_type map<varchar, varchar>,
   jvm_rc_source_config_string map<varchar, varchar>,
+  configs map<varchar, varchar>,
   ext varchar,
   PRIMARY KEY (account_id, id)
 );
@@ -60,7 +61,7 @@ CREATE TABLE IF NOT EXISTS gc_event (
   real_time double,
   ext varchar,
   PRIMARY KEY ((analyse_id, jvm_id, date), written_at)
-) WITH CLUSTERING ORDER BY (written_at DESC);
+) WITH CLUSTERING ORDER BY (written_at DESC) AND gc_grace_seconds = 60;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS gc_event_by_bucket
 AS SELECT * FROM gc_event

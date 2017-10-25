@@ -5,6 +5,7 @@ import com.gcplot.analytics.AnalyticsService;
 import com.gcplot.analytics.EventsResult;
 import com.gcplot.analytics.GCEventFeature;
 import com.gcplot.commons.ErrorMessages;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.utils.Range;
 import com.gcplot.model.IdentifiedEvent;
 import com.gcplot.model.gc.*;

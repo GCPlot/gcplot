@@ -3,7 +3,7 @@ package com.gcplot.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.VMVersion;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.google.common.base.Strings;
 import org.joda.time.DateTimeZone;

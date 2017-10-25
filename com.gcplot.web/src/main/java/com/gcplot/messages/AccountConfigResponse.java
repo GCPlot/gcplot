@@ -1,8 +1,8 @@
 package com.gcplot.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gcplot.model.account.config.ConfigProperty;
-import com.gcplot.model.account.config.Configuration;
+import com.gcplot.model.account.ConfigProperty;
+import com.gcplot.model.config.Configuration;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>

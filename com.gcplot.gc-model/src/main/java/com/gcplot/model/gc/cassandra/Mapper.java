@@ -3,6 +3,7 @@ package com.gcplot.model.gc.cassandra;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.gcplot.Identifier;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.utils.enums.EnumSetUtils;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;

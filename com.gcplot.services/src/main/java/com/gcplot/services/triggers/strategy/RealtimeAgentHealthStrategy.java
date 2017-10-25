@@ -1,8 +1,8 @@
 package com.gcplot.services.triggers.strategy;
 
 import com.gcplot.model.account.Account;
-import com.gcplot.model.account.config.ConfigProperty;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.account.ConfigProperty;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.services.mail.MailService;
 import com.gcplot.services.mail.data.JvmAgentStatus;

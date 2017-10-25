@@ -57,7 +57,7 @@ public class LoginController extends Controller {
      * Payload: UpdateAccountConfigRequest
      */
     private void updateConfig(UpdateAccountConfigRequest req, RequestContext ctx) {
-        com.gcplot.model.account.config.ConfigProperty cp = com.gcplot.model.account.config.ConfigProperty.by(req.propertyId);
+        com.gcplot.model.account.ConfigProperty cp = com.gcplot.model.account.ConfigProperty.by(req.propertyId);
         if (cp != null && req.value != null) {
             accountRepository.updateConfig(account(ctx), cp, req.value);
         }

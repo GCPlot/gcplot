@@ -1,8 +1,7 @@
 package com.gcplot.model.account;
 
 import com.gcplot.Identifier;
-import com.gcplot.model.account.config.ConfigProperty;
-import com.gcplot.model.account.config.Configuration;
+import com.gcplot.model.config.Configuration;
 import com.gcplot.model.role.Role;
 import com.gcplot.model.role.RoleImpl;
 import com.google.common.base.MoreObjects;
@@ -135,32 +134,11 @@ public class AccountImpl implements Account {
     }
 
     @Override
-    public Configuration config() {
-        return new Configuration() {
-            @Override
-            public long asLong(ConfigProperty cp) {
-                String v = getConfigs().get(cp.getId());
-                return (Long) (v == null ? cp.getDefaultValue() : Long.parseLong(v));
-            }
-
-            @Override
-            public double asDouble(ConfigProperty cp) {
-                String v = getConfigs().get(cp.getId());
-                return (Double) (v == null ? cp.getDefaultValue() : Double.parseDouble(v));
-            }
-
-            @Override
-            public boolean asBoolean(ConfigProperty cp) {
-                String v = getConfigs().get(cp.getId());
-                return (Boolean) (v == null ? cp.getDefaultValue() : Boolean.parseBoolean(v));
-            }
-
-            @Override
-            public String asString(ConfigProperty cp) {
-                String s = getConfigs().get(cp.getId());
-                return s == null ? (String) cp.getDefaultValue() : s;
-            }
-        };
+    public Configuration<ConfigProperty> config() {
+        if (configuration == null) {
+            configuration = Configuration.create(getConfigs());
+        }
+        return configuration;
     }
 
     public void setRegistrationTime(Date registrationTime) {
@@ -275,6 +253,8 @@ public class AccountImpl implements Account {
     protected Object id;
     @Transient
     protected transient Identifier identifier;
+    @Transient
+    protected transient Configuration<ConfigProperty> configuration;
     protected String username;
     protected String email;
     protected String notificationEmail;

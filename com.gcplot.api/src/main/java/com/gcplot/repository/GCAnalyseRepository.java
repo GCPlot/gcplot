@@ -1,7 +1,8 @@
 package com.gcplot.repository;
 
 import com.gcplot.Identifier;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.account.ConfigProperty;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.repository.operations.analyse.AnalyseOperation;
 
 import java.util.List;
@@ -31,5 +32,7 @@ public interface GCAnalyseRepository {
     void perform(AnalyseOperation operation);
 
     void perform(List<AnalyseOperation> operations);
+
+    void updateConfig(GCAnalyse analyse, ConfigProperty cp, String val);
 
 }

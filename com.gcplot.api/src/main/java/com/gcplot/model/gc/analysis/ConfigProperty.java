@@ -1,20 +1,20 @@
-package com.gcplot.model.account.config;
+package com.gcplot.model.gc.analysis;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
- *         7/3/17
+ * 10/24/17
  */
-public enum ConfigProperty {
-
-    PRELOAD_ANALYSIS_ON_PAGE_OPEN("1", true),
-
-    /** Notification Configurations **/
-    NOTIFY_REALTIME_AGENT_HEALTH("2", true),
-    REALTIME_AGENT_INACTIVE_SECONDS("3", 7200L);
-    /*********************************/
+public enum ConfigProperty implements com.gcplot.model.config.ConfigProperty {
+    GRAPHITE_URLS("1", null),
+    GRAPHITE_PREFIX("2", "${jvm_name}.gc."),
+    GRAPHITE_PROXY_TYPE("3", null),
+    GRAPHITE_PROXY_HOST("4", null),
+    GRAPHITE_PROXY_PORT("5", 0),
+    GRAPHITE_PROXY_USERNAME("6", null),
+    GRAPHITE_PROXY_PASSWORD("7", null);
 
     private static final Map<String, ConfigProperty> VALUES;
 

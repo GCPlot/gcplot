@@ -1,7 +1,7 @@
 package com.gcplot.logs;
 
 import com.gcplot.model.account.Account;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
