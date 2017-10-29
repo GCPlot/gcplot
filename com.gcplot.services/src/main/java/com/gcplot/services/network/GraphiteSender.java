@@ -58,7 +58,7 @@ public class GraphiteSender {
         } catch (Throwable ignore) { }
     }
 
-    public void send(String url, ProxyConfiguration pc, long timestamp, Map<String, Number> data) {
+    public void send(String url, ProxyConfiguration pc, Map<String, Long> data) {
         if (!(eventLoopGroup.isShuttingDown() || eventLoopGroup.isShutdown())) {
             String[] parts = url.split(":");
             if (parts.length != 2) {
@@ -93,9 +93,9 @@ public class GraphiteSender {
             });
             try {
                 Channel c = b.connect(parts[0], port).sync().channel();
-                data.forEach((metric, n) -> {
+                data.forEach((metric, timestamp) -> {
                     // TODO optimize
-                    c.write(Unpooled.copiedBuffer(metric + " " + n + " " + timestamp / 1000 + "\n", Charsets.UTF_8));
+                    c.write(Unpooled.copiedBuffer(metric + " " + (timestamp / 1000) + "\n", Charsets.UTF_8));
                 });
                 c.flush().closeFuture().sync();
             } catch (InterruptedException e) {

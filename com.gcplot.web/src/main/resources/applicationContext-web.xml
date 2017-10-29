@@ -42,10 +42,13 @@
         </property>
     </bean>
 
+    <bean id="eventsAnalyticsProcessor" class="com.gcplot.services.analytics.EventsAnalyticsProcessor"/>
+
     <bean id="analyticsService" class="com.gcplot.services.analytics.DefaultAnalyticsService">
         <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
         <property name="eventFactory" ref="eventFactory"/>
         <property name="eventRepository" ref="cassandraGCEventRepository"/>
+        <property name="eventsAnalyticsProcessor" ref="eventsAnalyticsProcessor"/>
     </bean>
 
     <bean id="logsProcessorService" class="com.gcplot.services.logs.DefaultLogsProcessorService"
