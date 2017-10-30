@@ -75,7 +75,8 @@
         <property name="connector" ref="s3Connector"/>
     </bean>
 
-    <bean id="graphiteMetricsSender" class="com.gcplot.services.network.GraphiteSender">
+    <bean id="graphiteMetricsSender" class="com.gcplot.services.network.GraphiteSender"
+          init-method="init" destroy-method="destroy">
         <property name="config" ref="config"/>
     </bean>
 
