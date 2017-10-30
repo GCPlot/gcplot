@@ -80,7 +80,7 @@ dependencies {
     integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: "$httpClientVersion"
     integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpmime', version: "$httpClientVersion"
     integrationTestCompile group: 'org.apache.zookeeper', name: 'zookeeper', version: "$zookeeperVersion"
-    integrationTestCompile 'com.github.kirviq:dumbster:1.7.1'
+    integrationTestCompile 'com.github.kirviq:dumbster:1.7'
 }
 
 check.dependsOn integrationTest
