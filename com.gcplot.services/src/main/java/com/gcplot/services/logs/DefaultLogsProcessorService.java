@@ -7,6 +7,7 @@ import com.gcplot.Identifier;
 import com.gcplot.configuration.ConfigProperty;
 import com.gcplot.commons.ErrorMessages;
 import com.gcplot.commons.FileUtils;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.utils.Exceptions;
 import com.gcplot.configuration.ConfigurationManager;
 import com.gcplot.logs.*;
@@ -37,7 +38,6 @@ import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.gcplot.utils.CollectionUtils.cloneAndAdd;
 import static com.gcplot.utils.CollectionUtils.cloneAndPut;

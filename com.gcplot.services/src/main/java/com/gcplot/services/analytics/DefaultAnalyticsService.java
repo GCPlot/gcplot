@@ -5,6 +5,7 @@ import com.gcplot.analytics.AnalyticsService;
 import com.gcplot.analytics.EventsResult;
 import com.gcplot.analytics.GCEventFeature;
 import com.gcplot.commons.ErrorMessages;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.utils.Range;
 import com.gcplot.model.IdentifiedEvent;
 import com.gcplot.model.gc.*;
@@ -57,9 +58,10 @@ public class DefaultAnalyticsService implements AnalyticsService {
     private GCAnalyseRepository analyseRepository;
     private GCEventRepository eventRepository;
     private GCEventFactory eventFactory;
+    private EventsAnalyticsProcessor eventsAnalyticsProcessor;
 
     @Override
-    public EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval,
+    public EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval, int samplingSeconds,
                                EnumSet<GCEventFeature> features, Consumer<IdentifiedEvent> listener) {
         Optional<GCAnalyse> oa = analyseRepository.analyse(accountId, analyseId);
         if (!oa.isPresent()) {
@@ -68,35 +70,12 @@ public class DefaultAnalyticsService implements AnalyticsService {
         GCAnalyse analyse = oa.get();
         Range range = correctIntervalIfRequired(jvmId, Range.of(interval), analyse);
         long secondsBetween = new Duration(range.from(), range.to()).getStandardSeconds();
-        int sampleSeconds = pickUpSampling(secondsBetween);
+        int sampleSeconds = samplingSeconds > 0 ? samplingSeconds : pickUpSampling(secondsBetween);
 
         Iterator<GCEvent> i = eventRepository.lazyEvents(analyseId, jvmId, range);
         List<EventInterceptor<GCEvent>> samplers = buildSamplers(features, sampleSeconds);
         List<EventInterceptor> interceptors = buildInterceptors(features, sampleSeconds, isG1(jvmId, analyse));
-        while (i.hasNext()) {
-            GCEvent next = i.next();
-
-            if (sampleSeconds > 1) {
-                boolean wasAccepted = false;
-                for (EventInterceptor<GCEvent> sampler : samplers) {
-                    if (sampler.isApplicable(next)) {
-                        sampler.process(next).forEach(listener);
-                        wasAccepted = true;
-                        break;
-                    }
-                }
-                if (!wasAccepted) {
-                    listener.accept(next);
-                }
-            } else {
-                listener.accept(next);
-            }
-            interceptors.forEach(ic -> ic.process(next).forEach(listener));
-        }
-        if (sampleSeconds > 1) {
-            samplers.forEach(s -> s.complete().forEach(listener));
-        }
-        interceptors.forEach(ic -> ic.complete().forEach(listener));
+        eventsAnalyticsProcessor.processEvents(listener, sampleSeconds, i, samplers, interceptors);
 
         return EventsResult.SUCCESS;
     }
@@ -193,5 +172,13 @@ public class DefaultAnalyticsService implements AnalyticsService {
 
     public void setEventFactory(GCEventFactory eventFactory) {
         this.eventFactory = eventFactory;
+    }
+
+    public EventsAnalyticsProcessor getEventsAnalyticsProcessor() {
+        return eventsAnalyticsProcessor;
+    }
+
+    public void setEventsAnalyticsProcessor(EventsAnalyticsProcessor eventsAnalyticsProcessor) {
+        this.eventsAnalyticsProcessor = eventsAnalyticsProcessor;
     }
 }

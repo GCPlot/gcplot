@@ -21,6 +21,8 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.SimpleEmail;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -96,6 +98,21 @@ public abstract class IntegrationTest {
     public void setUp() throws Exception {
         createCassandraScheme();
         smtpServer = SimpleSmtpServer.start(SimpleSmtpServer.AUTO_SMTP_PORT);
+        LOG.info("SMTP server was started on port {}", smtpServer.getPort());
+        try {
+            Email email = new SimpleEmail();
+            email.setHostName(LOCALHOST);
+            email.setSSLOnConnect(false);
+            email.setSmtpPort(smtpServer.getPort());
+            email.setFrom("test@test.com");
+            email.addTo("test@tset.com");
+            email.setMsg("Test");
+            email.setSubject("Test");
+            email.send();
+            Assert.assertEquals(smtpServer.getReceivedEmails().size(), 1);
+        } finally {
+            smtpServer.reset();
+        }
         dbName = Utils.getRandomIdentifier();
         database = new ODatabaseDocumentTx("memory:" + dbName).create();
 

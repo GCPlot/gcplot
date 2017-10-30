@@ -42,10 +42,13 @@
         </property>
     </bean>
 
+    <bean id="eventsAnalyticsProcessor" class="com.gcplot.services.analytics.EventsAnalyticsProcessor"/>
+
     <bean id="analyticsService" class="com.gcplot.services.analytics.DefaultAnalyticsService">
         <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
         <property name="eventFactory" ref="eventFactory"/>
         <property name="eventRepository" ref="cassandraGCEventRepository"/>
+        <property name="eventsAnalyticsProcessor" ref="eventsAnalyticsProcessor"/>
     </bean>
 
     <bean id="logsProcessorService" class="com.gcplot.services.logs.DefaultLogsProcessorService"
@@ -70,6 +73,18 @@
 
     <bean id="s3ResourceManager" class="com.gcplot.services.resources.S3ResourceManager">
         <property name="connector" ref="s3Connector"/>
+    </bean>
+
+    <bean id="graphiteMetricsSender" class="com.gcplot.services.network.GraphiteSender">
+        <property name="config" ref="config"/>
+    </bean>
+
+    <bean id="interceptorsPoller" class="com.gcplot.services.logs.interceptors.InterceptorsPoller"
+          init-method="init" destroy-method="shutdown">
+        <property name="config" ref="config"/>
+        <property name="analyseRepository" ref="cassandraGCAnalyseRepository"/>
+        <property name="analyticsService" ref="analyticsService"/>
+        <property name="graphiteSender" ref="graphiteMetricsSender"/>
     </bean>
 
 </beans>

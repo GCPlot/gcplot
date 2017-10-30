@@ -1,4 +1,4 @@
-package com.gcplot.model.account.config;
+package com.gcplot.model.account;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,7 +7,7 @@ import java.util.Map;
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         7/3/17
  */
-public enum ConfigProperty {
+public enum ConfigProperty implements com.gcplot.model.config.ConfigProperty  {
 
     PRELOAD_ANALYSIS_ON_PAGE_OPEN("1", true),
 

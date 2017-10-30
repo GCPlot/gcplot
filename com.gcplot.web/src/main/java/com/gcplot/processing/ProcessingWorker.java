@@ -10,7 +10,7 @@ import com.gcplot.fs.LogsStorageProvider;
 import com.gcplot.logs.LogHandle;
 import com.gcplot.logs.LogSource;
 import com.gcplot.logs.LogsProcessorService;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.repository.AccountRepository;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

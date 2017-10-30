@@ -3,7 +3,7 @@ package com.gcplot.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gcplot.model.VMVersion;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.google.common.base.Strings;
 import org.joda.time.DateTimeZone;
@@ -49,6 +49,8 @@ public class AnalyseResponse {
     public Map<String, String> jvmNames;
     @JsonProperty("jvm_mem")
     public Map<String, MemoryStatus> memory;
+    @JsonProperty("configs")
+    public AnalyseConfigResponse configs;
     @JsonProperty("ext")
     public String ext;
 
@@ -68,6 +70,7 @@ public class AnalyseResponse {
                            @JsonProperty("jvm_ids") Set<String> jvmIds,
                            @JsonProperty("jvm_names") Map<String, String> jvmNames,
                            @JsonProperty("jvm_mem") Map<String, MemoryStatus> memory,
+                           @JsonProperty("configs") AnalyseConfigResponse configs,
                            @JsonProperty("ext") String ext) {
         this.id = id;
         this.name = name;
@@ -84,6 +87,7 @@ public class AnalyseResponse {
         this.jvmIds = jvmIds;
         this.jvmNames = jvmNames;
         this.memory = memory;
+        this.configs = configs;
         this.ext = ext;
     }
 
@@ -107,6 +111,7 @@ public class AnalyseResponse {
         this.jvmIds = analyse.jvmIds();
         this.jvmNames = analyse.jvmNames();
         this.memory = analyse.jvmMemoryDetails() == null ? Collections.emptyMap() : transformValue(analyse.jvmMemoryDetails(), MemoryStatus::new);
+        this.configs = AnalyseConfigResponse.from(analyse.config());
         this.ext = analyse.ext();
     }
 

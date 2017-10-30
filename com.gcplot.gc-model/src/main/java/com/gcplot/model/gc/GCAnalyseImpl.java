@@ -1,14 +1,14 @@
 package com.gcplot.model.gc;
 
 import com.gcplot.Identifier;
+import com.gcplot.model.config.Configuration;
+import com.gcplot.model.gc.analysis.ConfigProperty;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.utils.Utils;
 import com.gcplot.model.VMVersion;
 import org.joda.time.DateTime;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 public class GCAnalyseImpl implements GCAnalyse {
 
@@ -180,6 +180,14 @@ public class GCAnalyseImpl implements GCAnalyse {
     }
 
     @Override
+    public Configuration<ConfigProperty> config() {
+        if (configuration == null) {
+            configuration = Configuration.create(getConfigs());
+        }
+        return configuration;
+    }
+
+    @Override
     public String ext() {
         return ext;
     }
@@ -188,7 +196,21 @@ public class GCAnalyseImpl implements GCAnalyse {
         return this;
     }
 
+    public Map<String, String> getConfigs() {
+        if (configs == null) {
+            configs = new HashMap<>();
+        }
+        return configs;
+    }
+
+    public GCAnalyseImpl configs(Map<String, String> configs) {
+        this.configs = configs;
+        this.configuration = null;
+        return this;
+    }
+
     public GCAnalyseImpl() {
+        this.configs = new HashMap<>();
     }
 
     public GCAnalyseImpl(GCAnalyse other) {
@@ -208,9 +230,11 @@ public class GCAnalyseImpl implements GCAnalyse {
         this.sourceConfig = other.sourceConfig();
         this.sourceByJvm = other.sourceByJvm();
         this.sourceConfigByJvm = other.sourceConfigByJvm();
+        this.configs = ((GCAnalyseImpl)other).configs;
         this.ext = other.ext();
     }
 
+    protected transient Configuration<ConfigProperty> configuration;
     protected String id;
     protected Identifier accountId;
     protected String name;
@@ -230,6 +254,7 @@ public class GCAnalyseImpl implements GCAnalyse {
     protected Properties sourceConfigProps;
     protected Map<String, SourceType> sourceByJvm = Collections.emptyMap();
     protected Map<String, String> sourceConfigByJvm = Collections.emptyMap();
+    private Map<String, String> configs;
     protected String ext;
 
     @Override

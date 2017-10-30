@@ -1,7 +1,7 @@
 package com.gcplot.services.triggers;
 
 import com.gcplot.model.account.Account;
-import com.gcplot.model.gc.GCAnalyse;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.repository.AccountRepository;
 import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.TriggerRepository;

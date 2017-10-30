@@ -11,10 +11,12 @@ public enum GCEventFeature {
 
     private static final EnumSet<GCEventFeature> samplers;
     private static final EnumSet<GCEventFeature> all;
+    private static final EnumSet<GCEventFeature> noStats;
 
     static {
         samplers = EnumSet.of(SAMPLE_YOUNG, SAMPLE_TENURED, SAMPLE_CONCURRENT, SAMPLE_FULL);
         all = EnumSet.allOf(GCEventFeature.class);
+        noStats = EnumSet.of(SAMPLE_YOUNG, SAMPLE_TENURED, SAMPLE_CONCURRENT, SAMPLE_FULL, CALC_RATES);
     }
 
     public static EnumSet<GCEventFeature> getSamplers() {
@@ -23,5 +25,9 @@ public enum GCEventFeature {
 
     public static EnumSet<GCEventFeature> getAll() {
         return all;
+    }
+
+    public static EnumSet<GCEventFeature> getNoStats() {
+        return noStats;
     }
 }

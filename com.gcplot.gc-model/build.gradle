@@ -3,6 +3,7 @@ dependencies {
     compile project(":com.gcplot.api")
     compile group: 'commons-io', name: 'commons-io', version: "$apacheCommonsIOVersion"
     compile group: 'net.jpountz.lz4', name: 'lz4', version: "$lz4Version"
+    compile group: 'io.netty', name: 'netty-all', version: "$nettyVersion"
 
     compile("com.datastax.cassandra:cassandra-driver-core:$cassandraDriverVersion") {
         exclude group: "io.netty"
@@ -11,5 +12,7 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    compile "org.cassandraunit:cassandra-unit:$cassandraUnitVersion"
+    compile("org.cassandraunit:cassandra-unit:$cassandraUnitVersion") {
+        exclude group: "io.netty"
+    }
 }

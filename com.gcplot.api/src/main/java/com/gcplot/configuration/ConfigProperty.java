@@ -22,8 +22,8 @@ public enum ConfigProperty {
     SMTP_PORT("smtp.port", 465),
     SMTP_USE_SSL("smtp.use.ssl", true),
     SMTP_AUTH("smtp.auth", true),
-    SMTP_CONNECTION_TIMEOUT("smtp.connection.timeout", 10000),
-    SMTP_SEND_TIMEOUT("smtp.send.timeout", 5000),
+    SMTP_CONNECTION_TIMEOUT("smtp.connection.timeout", 30000),
+    SMTP_SEND_TIMEOUT("smtp.send.timeout", 30000),
     SMTP_DEFAULT_USERNAME("smtp.confirm.username", "do-not-reply@gcplot.com"),
     SMTP_DEFAULT_PASSWORD("smtp.confirm.password", "%*KmX_bh/Z:e7)u\""),
 
@@ -41,6 +41,12 @@ public enum ConfigProperty {
     SURVIVOR_AGES_AVG_THRESHOLD("survivor.ages.avg.threshold", 100),
     TENURED_ACCUMULATE_SECONDS("tenured.accumulate.seconds", 10),
     FORBID_OTHER_GENERATION("forbid.other.generation", true),
+    GC_EVENTS_INTERCEPTORS_ENABLED("gc.events.interceptors.enabled", false),
+    GC_EVENTS_INTERCEPTORS_MINUTES("gc.events.interceptors.minutes", 3),
+    GC_EVENTS_INTERCEPTORS_SAMPLING_SECONDS("gc.events.interceptors.sampling.seconds", 60),
+
+    GRAPHITE_REDUNDANCY_CACHE_SIZE("graphite.redundancy.cache.size", 100_000),
+    GRAPHITE_EVENT_LOOP_POOL_SIZE("graphite.event.loop.pool.size", Runtime.getRuntime().availableProcessors() * 2),
 
     PASSWORD_MIN_LENGTH("password.min.length", 1),
 

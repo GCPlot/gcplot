@@ -12,6 +12,7 @@ dependencies {
 
   compile("org.apache.zookeeper:zookeeper:$zookeeperVersion") {
     exclude group: 'org.slf4j'
+    exclude group: 'io.netty'
   }
   compile "com.amazonaws:aws-java-sdk-s3:$awsVersion"
   compile "com.amazonaws:aws-java-sdk-ses:$awsVersion"
@@ -23,6 +24,7 @@ dependencies {
   compile "org.apache.commons:commons-email:$apacheMailVersion"
   compile group: 'org.apache.velocity', name: 'velocity-engine-core', version: "$velocityVersion"
   compile group: 'net.time4j', name: 'time4j-core', version: "$time4jVersion"
+  compile group: 'io.netty', name: 'netty-all', version: "$nettyVersion"
 
   testCompile group: 'io.findify', name: 's3mock_2.12', version: "$s3MockVersion"
 }

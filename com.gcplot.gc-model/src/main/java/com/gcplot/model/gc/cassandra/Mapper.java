@@ -3,6 +3,7 @@ package com.gcplot.model.gc.cassandra;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.gcplot.Identifier;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.utils.enums.EnumSetUtils;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
@@ -60,6 +61,7 @@ public abstract class Mapper {
         Map<String, Long> jvmSwapFree = row.getMap("jvm_md_swap_free", String.class, Long.class);
         Map<String, String> sourceByJvmRaw = row.getMap("jvm_rc_source_type", String.class, String.class);
         Map<String, String> sourceConfigByJvmRaw = row.getMap("jvm_rc_source_config_string", String.class, String.class);
+        Map<String, String> configs = row.getMap("configs", String.class, String.class);
 
         Map<String, SourceType> sourceByJvm = new HashMap<>();
         Map<String, String> sourceConfigByJvm = new HashMap<>();
@@ -79,7 +81,8 @@ public abstract class Mapper {
         return gcAnalyse
                 .jvmMemoryDetails(memoryDetails)
                 .sourceByJvm(sourceByJvm)
-                .sourceConfigByJvm(sourceConfigByJvm);
+                .sourceConfigByJvm(sourceConfigByJvm)
+                .configs(configs);
     }
 
     public static List<GCEvent> eventsFrom(Iterator<Row> resultSet) {

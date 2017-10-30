@@ -64,8 +64,9 @@ dependencies {
     compile project(":com.gcplot.log-processor")
 
     compile "com.amazonaws:aws-java-sdk-s3:$awsVersion"
-    compile "org.slf4j:slf4j-simple:$slf4jVersion"
-    compile "io.vertx:vertx-web:$vertxVersion"
+    compile("io.vertx:vertx-web:$vertxVersion") {
+        exclude group: 'io.netty'
+    }
     compile "io.vertx:vertx-codegen:$vertxVersion"
     compile "org.springframework:spring-context:$springVersion"
     compile "org.springframework:spring-beans:$springVersion"
@@ -79,7 +80,7 @@ dependencies {
     integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: "$httpClientVersion"
     integrationTestCompile group: 'org.apache.httpcomponents', name: 'httpmime', version: "$httpClientVersion"
     integrationTestCompile group: 'org.apache.zookeeper', name: 'zookeeper', version: "$zookeeperVersion"
-    integrationTestCompile 'com.github.kirviq:dumbster:1.7.1'
+    integrationTestCompile 'com.github.kirviq:dumbster:1.7'
 }
 
 check.dependsOn integrationTest

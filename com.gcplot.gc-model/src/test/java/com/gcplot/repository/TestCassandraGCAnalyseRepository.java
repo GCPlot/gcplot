@@ -3,6 +3,7 @@ package com.gcplot.repository;
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
 import com.gcplot.model.gc.*;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.repository.cassandra.CassandraGCAnalyseRepository;
 import com.gcplot.repository.operations.analyse.AddJvmOperation;
 import com.gcplot.repository.operations.analyse.RemoveAnalyseOperation;

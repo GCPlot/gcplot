@@ -2,6 +2,7 @@ package com.gcplot.model;
 
 import com.gcplot.Identifier;
 import com.gcplot.model.gc.*;
+import com.gcplot.model.gc.analysis.GCAnalyse;
 import org.joda.time.DateTime;
 
 import java.util.Map;
