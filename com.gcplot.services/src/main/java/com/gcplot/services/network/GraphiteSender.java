@@ -68,7 +68,6 @@ public class GraphiteSender {
                 Bootstrap bb = new Bootstrap()
                         .group(eventLoopGroup)
                         .channel(NioSocketChannel.class)
-                        .option(ChannelOption.SO_KEEPALIVE, true)
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.readInt(ConfigProperty.GRAPHITE_CONNECT_TIMEOUT))
                         .option(ChannelOption.TCP_NODELAY, true)
                         .option(ChannelOption.SO_SNDBUF, 5 * 1024 * 1024)
