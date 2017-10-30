@@ -67,7 +67,7 @@ public class LoginTests extends IntegrationTest {
         JsonObject jo = login(req);
         Assert.assertNotNull(jo.getJsonObject("config"));
         Assert.assertEquals(jo.getJsonObject("config").getBoolean("preload_analysis"), true);
-        UpdateAccountConfigRequest ucr = new UpdateAccountConfigRequest(ConfigProperty.PRELOAD_ANALYSIS_ON_PAGE_OPEN.getId(),
+        UpdateConfigRequest ucr = new UpdateConfigRequest(ConfigProperty.PRELOAD_ANALYSIS_ON_PAGE_OPEN.getId(),
                 "false");
         post("/user/config/update?token=" + jo.getString("token"), ucr, success());
 

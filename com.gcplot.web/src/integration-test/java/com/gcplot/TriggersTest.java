@@ -36,7 +36,7 @@ public class TriggersTest extends IntegrationTest {
 
         RegisterRequest request = register();
         post("/user/register", request, success());
-        UpdateAccountConfigRequest ucr = new UpdateAccountConfigRequest(com.gcplot.model.account.ConfigProperty.REALTIME_AGENT_INACTIVE_SECONDS.getId(),
+        UpdateConfigRequest ucr = new UpdateConfigRequest(com.gcplot.model.account.ConfigProperty.REALTIME_AGENT_INACTIVE_SECONDS.getId(),
                 "100");
         String token = login(request).getString("token");
         Identifier accountId = Identifier.fromStr(get("/user/account/id", token).getString("result"));

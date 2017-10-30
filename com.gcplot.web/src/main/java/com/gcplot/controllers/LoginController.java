@@ -45,7 +45,7 @@ public class LoginController extends Controller {
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_email", ChangeEmailRequest.class, this::changeEmail);
         dispatcher.requireAuth().allowNotConfirmed()
-                .post("/user/config/update", UpdateAccountConfigRequest.class, this::updateConfig);
+                .post("/user/config/update", UpdateConfigRequest.class, this::updateConfig);
         dispatcher.allowNotConfirmed().requireAuth().get("/user/send/confirmation", this::sendConfirmation);
         dispatcher.noAuth().allowNotConfirmed().post("/user/send/new_password", SendNewPassRequest.class,
                 this::sendNewPass);
@@ -54,11 +54,11 @@ public class LoginController extends Controller {
     /**
      * POST /user/config/update
      * Require Auth (token)
-     * Payload: UpdateAccountConfigRequest
+     * Payload: UpdateConfigRequest
      */
-    private void updateConfig(UpdateAccountConfigRequest req, RequestContext ctx) {
+    private void updateConfig(UpdateConfigRequest req, RequestContext ctx) {
         com.gcplot.model.account.ConfigProperty cp = com.gcplot.model.account.ConfigProperty.by(req.propertyId);
-        if (cp != null && req.value != null) {
+        if (cp != null) {
             accountRepository.updateConfig(account(ctx), cp, req.value);
         }
         ctx.response(SUCCESS);

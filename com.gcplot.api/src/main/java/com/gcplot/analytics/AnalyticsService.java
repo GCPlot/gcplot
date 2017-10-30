@@ -9,12 +9,22 @@ import java.util.function.Consumer;
 
 public interface AnalyticsService {
 
-    EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval,
+    EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval, int samplingSeconds,
                         EnumSet<GCEventFeature> features, Consumer<IdentifiedEvent> listener);
+
+    default EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval, int samplingSeconds,
+                                Consumer<IdentifiedEvent> listener) {
+        return events(accountId, analyseId, jvmId, interval, samplingSeconds, EnumSet.allOf(GCEventFeature.class), listener);
+    }
+
+    default EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval,
+                                EnumSet<GCEventFeature> features, Consumer<IdentifiedEvent> listener) {
+        return events(accountId, analyseId, jvmId, interval, 0, features, listener);
+    }
 
     default EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval,
                                 Consumer<IdentifiedEvent> listener) {
-        return events(accountId, analyseId, jvmId, interval, EnumSet.allOf(GCEventFeature.class), listener);
+        return events(accountId, analyseId, jvmId, interval, 0, EnumSet.allOf(GCEventFeature.class), listener);
     }
 
 }

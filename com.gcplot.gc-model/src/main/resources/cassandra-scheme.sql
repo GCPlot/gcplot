@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS gc_analyse (
   configs map<varchar, varchar>,
   ext varchar,
   PRIMARY KEY (account_id, id)
-);
+) WITH gc_grace_seconds = 60;
 
 CREATE INDEX IF NOT EXISTS analyse_continuous ON gc_analyse( is_continuous );
 

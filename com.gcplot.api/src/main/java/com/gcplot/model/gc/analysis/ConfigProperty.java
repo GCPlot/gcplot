@@ -10,9 +10,9 @@ import java.util.Map;
 public enum ConfigProperty implements com.gcplot.model.config.ConfigProperty {
     GRAPHITE_URLS("1", null),
     GRAPHITE_PREFIX("2", "${jvm_name}.gc."),
-    GRAPHITE_PROXY_TYPE("3", null),
+    GRAPHITE_PROXY_TYPE("3", 0L),
     GRAPHITE_PROXY_HOST("4", null),
-    GRAPHITE_PROXY_PORT("5", 0),
+    GRAPHITE_PROXY_PORT("5", 0L),
     GRAPHITE_PROXY_USERNAME("6", null),
     GRAPHITE_PROXY_PASSWORD("7", null);
 

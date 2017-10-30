@@ -12,7 +12,10 @@ import com.gcplot.services.network.ProxyConfiguration;
 import com.gcplot.services.network.ProxyType;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +24,7 @@ import java.util.Map;
  * 10/22/17
  */
 public class GraphiteInterceptor implements IdentifiedEventInterceptor {
-    private Map<String, Long> metrics = new HashMap<>();
+    private static final Logger LOG = LoggerFactory.getLogger(GraphiteInterceptor.class);
     private final GraphiteSender graphiteSender;
     private final GCAnalyse analyse;
     private final String jvmId;
@@ -29,6 +32,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     private final String prefix;
     private final String[] urls;
     private final ProxyConfiguration proxyConfiguration;
+    private final Map<String, Long> metrics = new HashMap<>();
 
     public GraphiteInterceptor(GraphiteSender graphiteSender, GCAnalyse analyse, String jvmId) {
         this.graphiteSender = graphiteSender;
@@ -37,7 +41,11 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         this.urls = Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_URLS)).replace(" ", "").split(",");
         if (this.urls.length > 0) {
             this.jvmName = StringUtils.replaceAll(Strings.nullToEmpty(analyse.jvmNames().get(jvmId)), "[\\.\\\\/ @#$%^&*();|<>\"'+-!?:;]", "_");
-            this.prefix = Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_PREFIX)).replace("{jvm_id}", jvmName);
+            String prefix = Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_PREFIX)).replace("{jvm_id}", jvmName);
+            if (!prefix.endsWith(".")) {
+                prefix += ".";
+            }
+            this.prefix = prefix;
             ProxyConfiguration pc = ProxyConfiguration.NONE;
             long pt = analyse.config().asLong(ConfigProperty.GRAPHITE_PROXY_TYPE);
             if (pt > 0) {
@@ -74,6 +82,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     @Override
     public void finish() {
         for (String url : urls) {
+            LOG.info("Sending data to graphite url: {}", url);
             graphiteSender.send(url, proxyConfiguration, metrics);
         }
     }
@@ -167,4 +176,15 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         }
     }
 
+    @Override
+    public String toString() {
+        return "GraphiteInterceptor{" +
+                "analyse=" + analyse +
+                ", jvmId='" + jvmId + '\'' +
+                ", jvmName='" + jvmName + '\'' +
+                ", prefix='" + prefix + '\'' +
+                ", urls=" + Arrays.toString(urls) +
+                ", proxyConfiguration=" + proxyConfiguration +
+                '}';
+    }
 }

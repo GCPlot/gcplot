@@ -17,6 +17,7 @@ import com.gcplot.roles.Restrictions;
 import com.gcplot.web.RequestContext;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.base.Strings;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,7 @@ public class AnalyseController extends Controller {
                         newAnalyses.get(a.id(), k -> analyseRepository.analysesCount(k).orElse(0))),
                         "You exceeded the amount of GC Analysis Groups per user. Contact us to increase this number.")
                 .post("/analyse/new", NewAnalyseRequest.class, this::newAnalyse);
+        dispatcher.requireAuth().post("/analyse/update/config", UpdateConfigRequest.class, this::updateConfig);
     }
 
     /**
@@ -271,6 +273,27 @@ public class AnalyseController extends Controller {
 
         ctx.response(new NewAnalyseResponse(analyseRepository.newAnalyse(analyse)));
         newAnalyses.invalidate(userId);
+    }
+
+    /**
+     * POST /analyse/update/config
+     * Require Auth (token)
+     * Params: analyse_id
+     * Responds: SUCCESS or ERROR
+     */
+    private void updateConfig(UpdateConfigRequest req, RequestContext ctx) {
+        com.gcplot.model.gc.analysis.ConfigProperty cp = com.gcplot.model.gc.analysis.ConfigProperty.by(req.propertyId);
+        String analyseId = ctx.param("analyse_id");
+        if (!Strings.isNullOrEmpty(analyseId)) {
+            GCAnalyse analyse = analyseRepository.analyse(account(ctx).id(), analyseId).orElse(null);
+            if (cp != null && analyse != null) {
+                analyseRepository.updateConfig(analyse, cp, req.value);
+            } else {
+                ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Analysis Group or config property is invalid."));
+            }
+        } else {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Analysis Group ID shouldn't be empty."));
+        }
     }
 
     @Autowired

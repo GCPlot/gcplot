@@ -61,7 +61,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
     private EventsAnalyticsProcessor eventsAnalyticsProcessor;
 
     @Override
-    public EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval,
+    public EventsResult events(Identifier accountId, String analyseId, String jvmId, Interval interval, int samplingSeconds,
                                EnumSet<GCEventFeature> features, Consumer<IdentifiedEvent> listener) {
         Optional<GCAnalyse> oa = analyseRepository.analyse(accountId, analyseId);
         if (!oa.isPresent()) {
@@ -70,7 +70,7 @@ public class DefaultAnalyticsService implements AnalyticsService {
         GCAnalyse analyse = oa.get();
         Range range = correctIntervalIfRequired(jvmId, Range.of(interval), analyse);
         long secondsBetween = new Duration(range.from(), range.to()).getStandardSeconds();
-        int sampleSeconds = pickUpSampling(secondsBetween);
+        int sampleSeconds = samplingSeconds > 0 ? samplingSeconds : pickUpSampling(secondsBetween);
 
         Iterator<GCEvent> i = eventRepository.lazyEvents(analyseId, jvmId, range);
         List<EventInterceptor<GCEvent>> samplers = buildSamplers(features, sampleSeconds);

@@ -15,7 +15,7 @@ public class AccountConfigResponse {
     public AccountConfigResponse() {
     }
 
-    public static AccountConfigResponse from(Configuration config) {
+    public static AccountConfigResponse from(Configuration<ConfigProperty> config) {
         AccountConfigResponse res = new AccountConfigResponse();
         for (ConfigProperty cp : ConfigProperty.values()) {
             switch (cp) {

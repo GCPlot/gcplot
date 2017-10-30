@@ -6,8 +6,8 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.gcplot.Identifier;
 import com.gcplot.model.VMVersion;
-import com.gcplot.model.account.ConfigProperty;
 import com.gcplot.model.gc.GCAnalyseImpl;
+import com.gcplot.model.gc.analysis.ConfigProperty;
 import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.model.gc.GarbageCollectorType;
 import com.gcplot.model.gc.MemoryDetails;
@@ -81,6 +81,7 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
                 .value("analyse_name", analyse.name())
                 .value("timezone", analyse.timezone())
                 .value("is_continuous", analyse.isContinuous())
+                .value("configs", Collections.emptyMap())
                 .value("start", analyse.start().toDateTime(DateTimeZone.UTC).getMillis())
                 .value("first_event", analyse.firstEvent() != null ? transformValue(analyse.firstEvent(),
                         v -> v.toDateTime(DateTimeZone.UTC).getMillis()) : Collections.emptyMap())
@@ -175,6 +176,11 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     @Override
     public void updateConfig(GCAnalyse analyse, ConfigProperty cp, String val) {
         ((GCAnalyseImpl) analyse).getConfigs().put(cp.getId(), val);
+        if (val != null) {
+            connector.session().execute(updateTable(analyse.accountId(), UUID.fromString(analyse.id())).with(put("configs", cp.getId(), val)));
+        } else {
+            connector.session().execute(updateTable(analyse.accountId(), UUID.fromString(analyse.id())).with(remove("configs", cp.getId())));
+        }
     }
 
     private RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String timezone,

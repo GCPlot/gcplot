@@ -41,6 +41,9 @@ public enum ConfigProperty {
     SURVIVOR_AGES_AVG_THRESHOLD("survivor.ages.avg.threshold", 100),
     TENURED_ACCUMULATE_SECONDS("tenured.accumulate.seconds", 10),
     FORBID_OTHER_GENERATION("forbid.other.generation", true),
+    GC_EVENTS_INTERCEPTORS_ENABLED("gc.events.interceptors.enabled", false),
+    GC_EVENTS_INTERCEPTORS_MINUTES("gc.events.interceptors.minutes", 3),
+    GC_EVENTS_INTERCEPTORS_SAMPLING_SECONDS("gc.events.interceptors.sampling.seconds", 60),
 
     GRAPHITE_REDUNDANCY_CACHE_SIZE("graphite.redundancy.cache.size", 100_000),
     GRAPHITE_EVENT_LOOP_POOL_SIZE("graphite.event.loop.pool.size", Runtime.getRuntime().availableProcessors() * 2),

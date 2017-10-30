@@ -8,7 +8,6 @@ import com.gcplot.utils.Utils;
 import com.gcplot.model.VMVersion;
 import org.joda.time.DateTime;
 
-import javax.persistence.Transient;
 import java.util.*;
 
 public class GCAnalyseImpl implements GCAnalyse {
@@ -204,6 +203,12 @@ public class GCAnalyseImpl implements GCAnalyse {
         return configs;
     }
 
+    public GCAnalyseImpl configs(Map<String, String> configs) {
+        this.configs = configs;
+        this.configuration = null;
+        return this;
+    }
+
     public GCAnalyseImpl() {
         this.configs = new HashMap<>();
     }
@@ -229,7 +234,6 @@ public class GCAnalyseImpl implements GCAnalyse {
         this.ext = other.ext();
     }
 
-    @Transient
     protected transient Configuration<ConfigProperty> configuration;
     protected String id;
     protected Identifier accountId;

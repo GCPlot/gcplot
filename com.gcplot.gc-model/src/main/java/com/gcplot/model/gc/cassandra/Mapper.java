@@ -61,6 +61,7 @@ public abstract class Mapper {
         Map<String, Long> jvmSwapFree = row.getMap("jvm_md_swap_free", String.class, Long.class);
         Map<String, String> sourceByJvmRaw = row.getMap("jvm_rc_source_type", String.class, String.class);
         Map<String, String> sourceConfigByJvmRaw = row.getMap("jvm_rc_source_config_string", String.class, String.class);
+        Map<String, String> configs = row.getMap("configs", String.class, String.class);
 
         Map<String, SourceType> sourceByJvm = new HashMap<>();
         Map<String, String> sourceConfigByJvm = new HashMap<>();
@@ -80,7 +81,8 @@ public abstract class Mapper {
         return gcAnalyse
                 .jvmMemoryDetails(memoryDetails)
                 .sourceByJvm(sourceByJvm)
-                .sourceConfigByJvm(sourceConfigByJvm);
+                .sourceConfigByJvm(sourceConfigByJvm)
+                .configs(configs);
     }
 
     public static List<GCEvent> eventsFrom(Iterator<Row> resultSet) {
