@@ -71,23 +71,25 @@ public class GraphiteSender {
                         .channel(NioSocketChannel.class)
                         .option(ChannelOption.SO_KEEPALIVE, true);
 
-                InetSocketAddress sa = new InetSocketAddress(pc.getHost(), pc.getPort());
-                switch (pc.getProxyType()) {
-                    case SOCKS5: {
-                        bb.handler(new Socks5ProxyHandler(sa, pc.getUsername(), pc.getPassword()));
-                        break;
-                    }
-                    case HTTP:
-                    case HTTPS: {
-                        if (pc.getProxyType() == ProxyType.HTTPS) {
-                            bb.handler(sslContext.newHandler(PooledByteBufAllocator.DEFAULT));
+                if (pc != ProxyConfiguration.NONE) {
+                    InetSocketAddress sa = new InetSocketAddress(pc.getHost(), pc.getPort());
+                    switch (pc.getProxyType()) {
+                        case SOCKS5: {
+                            bb.handler(new Socks5ProxyHandler(sa, pc.getUsername(), pc.getPassword()));
+                            break;
                         }
-                        HttpProxyHandler hph = pc.getUsername() != null ? new HttpProxyHandler(sa, pc.getUsername(), pc.getPassword()) :
-                                new HttpProxyHandler(sa);
-                        bb.handler(hph);
-                        break;
+                        case HTTP:
+                        case HTTPS: {
+                            if (pc.getProxyType() == ProxyType.HTTPS) {
+                                bb.handler(sslContext.newHandler(PooledByteBufAllocator.DEFAULT));
+                            }
+                            HttpProxyHandler hph = pc.getUsername() != null ? new HttpProxyHandler(sa, pc.getUsername(), pc.getPassword()) :
+                                    new HttpProxyHandler(sa);
+                            bb.handler(hph);
+                            break;
+                        }
+                        default:
                     }
-                    default:
                 }
                 return bb;
             });
