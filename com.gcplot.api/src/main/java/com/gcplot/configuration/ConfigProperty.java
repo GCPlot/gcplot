@@ -22,8 +22,8 @@ public enum ConfigProperty {
     SMTP_PORT("smtp.port", 465),
     SMTP_USE_SSL("smtp.use.ssl", true),
     SMTP_AUTH("smtp.auth", true),
-    SMTP_CONNECTION_TIMEOUT("smtp.connection.timeout", 10000),
-    SMTP_SEND_TIMEOUT("smtp.send.timeout", 5000),
+    SMTP_CONNECTION_TIMEOUT("smtp.connection.timeout", 30000),
+    SMTP_SEND_TIMEOUT("smtp.send.timeout", 30000),
     SMTP_DEFAULT_USERNAME("smtp.confirm.username", "do-not-reply@gcplot.com"),
     SMTP_DEFAULT_PASSWORD("smtp.confirm.password", "%*KmX_bh/Z:e7)u\""),
 
