@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
  * 10/22/17
  */
 public class GraphiteSender {
-    private static final Logger LOG = LoggerFactory.getLogger(GraphiteSender.class);
     private EventLoopGroup eventLoopGroup;
     private SslContext sslContext;
     private Cache<Pair<String, ProxyConfiguration>, Bootstrap> bootstrapCache;
@@ -101,9 +100,7 @@ public class GraphiteSender {
                 Channel c = b.connect(parts[0], port).sync().channel();
                 data.forEach((metric, timestamp) -> {
                     // TODO optimize
-                    String msg = metric + " " + (timestamp / 1000) + "\n";
-                    LOG.debug("!trace: {}", msg);
-                    c.write(Unpooled.copiedBuffer(msg, Charsets.ISO_8859_1));
+                    c.write(Unpooled.copiedBuffer(metric + " " + (timestamp / 1000) + "\n", Charsets.ISO_8859_1));
                 });
                 c.flush().closeFuture().sync();
             } catch (InterruptedException e) {
