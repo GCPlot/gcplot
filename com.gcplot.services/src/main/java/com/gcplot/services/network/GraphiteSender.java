@@ -95,7 +95,7 @@ public class GraphiteSender {
                 Channel c = b.connect(parts[0], port).sync().channel();
                 data.forEach((metric, timestamp) -> {
                     // TODO optimize
-                    c.write(Unpooled.copiedBuffer(metric + " " + (timestamp / 1000) + "\n", Charsets.UTF_8));
+                    c.write(Unpooled.copiedBuffer(metric + " " + (timestamp / 1000) + "\n", Charsets.ISO_8859_1));
                 });
                 c.flush().closeFuture().sync();
             } catch (InterruptedException e) {

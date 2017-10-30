@@ -167,11 +167,11 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
             } else if (gcEvent.isTenured()) {
                 m.put(p + "tenured.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             } else if (gcEvent.isFull()) {
-                m.put(p + "full.ms" + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "full.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             } else if (gcEvent.isPerm()) {
-                m.put(p + "perm.ms" + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "perm.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             } else if (gcEvent.isMetaspace()) {
-                m.put(p + "metaspace.ms" + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "metaspace.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             }
         }
     }
