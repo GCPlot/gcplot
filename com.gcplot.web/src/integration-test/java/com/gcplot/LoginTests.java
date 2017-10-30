@@ -33,7 +33,7 @@ public class LoginTests extends IntegrationTest {
 
         get("/user/login?login=" + request.email + "&password=" + request.password, j -> j.containsKey("result"));
 
-        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(10)));
+        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(30)));
         String confirmUrl = smtpServer.getReceivedEmails().get(0).getBody();
         Assert.assertTrue(withRedirect(confirmUrl));
 
@@ -109,13 +109,13 @@ public class LoginTests extends IntegrationTest {
         RegisterRequest request = register();
         post("/user/register", request, success());
 
-        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(10)));
+        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 1, TimeUnit.SECONDS.toNanos(30)));
 
         JsonObject jo = login(request);
 
         SendNewPassRequest r = new SendNewPassRequest("artem@gcplot.com");
         post("/user/send/new_password", r, success());
-        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 2, TimeUnit.SECONDS.toNanos(10)));
+        Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 2, TimeUnit.SECONDS.toNanos(30)));
         String newPassUrl = smtpServer.getReceivedEmails().get(1).getBody();
 
         Assert.assertTrue(newPassUrl.startsWith("http://test.com/?cp=true"));

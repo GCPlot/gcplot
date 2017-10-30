@@ -64,7 +64,6 @@ dependencies {
     compile project(":com.gcplot.log-processor")
 
     compile "com.amazonaws:aws-java-sdk-s3:$awsVersion"
-    compile "org.slf4j:slf4j-simple:$slf4jVersion"
     compile("io.vertx:vertx-web:$vertxVersion") {
         exclude group: 'io.netty'
     }

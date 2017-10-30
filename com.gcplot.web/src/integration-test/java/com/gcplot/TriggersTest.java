@@ -69,11 +69,11 @@ public class TriggersTest extends IntegrationTest {
         try {
             ts.processRealtimeAnalyzes();
 
-            Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 2, TimeUnit.SECONDS.toNanos(10)));
+            Assert.assertTrue(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 2, TimeUnit.SECONDS.toNanos(30)));
             Assert.assertEquals("<b><div>analyse1</div><d>JVM 2</d><c>3 mins, 20 secs</c></b>", smtpServer.getReceivedEmails().get(1).getBody());
 
             ts.processRealtimeAnalyzes();
-            Assert.assertFalse(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 3, TimeUnit.SECONDS.toNanos(5)));
+            Assert.assertFalse(Utils.waitFor(() -> smtpServer.getReceivedEmails().size() == 3, TimeUnit.SECONDS.toNanos(30)));
         } finally {
             DateTimeUtils.setCurrentMillisSystem();
         }
