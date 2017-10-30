@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -32,7 +33,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     private final String prefix;
     private final String[] urls;
     private final ProxyConfiguration proxyConfiguration;
-    private final Map<String, Long> metrics = new HashMap<>();
+    private final Map<String, Long> metrics = new ConcurrentHashMap<>();
 
     public GraphiteInterceptor(GraphiteSender graphiteSender, GCAnalyse analyse, String jvmId) {
         this.graphiteSender = graphiteSender;
@@ -41,7 +42,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         this.urls = Arrays.stream(Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_URLS)).replace(" ", "").split(",")).filter(s -> !s.trim().isEmpty()).map(String::trim).toArray(String[]::new);
         if (this.urls.length > 0) {
             this.jvmName = StringUtils.replaceAll(Strings.nullToEmpty(analyse.jvmNames().get(jvmId)), "[\\.\\\\/ @#$%^&*();|<>\"'+\\-\\!\\?\\:\\;]", "_");
-            String prefix = Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_PREFIX)).replace("{jvm_id}", jvmName);
+            String prefix = Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_PREFIX)).replace("${jvm_name}", jvmName);
             if (!prefix.endsWith(".")) {
                 prefix += ".";
             }
