@@ -47,6 +47,7 @@ public enum ConfigProperty {
 
     GRAPHITE_REDUNDANCY_CACHE_SIZE("graphite.redundancy.cache.size", 100_000),
     GRAPHITE_EVENT_LOOP_POOL_SIZE("graphite.event.loop.pool.size", Runtime.getRuntime().availableProcessors() * 2),
+    GRAPHITE_CONNECT_TIMEOUT("graphite.connect.timeout", 60000),
 
     PASSWORD_MIN_LENGTH("password.min.length", 1),
 

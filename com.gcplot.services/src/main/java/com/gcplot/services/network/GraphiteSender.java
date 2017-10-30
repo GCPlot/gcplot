@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
  * 10/22/17
  */
 public class GraphiteSender {
+    private static final Logger LOG = LoggerFactory.getLogger(GraphiteSender.class);
     private EventLoopGroup eventLoopGroup;
     private SslContext sslContext;
     private Cache<Pair<String, ProxyConfiguration>, Bootstrap> bootstrapCache;
@@ -67,7 +68,11 @@ public class GraphiteSender {
                 Bootstrap bb = new Bootstrap()
                         .group(eventLoopGroup)
                         .channel(NioSocketChannel.class)
-                        .option(ChannelOption.SO_KEEPALIVE, true);
+                        .option(ChannelOption.SO_KEEPALIVE, true)
+                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.readInt(ConfigProperty.GRAPHITE_CONNECT_TIMEOUT))
+                        .option(ChannelOption.TCP_NODELAY, true)
+                        .option(ChannelOption.SO_SNDBUF, 5 * 1024 * 1024)
+                        .option(ChannelOption.SO_TIMEOUT, config.readInt(ConfigProperty.GRAPHITE_CONNECT_TIMEOUT));
 
                 if (pc != ProxyConfiguration.NONE) {
                     InetSocketAddress sa = new InetSocketAddress(pc.getHost(), pc.getPort());
@@ -97,12 +102,20 @@ public class GraphiteSender {
                 return bb;
             });
             try {
-                Channel c = b.connect(parts[0], port).sync().channel();
+                LOG.info("!_! Connect.");
+                ChannelFuture cf = b.connect(parts[0], port);
+                LOG.info("!_! Sync.");
+                cf.sync();
+                LOG.info("!_! Get Channel.");
+                Channel c = cf.channel();
                 data.forEach((metric, timestamp) -> {
                     // TODO optimize
                     c.write(Unpooled.copiedBuffer(metric + " " + (timestamp / 1000) + "\n", Charsets.ISO_8859_1));
                 });
-                c.flush().closeFuture().sync();
+                LOG.info("!_! Flush.");
+                c.flush();
+                LOG.info("!_! Close.");
+                c.close();
             } catch (InterruptedException e) {
                 throw Exceptions.runtime(e);
             }
