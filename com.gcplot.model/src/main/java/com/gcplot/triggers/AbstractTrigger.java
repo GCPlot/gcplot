@@ -8,6 +8,8 @@ import javax.persistence.Version;
 import java.util.Map;
 
 /**
+ * FIXME Each new instance should be manually registered in ODB
+ *
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
  *         8/1/17
  */

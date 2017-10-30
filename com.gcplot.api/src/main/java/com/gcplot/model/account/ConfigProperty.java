@@ -12,8 +12,9 @@ public enum ConfigProperty implements com.gcplot.model.config.ConfigProperty  {
     PRELOAD_ANALYSIS_ON_PAGE_OPEN("1", true),
 
     /** Notification Configurations **/
-    NOTIFY_REALTIME_AGENT_HEALTH("2", true),
-    REALTIME_AGENT_INACTIVE_SECONDS("3", 7200L);
+    NOTIFICATIONS_ENABLED("2", true),
+    NOTIFY_REALTIME_AGENT_HEALTH("3", true),
+    REALTIME_AGENT_INACTIVE_SECONDS("4", 7200L);
     /*********************************/
 
     private static final Map<String, ConfigProperty> VALUES;

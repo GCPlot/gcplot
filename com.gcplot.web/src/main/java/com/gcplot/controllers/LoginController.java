@@ -44,6 +44,8 @@ public class LoginController extends Controller {
                 .post("/user/change_username", ChangeUsernameRequest.class, this::changeUsername);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/change_email", ChangeEmailRequest.class, this::changeEmail);
+        dispatcher.requireAuth()
+                .post("/user/change_notification_email", ChangeEmailRequest.class, this::changeNotificationEmail);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/config/update", UpdateConfigRequest.class, this::updateConfig);
         dispatcher.allowNotConfirmed().requireAuth().get("/user/send/confirmation", this::sendConfirmation);
@@ -248,6 +250,25 @@ public class LoginController extends Controller {
                 if (!account.isConfirmed()) {
                     mailService.sendConfirmationFor(account);
                 }
+                ctx.response(SUCCESS);
+            }
+        }
+    }
+
+    /**
+     * POST /user/change_notification_email
+     * Require Auth (token)
+     * Body: ChangeEmailRequest (JSON)
+     */
+    private void changeNotificationEmail(ChangeEmailRequest req, RequestContext ctx) {
+        Account account = account(ctx);
+        if (Strings.isNullOrEmpty(req.newEmail) || !EMAIL_PATTERN.matcher(req.newEmail).matches()) {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Please enter a valid notification email."));
+        } else {
+            if (!accountRepository.changeNotificationEmail(account, req.newEmail)) {
+                ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Unable to change notification e-mail. " +
+                        "Possibly it's already taken, please try again."));
+            } else {
                 ctx.response(SUCCESS);
             }
         }

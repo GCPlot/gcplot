@@ -12,6 +12,8 @@ public class LoginResult {
     public String lastName;
     @JsonProperty("email")
     public String email;
+    @JsonProperty("notification_email")
+    public String notificationEmail;
     @JsonProperty("token")
     public String token;
     @JsonProperty("confirmed")
@@ -27,6 +29,7 @@ public class LoginResult {
         loginResult.username = account.username();
         loginResult.firstName = account.firstName();
         loginResult.lastName = account.lastName();
+        loginResult.notificationEmail = account.notificationEmail();
         loginResult.email = account.email();
         loginResult.token = account.token();
         loginResult.confirmed = account.isConfirmed();

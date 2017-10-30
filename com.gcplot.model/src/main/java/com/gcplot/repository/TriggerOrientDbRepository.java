@@ -31,7 +31,7 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
 
     @Override
     protected void init(OObjectDatabaseTx db, OSchema schema) {
-        register(db, db.getMetadata().getSchema(), DummyTrigger.class);
+        register(db, db.getMetadata().getSchema(), BinaryTriggerImpl.class);
     }
 
     @Override
@@ -130,15 +130,4 @@ public class TriggerOrientDbRepository extends AbstractOrientDbRepository implem
     private static final String UPDATE_LAST_TIME_TRIGGERED_METRIC = Metrics.name(TriggerOrientDbRepository.class, "update_last_time_triggered");
     private static final String PUT_PROPERTY_METRIC = Metrics.name(TriggerOrientDbRepository.class, "put_property");
     private static final String REMOVE_PROPERTY_METRIC = Metrics.name(TriggerOrientDbRepository.class, "remove_property");
-
-    /**
-     * hack in order to have AbstractTrigger as a registered entity
-     */
-    public static class DummyTrigger extends AbstractTrigger {
-
-        @Override
-        public Object state() {
-            return null;
-        }
-    }
 }

@@ -36,6 +36,8 @@ public interface AccountRepository {
 
     boolean changeEmail(Account account, String newEmail);
 
+    boolean changeNotificationEmail(Account account, String newNotificationEmail);
+
     boolean confirm(String token, String salt);
 
     void block(String username);

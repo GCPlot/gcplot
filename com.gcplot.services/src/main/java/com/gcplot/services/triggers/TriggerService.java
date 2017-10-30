@@ -1,6 +1,7 @@
 package com.gcplot.services.triggers;
 
 import com.gcplot.model.account.Account;
+import com.gcplot.model.account.ConfigProperty;
 import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.repository.AccountRepository;
 import com.gcplot.repository.GCAnalyseRepository;
@@ -34,7 +35,7 @@ public class TriggerService {
             analyseRepository.analyses(true).forEach(a -> {
                 try {
                     Account account = accountRepository.account(a.accountId()).orElse(null);
-                    if (account != null) {
+                    if (account != null && account.config().asBoolean(ConfigProperty.NOTIFICATIONS_ENABLED)) {
                         analyses.computeIfAbsent(account, k ->
                                 Pair.of(triggerRepository.triggersFor(a.accountId()), new ArrayList<>())).getRight().add(a);
                     }
