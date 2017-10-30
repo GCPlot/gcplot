@@ -40,7 +40,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         this.jvmId = jvmId;
         this.urls = Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_URLS)).replace(" ", "").split(",");
         if (this.urls.length > 0) {
-            this.jvmName = StringUtils.replaceAll(Strings.nullToEmpty(analyse.jvmNames().get(jvmId)), "[\\.\\\\/ @#$%^&*();|<>\"'+-!?:;]", "_");
+            this.jvmName = StringUtils.replaceAll(Strings.nullToEmpty(analyse.jvmNames().get(jvmId)), "[\\.\\\\/ @#$%^&*();|<>\"'+\\-\\!\\?\\:\\;]", "_");
             String prefix = Strings.nullToEmpty(analyse.config().asString(ConfigProperty.GRAPHITE_PREFIX)).replace("{jvm_id}", jvmName);
             if (!prefix.endsWith(".")) {
                 prefix += ".";
