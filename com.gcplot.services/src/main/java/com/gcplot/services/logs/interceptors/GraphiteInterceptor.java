@@ -33,7 +33,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     private final String prefix;
     private final String[] urls;
     private final ProxyConfiguration proxyConfiguration;
-    private final Map<String, Long> metrics = new ConcurrentHashMap<>();
+    private final Map<String, Long> metrics = new HashMap<>();
 
     public GraphiteInterceptor(GraphiteSender graphiteSender, GCAnalyse analyse, String jvmId) {
         this.graphiteSender = graphiteSender;
