@@ -164,15 +164,20 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         if (gcEvent.concurrency() == EventConcurrency.SERIAL) {
             String p = prefix + "pauses.stw.";
             if (gcEvent.isYoung()) {
-                m.put(p + "young.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "young.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "young.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             } else if (gcEvent.isTenured()) {
-                m.put(p + "tenured.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "tenured.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "tenured.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             } else if (gcEvent.isFull()) {
-                m.put(p + "full.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "full.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "full.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             } else if (gcEvent.isPerm()) {
-                m.put(p + "perm.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "perm.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "perm.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             } else if (gcEvent.isMetaspace()) {
-                m.put(p + "metaspace.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "metaspace.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
+                m.put(p + "metaspace.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
             }
         }
     }
