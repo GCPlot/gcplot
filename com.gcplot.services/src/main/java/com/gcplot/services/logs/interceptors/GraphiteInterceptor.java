@@ -91,8 +91,8 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     @Override
     public void finish() {
         for (String url : urls) {
-            stwEvents.forEach((p, m) -> fillSTWPauses(m, p.getLeft() * 1000, p.getRight(), prefix, metrics));
-            concEvents.forEach((p, m) -> fillConcurrentPauses(m, p.getLeft() * 1000, p.getRight(), prefix, metrics));
+            stwEvents.forEach((p, m) -> fillSTWPauses(m, p.getLeft() * 1000 * 60, p.getRight(), prefix, metrics));
+            concEvents.forEach((p, m) -> fillConcurrentPauses(m, p.getLeft() * 1000 * 60, p.getRight(), prefix, metrics));
             LOG.info("Sending data to graphite url: {}", url);
             graphiteSender.send(url, proxyConfiguration, metrics);
         }
