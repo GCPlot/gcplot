@@ -69,8 +69,8 @@ public class InterceptorsPoller {
                         DateTime prevLastEvent = lastTimestamps.get(jvm);
                         if (prevLastEvent == null || !prevLastEvent.equals(lastEvent)) {
                             DateTime firstEvent = prevLastEvent == null ?
-                                    lastEvent.minusMinutes(queryMinutes * queryRatio) : prevLastEvent.plusMillis(1);
-                            Interval i = new Interval(firstEvent, lastEvent);
+                                    lastEvent.minusMinutes(queryMinutes * queryRatio) : prevLastEvent;
+                            Interval i = new Interval(firstEvent.withSecondOfMinute(0), lastEvent.withSecondOfMinute(0));
                             lastTimestamps.put(jvm, lastEvent);
 
                             analyticsService.events(a.accountId(), a.id(), jvm, i, samplingSeconds, GCEventFeature.getNoStats(), gi::intercept);
