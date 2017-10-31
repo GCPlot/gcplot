@@ -116,79 +116,66 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
             case G1_REMARK: {
                 m.put(p + "g1_remark.ms.min " + e.getMin(), occurred);
                 m.put(p + "g1_remark.ms.max " + e.getMax(), occurred);
-                m.put(p + "g1_remark.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case G1_CLEANUP: {
                 m.put(p + "g1_cleanup.ms.min " + e.getMin(), occurred);
                 m.put(p + "g1_cleanup.ms.max " + e.getMax(), occurred);
-                m.put(p + "g1_cleanup.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case G1_COPYING: {
                 m.put(p + "g1_copy.ms.min " + e.getMin(), occurred);
                 m.put(p + "g1_copy.ms.max " + e.getMax(), occurred);
-                m.put(p + "g1_copy.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case G1_INITIAL_MARK: {
                 m.put(p + "g1_init_mark.ms.min " + e.getMin(), occurred);
                 m.put(p + "g1_init_mark.ms.max " + e.getMax(), occurred);
-                m.put(p + "g1_init_mark.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case G1_CONCURRENT_MARKING: {
                 m.put(p + "g1_conc_mark.ms.min " + e.getMin(), occurred);
                 m.put(p + "g1_conc_mark.ms.max " + e.getMax(), occurred);
-                m.put(p + "g1_conc_mark.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case G1_ROOT_REGION_SCANNING: {
                 m.put(p + "g1_root_scan.ms.min " + e.getMin(), occurred);
                 m.put(p + "g1_root_scan.ms.max " + e.getMax(), occurred);
-                m.put(p + "g1_root_scan.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case CMS_REMARK: {
                 m.put(p + "cms_remark.ms.min " + e.getMin(), occurred);
                 m.put(p + "cms_remark.ms.max " + e.getMax(), occurred);
-                m.put(p + "cms_remark.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case CMS_INITIAL_MARK: {
                 m.put(p + "cms_init_mark.ms.min " + e.getMin(), occurred);
                 m.put(p + "cms_init_mark.ms.max " + e.getMax(), occurred);
-                m.put(p + "cms_init_mark.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case CMS_CONCURRENT_MARK: {
                 m.put(p + "cms_conc_mark.ms.min " + e.getMin(), occurred);
                 m.put(p + "cms_conc_mark.ms.max " + e.getMax(), occurred);
-                m.put(p + "cms_conc_mark.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case CMS_CONCURRENT_RESET: {
                 m.put(p + "cms_conc_reset.ms.min " + e.getMin(), occurred);
                 m.put(p + "cms_conc_reset.ms.max " + e.getMax(), occurred);
-                m.put(p + "cms_conc_reset.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case CMS_CONCURRENT_SWEEP: {
                 m.put(p + "cms_conc_sweep.ms.min " + e.getMin(), occurred);
                 m.put(p + "cms_conc_sweep.ms.max " + e.getMax(), occurred);
-                m.put(p + "cms_conc_sweep.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case CMS_CONCURRENT_PRECLEAN: {
                 m.put(p + "cms_conc_pclean.ms.min " + e.getMin(), occurred);
                 m.put(p + "cms_conc_pclean.ms.max " + e.getMax(), occurred);
-                m.put(p + "cms_conc_pclean.ms.avg " + e.getAvg(), occurred);
                 break;
             }
             case OTHER: {
                 m.put(p + "other.ms.min " + e.getMin(), occurred);
                 m.put(p + "other.ms.max " + e.getMax(), occurred);
-                m.put(p + "other.ms.avg " + e.getAvg(), occurred);
                 break;
             }
         }
@@ -199,23 +186,18 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         if (type == EventType.YOUNG) {
             m.put(p + "young.ms.max " + e.getMax(), occurred);
             m.put(p + "young.ms.min " + e.getMin(), occurred);
-            m.put(p + "young.ms.avg " + e.getAvg(), occurred);
         } else if (type == EventType.TENURED) {
             m.put(p + "tenured.ms.max " + e.getMax(), occurred);
             m.put(p + "tenured.ms.min " + e.getMin(), occurred);
-            m.put(p + "tenured.ms.avg " + e.getAvg(), occurred);
         } else if (type == EventType.FULL) {
             m.put(p + "full.ms.max " + e.getMax(), occurred);
             m.put(p + "full.ms.min " + e.getMin(), occurred);
-            m.put(p + "full.ms.avg " + e.getAvg(), occurred);
         } else if (type == EventType.PERM) {
             m.put(p + "perm.ms.max " + e.getMax(), occurred);
             m.put(p + "perm.ms.min " + e.getMin(), occurred);
-            m.put(p + "perm.ms.avg " + e.getAvg(), occurred);
         } else if (type == EventType.METASPACE) {
             m.put(p + "metaspace.ms.max " + e.getMax(), occurred);
             m.put(p + "metaspace.ms.min " + e.getMin(), occurred);
-            m.put(p + "metaspace.ms.avg " + e.getAvg(), occurred);
         }
     }
 

@@ -67,16 +67,14 @@ public class InterceptorsPoller {
 
                         DateTime lastEvent = a.lastEvent().get(jvm);
                         DateTime prevLastEvent = lastTimestamps.get(jvm);
-                        try {
-                            if (prevLastEvent == null || !prevLastEvent.equals(lastEvent)) {
-                                DateTime firstEvent = lastEvent.minusMinutes(queryMinutes * queryRatio);
-                                Interval i = new Interval(firstEvent, lastEvent);
-
-                                analyticsService.events(a.accountId(), a.id(), jvm, i, samplingSeconds, GCEventFeature.getNoStats(), gi::intercept);
-                                gi.finish();
-                            }
-                        } finally {
+                        if (prevLastEvent == null || !prevLastEvent.equals(lastEvent)) {
+                            DateTime firstEvent = prevLastEvent == null ?
+                                    lastEvent.minusMinutes(queryMinutes * queryRatio) : prevLastEvent.plusMillis(1);
+                            Interval i = new Interval(firstEvent, lastEvent);
                             lastTimestamps.put(jvm, lastEvent);
+
+                            analyticsService.events(a.accountId(), a.id(), jvm, i, samplingSeconds, GCEventFeature.getNoStats(), gi::intercept);
+                            gi.finish();
                         }
                     }
                 } catch (Throwable t) {
