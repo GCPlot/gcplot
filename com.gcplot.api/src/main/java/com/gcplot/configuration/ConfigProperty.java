@@ -43,6 +43,7 @@ public enum ConfigProperty {
     FORBID_OTHER_GENERATION("forbid.other.generation", true),
     GC_EVENTS_INTERCEPTORS_ENABLED("gc.events.interceptors.enabled", false),
     GC_EVENTS_INTERCEPTORS_MINUTES("gc.events.interceptors.minutes", 3),
+    GC_EVENTS_INTERCEPTORS_QUERY_TIME_RATIO("gc.events.interceptors.query.time.ratio", 3),
     GC_EVENTS_INTERCEPTORS_SAMPLING_SECONDS("gc.events.interceptors.sampling.seconds", 60),
 
     GRAPHITE_REDUNDANCY_CACHE_SIZE("graphite.redundancy.cache.size", 100_000),

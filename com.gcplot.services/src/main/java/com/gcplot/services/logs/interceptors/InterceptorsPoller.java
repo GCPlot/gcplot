@@ -54,6 +54,9 @@ public class InterceptorsPoller {
     }
 
     private void process() {
+        int queryMinutes = config.readInt(ConfigProperty.GC_EVENTS_INTERCEPTORS_MINUTES);
+        int queryRatio = config.readInt(ConfigProperty.GC_EVENTS_INTERCEPTORS_QUERY_TIME_RATIO);
+        int samplingSeconds = config.readInt(ConfigProperty.GC_EVENTS_INTERCEPTORS_SAMPLING_SECONDS);
         analyseRepository.analyses(true).forEach(a -> {
             a.jvmIds().forEach(jvm -> {
                 try {
@@ -61,12 +64,12 @@ public class InterceptorsPoller {
                     if (gi.isActive() && a.lastEvent() != null && a.lastEvent().get(jvm) != null) {
                         LOG.info("Running graphite interceptor for {}:{} {}", a.name(), a.id(), jvm);
                         LOG.debug("Graphite Interceptor: {}", gi);
-                        int samplingSeconds = config.readInt(ConfigProperty.GC_EVENTS_INTERCEPTORS_SAMPLING_SECONDS);
+
                         DateTime lastEvent = a.lastEvent().get(jvm);
                         DateTime prevLastEvent = lastTimestamps.get(jvm);
                         try {
                             if (prevLastEvent == null || !prevLastEvent.equals(lastEvent)) {
-                                DateTime firstEvent = lastEvent.minusMinutes(config.readInt(ConfigProperty.GC_EVENTS_INTERCEPTORS_MINUTES) * 2);
+                                DateTime firstEvent = lastEvent.minusMinutes(queryMinutes * queryRatio);
                                 Interval i = new Interval(firstEvent, lastEvent);
 
                                 analyticsService.events(a.accountId(), a.id(), jvm, i, samplingSeconds, GCEventFeature.getNoStats(), gi::intercept);

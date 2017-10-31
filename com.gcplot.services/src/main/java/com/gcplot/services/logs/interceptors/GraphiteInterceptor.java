@@ -4,21 +4,23 @@ import com.gcplot.logs.IdentifiedEventInterceptor;
 import com.gcplot.model.IdentifiedEvent;
 import com.gcplot.model.gc.EventConcurrency;
 import com.gcplot.model.gc.GCRate;
+import com.gcplot.model.gc.Phase;
 import com.gcplot.model.gc.analysis.ConfigProperty;
 import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.model.gc.GCEvent;
+import com.gcplot.model.stats.MinMaxAvg;
 import com.gcplot.services.network.GraphiteSender;
 import com.gcplot.services.network.ProxyConfiguration;
 import com.gcplot.services.network.ProxyType;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author <a href="mailto:art.dm.ser@gmail.com">Artem Dmitriev</a>
@@ -34,6 +36,8 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     private final String[] urls;
     private final ProxyConfiguration proxyConfiguration;
     private final Map<String, Long> metrics = new HashMap<>();
+    private final Map<Pair<Long, EventType>, MinMaxAvg> stwEvents = new HashMap<>();
+    private final Map<Pair<Long, Phase>, MinMaxAvg> concEvents = new HashMap<>();
 
     public GraphiteInterceptor(GraphiteSender graphiteSender, GCAnalyse analyse, String jvmId) {
         this.graphiteSender = graphiteSender;
@@ -71,9 +75,13 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     public void intercept(IdentifiedEvent event) {
         if (event.isGCEvent()) {
             GCEvent gcEvent = (GCEvent) event;
-            fillSTWPauses(gcEvent, prefix, metrics);
-            fillConcurrentPauses(gcEvent, prefix, metrics);
-            fillMemory(gcEvent, prefix, metrics);
+            if (gcEvent.concurrency() == EventConcurrency.SERIAL) {
+                stwEvents.computeIfAbsent(Pair.of(gcEvent.occurred().getMillis() / 1000, EventType.from(gcEvent)), k -> new MinMaxAvg())
+                        .next(gcEvent.pauseMu() / 1000);
+            } else if (gcEvent.concurrency() == EventConcurrency.CONCURRENT) {
+                concEvents.computeIfAbsent(Pair.of(gcEvent.occurred().getMillis() / 1000, gcEvent.phase()), k -> new MinMaxAvg())
+                        .next(gcEvent.pauseMu() / 1000);
+            }
         } else if (event.isGCRate()) {
             GCRate rate = (GCRate) event;
             fillGCRate(rate, prefix, metrics);
@@ -83,6 +91,8 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     @Override
     public void finish() {
         for (String url : urls) {
+            stwEvents.forEach((p, m) -> fillSTWPauses(m, p.getLeft() * 1000, p.getRight(), prefix, metrics));
+            concEvents.forEach((p, m) -> fillConcurrentPauses(m, p.getLeft() * 1000, p.getRight(), prefix, metrics));
             LOG.info("Sending data to graphite url: {}", url);
             graphiteSender.send(url, proxyConfiguration, metrics);
         }
@@ -100,85 +110,112 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         // TODO implement
     }
 
-    private void fillConcurrentPauses(GCEvent gcEvent, String prefix, Map<String, Long> m) {
-        if (gcEvent.concurrency() == EventConcurrency.CONCURRENT) {
-            String p = prefix + "pauses.concurrent.";
-            switch (gcEvent.phase()) {
-                case G1_REMARK: {
-                    m.put(p + "g1_remark.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case G1_CLEANUP: {
-                    m.put(p + "g1_cleanup.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case G1_COPYING: {
-                    m.put(p + "g1_copy.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case G1_INITIAL_MARK: {
-                    m.put(p + "g1_init_mark.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case G1_CONCURRENT_MARKING: {
-                    m.put(p + "g1_conc_mark.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case G1_ROOT_REGION_SCANNING: {
-                    m.put(p + "g1_root_scan.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case CMS_REMARK: {
-                    m.put(p + "cms_remark.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case CMS_INITIAL_MARK: {
-                    m.put(p + "cms_init_mark.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case CMS_CONCURRENT_MARK: {
-                    m.put(p + "cms_conc_mark.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case CMS_CONCURRENT_RESET: {
-                    m.put(p + "cms_conc_reset.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case CMS_CONCURRENT_SWEEP: {
-                    m.put(p + "cms_conc_sweep.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case CMS_CONCURRENT_PRECLEAN: {
-                    m.put(p + "cms_conc_pclean.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
-                case OTHER: {
-                    m.put(p + "other.ms " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                    break;
-                }
+    private void fillConcurrentPauses(MinMaxAvg e, long occurred, Phase c, String prefix, Map<String, Long> m) {
+        String p = prefix + "pauses.concurrent.";
+        switch (c) {
+            case G1_REMARK: {
+                m.put(p + "g1_remark.ms.min " + e.getMin(), occurred);
+                m.put(p + "g1_remark.ms.max " + e.getMax(), occurred);
+                m.put(p + "g1_remark.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case G1_CLEANUP: {
+                m.put(p + "g1_cleanup.ms.min " + e.getMin(), occurred);
+                m.put(p + "g1_cleanup.ms.max " + e.getMax(), occurred);
+                m.put(p + "g1_cleanup.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case G1_COPYING: {
+                m.put(p + "g1_copy.ms.min " + e.getMin(), occurred);
+                m.put(p + "g1_copy.ms.max " + e.getMax(), occurred);
+                m.put(p + "g1_copy.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case G1_INITIAL_MARK: {
+                m.put(p + "g1_init_mark.ms.min " + e.getMin(), occurred);
+                m.put(p + "g1_init_mark.ms.max " + e.getMax(), occurred);
+                m.put(p + "g1_init_mark.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case G1_CONCURRENT_MARKING: {
+                m.put(p + "g1_conc_mark.ms.min " + e.getMin(), occurred);
+                m.put(p + "g1_conc_mark.ms.max " + e.getMax(), occurred);
+                m.put(p + "g1_conc_mark.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case G1_ROOT_REGION_SCANNING: {
+                m.put(p + "g1_root_scan.ms.min " + e.getMin(), occurred);
+                m.put(p + "g1_root_scan.ms.max " + e.getMax(), occurred);
+                m.put(p + "g1_root_scan.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case CMS_REMARK: {
+                m.put(p + "cms_remark.ms.min " + e.getMin(), occurred);
+                m.put(p + "cms_remark.ms.max " + e.getMax(), occurred);
+                m.put(p + "cms_remark.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case CMS_INITIAL_MARK: {
+                m.put(p + "cms_init_mark.ms.min " + e.getMin(), occurred);
+                m.put(p + "cms_init_mark.ms.max " + e.getMax(), occurred);
+                m.put(p + "cms_init_mark.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case CMS_CONCURRENT_MARK: {
+                m.put(p + "cms_conc_mark.ms.min " + e.getMin(), occurred);
+                m.put(p + "cms_conc_mark.ms.max " + e.getMax(), occurred);
+                m.put(p + "cms_conc_mark.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case CMS_CONCURRENT_RESET: {
+                m.put(p + "cms_conc_reset.ms.min " + e.getMin(), occurred);
+                m.put(p + "cms_conc_reset.ms.max " + e.getMax(), occurred);
+                m.put(p + "cms_conc_reset.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case CMS_CONCURRENT_SWEEP: {
+                m.put(p + "cms_conc_sweep.ms.min " + e.getMin(), occurred);
+                m.put(p + "cms_conc_sweep.ms.max " + e.getMax(), occurred);
+                m.put(p + "cms_conc_sweep.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case CMS_CONCURRENT_PRECLEAN: {
+                m.put(p + "cms_conc_pclean.ms.min " + e.getMin(), occurred);
+                m.put(p + "cms_conc_pclean.ms.max " + e.getMax(), occurred);
+                m.put(p + "cms_conc_pclean.ms.avg " + e.getAvg(), occurred);
+                break;
+            }
+            case OTHER: {
+                m.put(p + "other.ms.min " + e.getMin(), occurred);
+                m.put(p + "other.ms.max " + e.getMax(), occurred);
+                m.put(p + "other.ms.avg " + e.getAvg(), occurred);
+                break;
             }
         }
     }
 
-    private void fillSTWPauses(GCEvent gcEvent, String prefix, Map<String, Long> m) {
-        if (gcEvent.concurrency() == EventConcurrency.SERIAL) {
-            String p = prefix + "pauses.stw.";
-            if (gcEvent.isYoung()) {
-                m.put(p + "young.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                m.put(p + "young.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-            } else if (gcEvent.isTenured()) {
-                m.put(p + "tenured.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                m.put(p + "tenured.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-            } else if (gcEvent.isFull()) {
-                m.put(p + "full.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                m.put(p + "full.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-            } else if (gcEvent.isPerm()) {
-                m.put(p + "perm.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                m.put(p + "perm.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-            } else if (gcEvent.isMetaspace()) {
-                m.put(p + "metaspace.ms.max " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-                m.put(p + "metaspace.ms.min " + (gcEvent.pauseMu() / 1000), gcEvent.occurred().getMillis());
-            }
+    private void fillSTWPauses(MinMaxAvg e, long occurred, EventType type, String prefix, Map<String, Long> m) {
+        String p = prefix + "pauses.stw.";
+        if (type == EventType.YOUNG) {
+            m.put(p + "young.ms.max " + e.getMax(), occurred);
+            m.put(p + "young.ms.min " + e.getMin(), occurred);
+            m.put(p + "young.ms.avg " + e.getAvg(), occurred);
+        } else if (type == EventType.TENURED) {
+            m.put(p + "tenured.ms.max " + e.getMax(), occurred);
+            m.put(p + "tenured.ms.min " + e.getMin(), occurred);
+            m.put(p + "tenured.ms.avg " + e.getAvg(), occurred);
+        } else if (type == EventType.FULL) {
+            m.put(p + "full.ms.max " + e.getMax(), occurred);
+            m.put(p + "full.ms.min " + e.getMin(), occurred);
+            m.put(p + "full.ms.avg " + e.getAvg(), occurred);
+        } else if (type == EventType.PERM) {
+            m.put(p + "perm.ms.max " + e.getMax(), occurred);
+            m.put(p + "perm.ms.min " + e.getMin(), occurred);
+            m.put(p + "perm.ms.avg " + e.getAvg(), occurred);
+        } else if (type == EventType.METASPACE) {
+            m.put(p + "metaspace.ms.max " + e.getMax(), occurred);
+            m.put(p + "metaspace.ms.min " + e.getMin(), occurred);
+            m.put(p + "metaspace.ms.avg " + e.getAvg(), occurred);
         }
     }
 
@@ -192,5 +229,25 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
                 ", urls=" + Arrays.toString(urls) +
                 ", proxyConfiguration=" + proxyConfiguration +
                 '}';
+    }
+
+    enum EventType {
+        YOUNG, TENURED, FULL, PERM, METASPACE;
+
+        public static EventType from(GCEvent event) {
+            if (event.isYoung()) {
+                return YOUNG;
+            } else if (event.isTenured()) {
+                return TENURED;
+            } else if (event.isFull()) {
+                return FULL;
+            } else if (event.isPerm()) {
+                return PERM;
+            } else if (event.isMetaspace()) {
+                return METASPACE;
+            } else {
+                return null;
+            }
+        }
     }
 }
