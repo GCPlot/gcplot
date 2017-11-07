@@ -2,12 +2,10 @@ package com.gcplot.services.logs.interceptors;
 
 import com.gcplot.logs.IdentifiedEventInterceptor;
 import com.gcplot.model.IdentifiedEvent;
-import com.gcplot.model.gc.EventConcurrency;
-import com.gcplot.model.gc.GCRate;
-import com.gcplot.model.gc.Phase;
+import com.gcplot.model.VMVersion;
+import com.gcplot.model.gc.*;
 import com.gcplot.model.gc.analysis.ConfigProperty;
 import com.gcplot.model.gc.analysis.GCAnalyse;
-import com.gcplot.model.gc.GCEvent;
 import com.gcplot.model.stats.MinMaxAvg;
 import com.gcplot.services.network.GraphiteSender;
 import com.gcplot.services.network.ProxyConfiguration;
@@ -36,6 +34,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     private final String[] urls;
     private final ProxyConfiguration proxyConfiguration;
     private final Map<String, Long> metrics = new HashMap<>();
+    private final Map<Long, GCEvent> memoryEvents = new HashMap<>();
     private final Map<Pair<Long, EventType>, MinMaxAvg> stwEvents = new HashMap<>();
     private final Map<Pair<Long, Phase>, MinMaxAvg> concEvents = new HashMap<>();
 
@@ -76,8 +75,10 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         if (event.isGCEvent()) {
             GCEvent gcEvent = (GCEvent) event;
             if (gcEvent.concurrency() == EventConcurrency.SERIAL) {
-                stwEvents.computeIfAbsent(Pair.of(gcEvent.occurred().getMillis() / 1000 / 60, EventType.from(gcEvent)), k -> new MinMaxAvg())
+                long occurred = gcEvent.occurred().getMillis() / 1000 / 60;
+                stwEvents.computeIfAbsent(Pair.of(occurred, EventType.from(gcEvent)), k -> new MinMaxAvg())
                         .next(gcEvent.pauseMu() / 1000);
+                memoryEvents.putIfAbsent(occurred, gcEvent);
             } else if (gcEvent.concurrency() == EventConcurrency.CONCURRENT) {
                 concEvents.computeIfAbsent(Pair.of(gcEvent.occurred().getMillis() / 1000 / 60, gcEvent.phase()), k -> new MinMaxAvg())
                         .next(gcEvent.pauseMu() / 1000);
@@ -93,6 +94,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         for (String url : urls) {
             stwEvents.forEach((p, m) -> fillSTWPauses(m, p.getLeft() * 1000 * 60, p.getRight(), prefix, metrics));
             concEvents.forEach((p, m) -> fillConcurrentPauses(m, p.getLeft() * 1000 * 60, p.getRight(), prefix, metrics));
+            memoryEvents.forEach((o, e) -> fillMemory(e, EventType.from(e), o * 1000 * 60, prefix, metrics));
             LOG.info("Sending data to graphite url: {}", url);
             graphiteSender.send(url, proxyConfiguration, metrics);
         }
@@ -106,8 +108,73 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         m.put(p + "promote.mb_s " + rate.promotionRate() / 1024, rate.occurred().getMillis());
     }
 
-    private void fillMemory(GCEvent gcEvent, String prefix, Map<String, Long> m) {
-        // TODO implement
+    private void fillMemory(GCEvent gcEvent, EventType eventType, long occurred,
+                            String prefix, Map<String, Long> m) {
+        String p = prefix + "memory.";
+        boolean hasTotal = gcEvent.totalCapacity() != Capacity.NONE;
+        if (gcEvent.generations().size() == 1) {
+            if (eventType == EventType.YOUNG) {
+                boolean hasYoung = gcEvent.capacity() != Capacity.NONE;
+                if (hasYoung) {
+                    m.put(p + "young.used_before.mb " + (gcEvent.capacity().usedBefore() / 1024), occurred);
+                    m.put(p + "young.used_after.mb " + (gcEvent.capacity().usedAfter() / 1024), occurred);
+                    m.put(p + "young.total_size.mb " + (gcEvent.capacity().total() / 1024), occurred);
+                }
+                if (hasTotal) {
+                    m.put(p + "heap.used_before.mb " + (gcEvent.totalCapacity().usedBefore() / 1024), occurred);
+                    m.put(p + "heap.used_after.mb " + (gcEvent.totalCapacity().usedAfter() / 1024), occurred);
+                    m.put(p + "heap.total_size.mb " + (gcEvent.totalCapacity().total() / 1024), occurred);
+                }
+                if (hasTotal && hasYoung) {
+                    m.put(p + "tenured.used_before.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().usedBefore(), 0) / 1024), occurred);
+                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedAfter() - gcEvent.capacity().usedAfter(), 0) / 1024), occurred);
+                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().total() - gcEvent.capacity().total(), 0) / 1024), occurred);
+                }
+            } else if (eventType == EventType.METASPACE) {
+                if (gcEvent.capacity() != Capacity.NONE) {
+                    m.put(p + "metaspace.used_before.mb " + (gcEvent.capacity().usedBefore() / 1024), occurred);
+                    m.put(p + "metaspace.used_after.mb " + (gcEvent.capacity().usedAfter() / 1024), occurred);
+                }
+            } else if (eventType == EventType.PERM) {
+                if (gcEvent.capacity() != Capacity.NONE) {
+                    m.put(p + "perm.used_before.mb " + (gcEvent.capacity().usedBefore() / 1024), occurred);
+                    m.put(p + "perm.used_after.mb " + (gcEvent.capacity().usedAfter() / 1024), occurred);
+                }
+            }
+        } else {
+            // Full GC tends to contain details about YOUNG, TENURED, etc. We should use this info for Memory graphs
+            if (gcEvent.generations().contains(Generation.YOUNG) && gcEvent.capacityByGeneration() != null &&
+                    gcEvent.capacityByGeneration().containsKey(Generation.YOUNG)) {
+                Capacity youngCapacity = gcEvent.capacityByGeneration().get(Generation.YOUNG);
+                m.put(p + "young.used_before.mb " + (youngCapacity.usedBefore() / 1024), occurred);
+                m.put(p + "young.used_after.mb " + (youngCapacity.usedAfter() / 1024), occurred);
+                m.put(p + "young.total_size.mb " + (youngCapacity.total() / 1024), occurred);
+
+                if (hasTotal) {
+                    m.put(p + "tenured.used_before.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.usedBefore(), 0) / 1024), occurred);
+                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedAfter() - youngCapacity.usedAfter(), 0) / 1024), occurred);
+                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().total() - youngCapacity.total(), 0) / 1024), occurred);
+                }
+            }
+            if (hasTotal) {
+                m.put(p + "heap.used_before.mb " + (gcEvent.totalCapacity().usedBefore() / 1024), occurred);
+                m.put(p + "heap.used_after.mb " + (gcEvent.totalCapacity().usedAfter() / 1024), occurred);
+                m.put(p + "heap.total_size.mb " + (gcEvent.totalCapacity().total() / 1024), occurred);
+            }
+            if (gcEvent.capacityByGeneration() != null) {
+                Capacity metaspaceCapacity = gcEvent.capacityByGeneration().get(Generation.METASPACE);
+                if (metaspaceCapacity != null && metaspaceCapacity != Capacity.NONE) {
+                    m.put(p + "metaspace.used_before.mb " + (metaspaceCapacity.usedBefore() / 1024), occurred);
+                    m.put(p + "metaspace.used_after.mb " + (metaspaceCapacity.usedAfter() / 1024), occurred);
+                } else {
+                    Capacity permCapacity = gcEvent.capacityByGeneration().get(Generation.PERM);
+                    if (permCapacity != null && permCapacity != Capacity.NONE) {
+                        m.put(p + "perm.used_before.mb " + (permCapacity.usedBefore() / 1024), occurred);
+                        m.put(p + "perm.used_after.mb " + (permCapacity.usedAfter() / 1024), occurred);
+                    }
+                }
+            }
+        }
     }
 
     private void fillConcurrentPauses(MinMaxAvg e, long occurred, Phase c, String prefix, Map<String, Long> m) {
