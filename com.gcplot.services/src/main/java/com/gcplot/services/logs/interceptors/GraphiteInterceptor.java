@@ -115,28 +115,28 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
                 boolean hasYoung = gcEvent.capacity() != Capacity.NONE;
                 if (hasYoung) {
                     m.put(p + "young.used_before.mb " + (gcEvent.capacity().usedBefore() / 1024), occurred);
-                    m.put(p + "young.used_after.mb" + (gcEvent.capacity().usedAfter() / 1024), occurred);
-                    m.put(p + "young.total_size.mb" + (gcEvent.capacity().total() / 1024), occurred);
+                    m.put(p + "young.used_after.mb " + (gcEvent.capacity().usedAfter() / 1024), occurred);
+                    m.put(p + "young.total_size.mb " + (gcEvent.capacity().total() / 1024), occurred);
                 }
                 if (hasTotal) {
                     m.put(p + "heap.used_before.mb " + (gcEvent.totalCapacity().usedBefore() / 1024), occurred);
-                    m.put(p + "heap.used_after.mb" + (gcEvent.totalCapacity().usedAfter() / 1024), occurred);
-                    m.put(p + "heap.total_size.mb" + (gcEvent.totalCapacity().total() / 1024), occurred);
+                    m.put(p + "heap.used_after.mb " + (gcEvent.totalCapacity().usedAfter() / 1024), occurred);
+                    m.put(p + "heap.total_size.mb " + (gcEvent.totalCapacity().total() / 1024), occurred);
                 }
                 if (hasTotal && hasYoung) {
                     m.put(p + "tenured.used_before.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().usedBefore(), 0) / 1024), occurred);
-                    m.put(p + "tenured.used_after.mb" + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().usedAfter(), 0) / 1024), occurred);
-                    m.put(p + "tenured.total_size.mb" + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().total(), 0) / 1024), occurred);
+                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().usedAfter(), 0) / 1024), occurred);
+                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().total(), 0) / 1024), occurred);
                 }
             } else if (eventType == EventType.METASPACE) {
                 if (gcEvent.capacity() != Capacity.NONE) {
                     m.put(p + "metaspace.used_before.mb " + (gcEvent.capacity().usedBefore() / 1024), occurred);
-                    m.put(p + "metaspace.used_after.mb" + (gcEvent.capacity().usedAfter() / 1024), occurred);
+                    m.put(p + "metaspace.used_after.mb " + (gcEvent.capacity().usedAfter() / 1024), occurred);
                 }
             } else if (eventType == EventType.PERM) {
                 if (gcEvent.capacity() != Capacity.NONE) {
                     m.put(p + "perm.used_before.mb " + (gcEvent.capacity().usedBefore() / 1024), occurred);
-                    m.put(p + "perm.used_after.mb" + (gcEvent.capacity().usedAfter() / 1024), occurred);
+                    m.put(p + "perm.used_after.mb " + (gcEvent.capacity().usedAfter() / 1024), occurred);
                 }
             }
         } else {
@@ -145,30 +145,30 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
                     gcEvent.capacityByGeneration().containsKey(Generation.YOUNG)) {
                 Capacity youngCapacity = gcEvent.capacityByGeneration().get(Generation.YOUNG);
                 m.put(p + "young.used_before.mb " + (youngCapacity.usedBefore() / 1024), occurred);
-                m.put(p + "young.used_after.mb" + (youngCapacity.usedAfter() / 1024), occurred);
-                m.put(p + "young.total_size.mb" + (youngCapacity.total() / 1024), occurred);
+                m.put(p + "young.used_after.mb " + (youngCapacity.usedAfter() / 1024), occurred);
+                m.put(p + "young.total_size.mb " + (youngCapacity.total() / 1024), occurred);
 
                 if (hasTotal) {
                     m.put(p + "tenured.used_before.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.usedBefore(), 0) / 1024), occurred);
-                    m.put(p + "tenured.used_after.mb" + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.usedAfter(), 0) / 1024), occurred);
-                    m.put(p + "tenured.total_size.mb" + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.total(), 0) / 1024), occurred);
+                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.usedAfter(), 0) / 1024), occurred);
+                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.total(), 0) / 1024), occurred);
                 }
             }
             if (hasTotal) {
                 m.put(p + "heap.used_before.mb " + (gcEvent.totalCapacity().usedBefore() / 1024), occurred);
-                m.put(p + "heap.used_after.mb" + (gcEvent.totalCapacity().usedAfter() / 1024), occurred);
-                m.put(p + "heap.total_size.mb" + (gcEvent.totalCapacity().total() / 1024), occurred);
+                m.put(p + "heap.used_after.mb " + (gcEvent.totalCapacity().usedAfter() / 1024), occurred);
+                m.put(p + "heap.total_size.mb " + (gcEvent.totalCapacity().total() / 1024), occurred);
             }
             if (gcEvent.capacityByGeneration() != null) {
                 Capacity metaspaceCapacity = gcEvent.capacityByGeneration().get(Generation.METASPACE);
                 if (metaspaceCapacity != null && metaspaceCapacity != Capacity.NONE) {
                     m.put(p + "metaspace.used_before.mb " + (metaspaceCapacity.usedBefore() / 1024), occurred);
-                    m.put(p + "metaspace.used_after.mb" + (metaspaceCapacity.usedAfter() / 1024), occurred);
+                    m.put(p + "metaspace.used_after.mb " + (metaspaceCapacity.usedAfter() / 1024), occurred);
                 } else {
                     Capacity permCapacity = gcEvent.capacityByGeneration().get(Generation.PERM);
                     if (permCapacity != null && permCapacity != Capacity.NONE) {
                         m.put(p + "perm.used_before.mb " + (permCapacity.usedBefore() / 1024), occurred);
-                        m.put(p + "perm.used_after.mb" + (permCapacity.usedAfter() / 1024), occurred);
+                        m.put(p + "perm.used_after.mb " + (permCapacity.usedAfter() / 1024), occurred);
                     }
                 }
             }
