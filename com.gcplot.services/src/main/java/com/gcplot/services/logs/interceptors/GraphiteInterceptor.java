@@ -34,6 +34,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
     private final String[] urls;
     private final ProxyConfiguration proxyConfiguration;
     private final Map<String, Long> metrics = new HashMap<>();
+    private final Map<Long, GCEvent> memoryEvents = new HashMap<>();
     private final Map<Pair<Long, EventType>, MinMaxAvg> stwEvents = new HashMap<>();
     private final Map<Pair<Long, Phase>, MinMaxAvg> concEvents = new HashMap<>();
 
@@ -77,7 +78,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
                 long occurred = gcEvent.occurred().getMillis() / 1000 / 60;
                 stwEvents.computeIfAbsent(Pair.of(occurred, EventType.from(gcEvent)), k -> new MinMaxAvg())
                         .next(gcEvent.pauseMu() / 1000);
-                fillMemory(gcEvent, EventType.from(gcEvent), gcEvent.occurred().getMillis(), prefix, metrics);
+                memoryEvents.putIfAbsent(occurred, gcEvent);
             } else if (gcEvent.concurrency() == EventConcurrency.CONCURRENT) {
                 concEvents.computeIfAbsent(Pair.of(gcEvent.occurred().getMillis() / 1000 / 60, gcEvent.phase()), k -> new MinMaxAvg())
                         .next(gcEvent.pauseMu() / 1000);
@@ -93,6 +94,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
         for (String url : urls) {
             stwEvents.forEach((p, m) -> fillSTWPauses(m, p.getLeft() * 1000 * 60, p.getRight(), prefix, metrics));
             concEvents.forEach((p, m) -> fillConcurrentPauses(m, p.getLeft() * 1000 * 60, p.getRight(), prefix, metrics));
+            memoryEvents.forEach((o, e) -> fillMemory(e, EventType.from(e), o * 1000 * 60, prefix, metrics));
             LOG.info("Sending data to graphite url: {}", url);
             graphiteSender.send(url, proxyConfiguration, metrics);
         }
