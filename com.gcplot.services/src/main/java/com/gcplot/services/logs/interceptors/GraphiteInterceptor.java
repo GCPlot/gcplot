@@ -127,8 +127,8 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
                 }
                 if (hasTotal && hasYoung) {
                     m.put(p + "tenured.used_before.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().usedBefore(), 0) / 1024), occurred);
-                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().usedAfter(), 0) / 1024), occurred);
-                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - gcEvent.capacity().total(), 0) / 1024), occurred);
+                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedAfter() - gcEvent.capacity().usedAfter(), 0) / 1024), occurred);
+                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().total() - gcEvent.capacity().total(), 0) / 1024), occurred);
                 }
             } else if (eventType == EventType.METASPACE) {
                 if (gcEvent.capacity() != Capacity.NONE) {
@@ -152,8 +152,8 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
 
                 if (hasTotal) {
                     m.put(p + "tenured.used_before.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.usedBefore(), 0) / 1024), occurred);
-                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.usedAfter(), 0) / 1024), occurred);
-                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().usedBefore() - youngCapacity.total(), 0) / 1024), occurred);
+                    m.put(p + "tenured.used_after.mb " + (Math.max(gcEvent.totalCapacity().usedAfter() - youngCapacity.usedAfter(), 0) / 1024), occurred);
+                    m.put(p + "tenured.total_size.mb " + (Math.max(gcEvent.totalCapacity().total() - youngCapacity.total(), 0) / 1024), occurred);
                 }
             }
             if (hasTotal) {
