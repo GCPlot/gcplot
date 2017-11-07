@@ -77,7 +77,7 @@ public class GraphiteInterceptor implements IdentifiedEventInterceptor {
                 long occurred = gcEvent.occurred().getMillis() / 1000 / 60;
                 stwEvents.computeIfAbsent(Pair.of(occurred, EventType.from(gcEvent)), k -> new MinMaxAvg())
                         .next(gcEvent.pauseMu() / 1000);
-                fillMemory(gcEvent, EventType.from(gcEvent), occurred, prefix, metrics);
+                fillMemory(gcEvent, EventType.from(gcEvent), gcEvent.occurred().getMillis(), prefix, metrics);
             } else if (gcEvent.concurrency() == EventConcurrency.CONCURRENT) {
                 concEvents.computeIfAbsent(Pair.of(gcEvent.occurred().getMillis() / 1000 / 60, gcEvent.phase()), k -> new MinMaxAvg())
                         .next(gcEvent.pauseMu() / 1000);
