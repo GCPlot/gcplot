@@ -294,6 +294,7 @@ public class AnalyseController extends Controller {
             GCAnalyse analyse = analyseRepository.analyse(account(ctx).id(), analyseId).orElse(null);
             if (configs.size() > 0 && analyse != null) {
                 analyseRepository.updateConfigs(analyse, configs);
+                ctx.response(SUCCESS);
             } else {
                 ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "Analysis Group or config property is invalid."));
             }
