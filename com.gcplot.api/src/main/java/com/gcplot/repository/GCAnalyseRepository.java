@@ -4,6 +4,7 @@ import com.gcplot.Identifier;
 import com.gcplot.model.gc.analysis.ConfigProperty;
 import com.gcplot.model.gc.analysis.GCAnalyse;
 import com.gcplot.repository.operations.analyse.AnalyseOperation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,6 @@ public interface GCAnalyseRepository {
 
     void perform(List<AnalyseOperation> operations);
 
-    void updateConfig(GCAnalyse analyse, ConfigProperty cp, String val);
+    void updateConfigs(GCAnalyse analyse, List<Pair<ConfigProperty, String>> vals);
 
 }

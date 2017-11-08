@@ -16,6 +16,7 @@ import com.gcplot.repository.GCAnalyseRepository;
 import com.gcplot.repository.operations.analyse.*;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -174,13 +175,15 @@ public class CassandraGCAnalyseRepository extends AbstractCassandraRepository im
     }
 
     @Override
-    public void updateConfig(GCAnalyse analyse, ConfigProperty cp, String val) {
-        ((GCAnalyseImpl) analyse).getConfigs().put(cp.getId(), val);
-        if (val != null) {
-            connector.session().execute(updateTable(analyse.accountId(), UUID.fromString(analyse.id())).with(put("configs", cp.getId(), val)));
-        } else {
-            connector.session().execute(updateTable(analyse.accountId(), UUID.fromString(analyse.id())).with(remove("configs", cp.getId())));
-        }
+    public void updateConfigs(GCAnalyse analyse, List<Pair<ConfigProperty, String>> vals) {
+        vals.forEach(p -> {
+            ((GCAnalyseImpl) analyse).getConfigs().put(p.getLeft().getId(), p.getRight());
+            if (p.getRight() != null) {
+                connector.session().execute(updateTable(analyse.accountId(), UUID.fromString(analyse.id())).with(put("configs", p.getLeft().getId(), p.getRight())));
+            } else {
+                connector.session().execute(updateTable(analyse.accountId(), UUID.fromString(analyse.id())).with(remove("configs", p.getLeft().getId())));
+            }
+        });
     }
 
     private RegularStatement updateAnalyse(Identifier accountId, String analyseId, String name, String timezone,
