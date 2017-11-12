@@ -48,6 +48,7 @@ public class LoginController extends Controller {
                 .post("/user/change_notification_email", ChangeEmailRequest.class, this::changeNotificationEmail);
         dispatcher.requireAuth().allowNotConfirmed()
                 .post("/user/config/update", UpdateConfigRequest.class, this::updateConfig);
+        dispatcher.noAuth().blocking().get("/user/register_admin", this::registerAdmin);
         dispatcher.allowNotConfirmed().requireAuth().get("/user/send/confirmation", this::sendConfirmation);
         dispatcher.noAuth().allowNotConfirmed().post("/user/send/new_password", SendNewPassRequest.class,
                 this::sendNewPass);
@@ -281,6 +282,15 @@ public class LoginController extends Controller {
         Account account = account(ctx);
         mailService.sendConfirmationFor(account);
         ctx.response(SUCCESS);
+    }
+
+    private void registerAdmin(RequestContext ctx) {
+        if (!config.readBoolean(ConfigProperty.IS_ADMIN_REGISTERED)) {
+            config.putProperty(ConfigProperty.IS_ADMIN_REGISTERED, true);
+            register(new RegisterRequest("admin", "", "", "admin", "admin@test.com"), ctx);
+        } else {
+            ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "You can register admin user only once."));
+        }
     }
 
     private AccountRepository.LoginType guess(String username) {

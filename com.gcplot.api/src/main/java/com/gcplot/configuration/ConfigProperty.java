@@ -7,25 +7,25 @@ public enum ConfigProperty {
     SERVING_DISABLED("serving.disabled", false),
     POLL_INTERVAL("config.poll.interval", 15000),
 
-    PUBLIC_HOST("public.host.domain", "gcplot.com"),
-    API_HOST("api.host.domain", "api.gcplot.com"),
+    PUBLIC_HOST("public.host.domain", ""),
+    API_HOST("api.host.domain", ""),
     USE_PUBLIC_SSL("use.public.ssl", false),
 
     EMAIL_CONFIRM_TEMPLATE("email.confirm.template", ""),
     EMAIL_NEW_PASS_TEMPLATE("email.new.pass.template", ""),
     EMAIL_AGENT_HEALTH_TEMPLATE("email.agent.health.template", ""),
 
-    EMAIL_DEFAULT_FROM("email.default.from", "do-not-reply@gcplot.com"),
-    EMAIL_DEFAULT_FROM_NAME("email.default.from.name", "GCPlot"),
+    EMAIL_DEFAULT_FROM("email.default.from", ""),
+    EMAIL_DEFAULT_FROM_NAME("email.default.from.name", ""),
 
-    SMTP_HOST_NAME("smtp.host.name", "smtp.yandex.ru"),
+    SMTP_HOST_NAME("smtp.host.name", ""),
     SMTP_PORT("smtp.port", 465),
-    SMTP_USE_SSL("smtp.use.ssl", true),
-    SMTP_AUTH("smtp.auth", true),
+    SMTP_USE_SSL("smtp.use.ssl", false),
+    SMTP_AUTH("smtp.auth", false),
     SMTP_CONNECTION_TIMEOUT("smtp.connection.timeout", 30000),
     SMTP_SEND_TIMEOUT("smtp.send.timeout", 30000),
-    SMTP_DEFAULT_USERNAME("smtp.confirm.username", "do-not-reply@gcplot.com"),
-    SMTP_DEFAULT_PASSWORD("smtp.confirm.password", "%*KmX_bh/Z:e7)u\""),
+    SMTP_DEFAULT_USERNAME("smtp.confirm.username", ""),
+    SMTP_DEFAULT_PASSWORD("smtp.confirm.password", ""),
 
     SES_REGION("aws.ses.region", "us-east-1"),
     SES_ACCESS_KEY("aws.ses.access.key", ""),
@@ -58,9 +58,10 @@ public enum ConfigProperty {
     PARSE_LOG_SAMPLING_SECONDS("parse.log.sampling.seconds", 0),
 
     TRIGGERS_POLL_INTERVAL_MS("triggers.poll.interval.ms", 60 * 1000),
-    TRIGGERS_EMAIL_ENABLED("triggers.email.enabled", true),
+    TRIGGERS_EMAIL_ENABLED("triggers.email.enabled", false),
     TRIGGERS_ENABLED("triggers.enabled", false),
 
+    IS_ADMIN_REGISTERED("admin.registered", false),
     CONNECTOR_LATEST_VERSION("connector.latest.version", "0.0.1");
 
     private static Map<String, ConfigProperty> types = new HashMap<>();
