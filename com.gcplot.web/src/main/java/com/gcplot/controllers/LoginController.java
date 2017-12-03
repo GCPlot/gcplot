@@ -287,7 +287,7 @@ public class LoginController extends Controller {
     private void registerAdmin(RequestContext ctx) {
         if (!config.readBoolean(ConfigProperty.IS_ADMIN_REGISTERED)) {
             config.putProperty(ConfigProperty.IS_ADMIN_REGISTERED, true);
-            register(new RegisterRequest("admin", "", "", "admin", "admin@test.com"), ctx);
+            register(new RegisterRequest("admin", "admin", "", "admin", "admin@test.com"), ctx);
         } else {
             ctx.write(ErrorMessages.buildJson(ErrorMessages.INVALID_REQUEST_PARAM, "You can register admin user only once."));
         }
