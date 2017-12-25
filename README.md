@@ -28,9 +28,11 @@ You can check the Docker container versions available [here](https://hub.docker.
 
 You can control heap size of the services inside container. GCPlot uses Cassandra and OrientDB under the hood, which are also presented inside the container. Default values are:
 
-```GCPLOT_MEMORY=512m
+```
+GCPLOT_MEMORY=512m
 ORIENTDB_MEMORY=256m
-CASSANDRA_MEMORY=1g```
+CASSANDRA_MEMORY=1g
+```
 
 To give, for example, GCPlot service 1G of heap, and to Cassandra 4G, the command may look like:
 
