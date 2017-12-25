@@ -12,10 +12,26 @@ You can run GCPlot in a Docker container. Docker is supported by most of the mod
 
 In order to run GCPlot as-is without additional configuration, run next command:
 
-`docker run -d -p 80:80 gcplot/gcplot:latest`
+`docker run -d -p 80:80 gcplot/gcplot`
 
 After that eventually the platform will be accessible from your host machine at `http://127.0.0.1` address. If you would like to use another port, just change it. For example, for `http://127.0.0.1:8080` address, the command will look like:
 
-`docker run -d -p 8080:80 gcplot/gcplot:latest`
+`docker run -d -p 8080:80 gcplot/gcplot`
 
 By default, admin user is already created, with username and password `admin`. Please consider changing it for the best security after the initial log in.
+
+### Versions
+
+You can check the Docker container versions available [here](https://hub.docker.com/r/gcplot/gcplot/tags/). 
+
+### Memory Settings
+
+You can control heap size of the services inside container. GCPlot uses Cassandra and OrientDB under the hood, which are also presented inside the container. Default values are:
+
+```GCPLOT_MEMORY=512m
+ORIENTDB_MEMORY=256m
+CASSANDRA_MEMORY=1g```
+
+To give, for example, GCPlot service 1G of heap, and to Cassandra 4G, the command may look like:
+
+`docker run -d -p 80:80 -e "GCPLOT_MEMORY=1g" -e "CASSANDRA_MEMORY=4g" gcplot/gcplot`
