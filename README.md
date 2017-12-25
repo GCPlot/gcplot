@@ -4,6 +4,8 @@ GCPlot is a Java Garbage Collector (GC) logs analyzer. Basically, it's an effort
 
 The report itself consists of a lot of graphs, measurements, stats, etc about how exactly your GC works. You can also manage the timeline and decide - whether to dig deeper, by analyzing, for example, 2 minutes interval in the most details, or check everything from the bird's eye view by choosing the last month.
 
+SPA UI: https://github.com/dmart28/gcplot-ui
+
 # Installation
 
 ## Docker Installation
